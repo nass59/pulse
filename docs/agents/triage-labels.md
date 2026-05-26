@@ -13,3 +13,13 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
 Edit the right-hand column to match whatever vocabulary you actually use.
+
+## Terminal states
+
+States that mark an issue as no longer active. Applied after work completes; not part of the incoming triage flow.
+
+| Label  | Meaning         |
+| ------ | --------------- |
+| `done` | Work completed  |
+
+`wontfix` (in the table above) is the other terminal state — it serves as both a triage outcome and a closed state.
