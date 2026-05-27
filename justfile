@@ -28,3 +28,19 @@ infra-ps:
 # Tail logs from the local infra stack. Pass a service name to scope: `just infra-logs kafka`.
 infra-logs service="":
     docker compose -f infra/docker-compose.yaml logs -f {{service}}
+
+# Run the docs site in dev mode (Next.js + Turbopack).
+docs-dev:
+    bun --filter '@pulse/docs' dev
+
+# Build the docs site as a static export to apps/docs/out/.
+docs-build:
+    bun --filter '@pulse/docs' build
+
+# Lint and format-check the workspace via Ultracite (Biome preset).
+lint:
+    bunx ultracite check
+
+# Apply Ultracite (Biome) fixes across the workspace.
+format:
+    bunx ultracite fix

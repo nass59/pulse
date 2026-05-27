@@ -20,8 +20,9 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-dist/
-.next/
+**/dist/
+**/.next/
+**/out/
 .turbo/
 coverage/
 
@@ -34,7 +35,6 @@ vendor/
 # --- JVM / Gradle (services/analytics) ---
 build/
 .gradle/
-out/
 *.class
 
 # --- Generated code (Avro codegen output) ---

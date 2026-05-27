@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "@biomejs/biome": "2.4.15",
+    "ultracite": "7.8.0"
+  },
+  "name": "pulse",
+  "scripts": {
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "private": true
+}
