@@ -12,3 +12,19 @@
 # Show the list of recipes. Default when running `just` with no args.
 default:
     @just --list
+
+# Bring the local infra stack up (Kafka, Apicurio, Postgres, Redis).
+infra-up:
+    docker compose -f infra/docker-compose.yaml up -d
+
+# Take the local infra stack down. Keeps the Postgres volume (add `-v` to wipe).
+infra-down:
+    docker compose -f infra/docker-compose.yaml down
+
+# Show status of the local infra stack.
+infra-ps:
+    docker compose -f infra/docker-compose.yaml ps
+
+# Tail logs from the local infra stack. Pass a service name to scope: `just infra-logs kafka`.
+infra-logs service="":
+    docker compose -f infra/docker-compose.yaml logs -f {{service}}
