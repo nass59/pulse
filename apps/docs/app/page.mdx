@@ -1,5 +1,28 @@
-export const metadata = { title: 'Pulse docs' };
+export const metadata = {
+  title: "Pulse docs",
+  description:
+    "A derived study artifact for the Pulse Kafka-learning project — concepts, architecture, and the build journey.",
+};
 
-# Hello, Pulse docs
+# Pulse
 
-This site is a derived study artifact. Canonical docs live in `docs/adr/` and `CONTEXT.md` — see ADR-0007 for the why.
+Pulse is a Twitch-style livestream platform built as a vehicle for learning **Kafka** and **distributed-systems architecture** deeply. These docs are the tutorial-shaped read of the system: what was built, why, and the concepts each decision teaches. They are organised in three tiers.
+
+**[Concepts →](/concepts)**
+The distributed-systems ideas the build forces you to confront — KRaft, healthchecks, auto-topic-creation, named volumes — one page each.
+
+**[Architecture →](/architecture)**
+The system topology and the infrastructure substrate. What runs, what talks to what, and what is still on the drawing board.
+
+**[Journey →](/journey/foundations)**
+Progress by phase and epic: lessons unlocked, issues closed, and the war stories worth remembering.
+
+<Callout variant="note" title="This is a study artifact">
+  These pages are **downstream** of the canonical sources — the Architecture
+  Decision Records in `docs/adr/` and the domain glossary in `CONTEXT.md`. When
+  this site disagrees with an ADR, the ADR wins and the site is wrong. Nothing
+  here invents architecture; it translates decisions that were already made and
+  recorded. See
+  [ADR-0007](https://github.com/nass59/pulse/blob/main/docs/adr/0007-docs-site-as-study-artifact.md)
+  for why the site exists and why it is deliberately not a source of truth.
+</Callout>

@@ -1,0 +1,72 @@
+export const metadata = {
+  title: "Journey · Foundations — Pulse docs",
+  description:
+    "Phase 0 recap: the infrastructure substrate, the lessons unlocked, and the image-hygiene war stories worth remembering.",
+};
+
+# Journey · Phase 0 — Foundations
+
+**Goal:** get the empty repo to the point where `docker compose up` brings the whole infrastructure stack online and you can verify it with `kcat`.
+
+Phase 0 shipped no service code on purpose. It built the *substrate* — the runnable, reproducible local environment that every polyglot service will stand on. Get this wrong and nothing above it is trustworthy.
+
+## What was built
+
+- A monorepo skeleton: `services/{identity,chat,analytics}/`, `packages/schemas/`, `infra/`.
+- `infra/docker-compose.yaml` — Kafka (KRaft), Apicurio, Postgres, Redis, all healthchecked. See **[Infrastructure](/architecture/infrastructure)**.
+- A `kcat` smoke test proving a produced message is readable back.
+
+## Lessons unlocked
+
+| Concept | What it teaches |
+|---|---|
+| **[KRaft mode](/concepts/kraft-mode)** | Kafka without ZooKeeper; a single broker electing itself controller |
+| **[Healthchecks](/concepts/healthchecks)** | "started" vs "ready," and the `start_period` grace window |
+| **[Auto topic creation](/concepts/auto-topic-creation)** | convenient locally, a footgun in production |
+| **[Named volumes](/concepts/named-volumes)** | how Postgres survives `docker compose down` |
+
+Plus the `kcat` vocabulary itself — `-P`/`-C`/`-b`/`-t` — the universal Kafka REPL that survives whatever language a service is written in.
+
+## War stories
+
+Two of the most valuable lessons in Phase 0 weren't planned — they were forced by the supply chain shifting under the stack. Both failed *silently*: `docker pull` happily fetched something, and the breakage only surfaced at runtime. They are the reason the Compose file is treated as a reproducibility contract.
+
+<Callout variant="warning" title="Bitnami vanished — swapped to apache/kafka">
+  The stack originally used `bitnami/kafka`. In August 2025 Broadcom moved
+  Bitnami's free images behind paid "Bitnami Secure Images," so the pull broke.
+  The fix was to move to Apache's own official `apache/kafka:4.3.0` — which also
+  aligns better with the project's "learn Kafka, not a vendor distro" framing.
+  The env-var naming differs: Apache drops the `_CFG_` infix Bitnami used for
+  templating (`KAFKA_NODE_ID`, not `KAFKA_CFG_NODE_ID`).
+</Callout>
+
+<Callout variant="warning" title="Apicurio -mem deleted in v3 — pinned to v2.6.x">
+  Apicurio 3.x removed the in-memory storage backend entirely. The clean-looking
+  "upgrade" boots into a broken half-state: `APICURIO_STORAGE_KIND=mem` is no
+  longer a valid value. The `-mem` image is a v2-only thing, so the version is
+  pinned to `2.6.13.Final`. A future epic will move to the SQL-backed variant,
+  wired to Postgres, once schema persistence across restarts becomes useful.
+</Callout>
+
+The shared defence is the same in both cases: **pin tags exactly, smoke-test on a fresh pull, and treat the Compose file as a reproducibility contract.** If "image hygiene" recurs as a theme, it earns its own concept page; for now it lives here as lived experience.
+
+## Issues closed
+
+From the local-only tracker (`.scratch/foundations/`):
+
+- `foundations/01-init-repo` — git init + monorepo skeleton + README
+- `foundations/02-docker-compose` — the four-service infra stack
+- `foundations/03-kcat-smoke-test` — produce + consume a message via `kcat`
+
+## Next
+
+Phase 1 brings the first service to life — at which point the architecture topology flips its first node from **planned** to **live**.
+
+<Sources
+  adrs={[1, 2, 3, 5, 6]}
+  issues={[
+    "foundations/01-init-repo",
+    "foundations/02-docker-compose",
+    "foundations/03-kcat-smoke-test",
+  ]}
+/>

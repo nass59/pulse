@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Named volumes — Pulse docs",
+  description:
+    "How Postgres keeps its data across docker compose down, and what a named volume actually is.",
+};
+
+# Named volumes
+
+A container's own filesystem is **ephemeral**: remove the container and everything written inside it is gone. That is the right default for a stateless service, and a disaster for a database. Pulse's Postgres keeps its data across restarts because of one line:
+
+```yaml
+postgres:
+  image: postgres:16
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+# …
+volumes:
+  postgres_data:
+```
+
+## What a named volume is
+
+A **named volume** is storage that Docker manages on the host, *outside* any single container's lifecycle. `postgres_data:/var/lib/postgresql/data` mounts that managed storage at the path where Postgres keeps its files. The container can come and go; the volume persists, and the next Postgres container mounts the same data.
+
+The payoff is concrete: `docker compose down` removes the containers but **leaves named volumes intact**, so your data survives. You only lose it if you explicitly ask, with `docker compose down -v`. That `-v` is the line between "restart the stack" and "wipe the database" — worth committing to muscle memory.
+
+## Named volume vs bind mount
+
+The other way to persist data is a **bind mount** — pointing a container path at a specific host directory (`./data:/var/lib/postgresql/data`). Both survive container removal, but they trade off differently:
+
+- **Named volume** — Docker owns the location and permissions. Portable across machines, no host-path assumptions, the right default for service *data* you never edit by hand.
+- **Bind mount** — you own an exact host path. Right when a human needs to read or edit the files directly (source code, config), at the cost of host-path and permission coupling.
+
+Postgres data is the textbook named-volume case: the database owns those files, nothing else should touch them, and it should travel with the Compose project rather than a hard-coded host path.
+
+<Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

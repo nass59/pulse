@@ -1,0 +1,14 @@
+export const metadata = {
+  title: "Concepts — Pulse docs",
+  description:
+    "Distributed-systems concepts the Pulse build forces you to confront.",
+};
+
+# Concepts
+
+The distributed-systems ideas the build forces you to confront, one page each. Phase 0 (foundations) stood up the infrastructure substrate, so the first concepts are about _running Kafka and its neighbours_ — not yet about events flowing through them.
+
+- **[KRaft mode](/concepts/kraft-mode)** — Kafka without ZooKeeper; how a single broker elects itself controller, and why that takes a moment. _Interactive._
+- **[Healthchecks](/concepts/healthchecks)** — what "healthy" means in Compose, and the `start_period` that keeps a slow-booting service from flapping.
+- **[Auto topic creation](/concepts/auto-topic-creation)** — why your first `kcat` produce just works locally, and why that same convenience is a footgun in production.
+- **[Named volumes](/concepts/named-volumes)** — how Postgres keeps its data across `docker compose down`, and what a named volume actually is.

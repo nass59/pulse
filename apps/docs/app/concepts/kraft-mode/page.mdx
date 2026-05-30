@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "KRaft mode — Pulse docs",
+  description:
+    "Kafka without ZooKeeper: how a single broker elects itself controller, and why the healthcheck waits.",
+};
+
+# KRaft mode
+
+Classic Kafka ran the **broker** (which stores and serves your data) alongside a separate **ZooKeeper** ensemble that held cluster metadata — who the brokers are, which one is the controller, what topics exist. That is two distributed systems to operate, not one.
+
+**KRaft** (Kafka Raft) folds metadata management *into* Kafka itself. The controller role — the node responsible for cluster metadata and leader election — now runs inside a broker process, backed by an internal Raft-replicated metadata log. One fewer thing to deploy, secure, and reason about. Pulse runs KRaft from day one; ZooKeeper never enters the picture.
+
+In `infra/docker-compose.yaml` the broker is told to play both parts:
+
+```yaml
+KAFKA_PROCESS_ROLES: broker,controller
+KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+```
+
+## Watch it boot
+
+The single most useful thing to understand about KRaft locally is that the broker is **not instantly ready**. It boots, initialises its metadata log, elects a controller, and only *then* can serve. Run the sequence:
+
+<KraftControllerElection />
+
+## Why a single-node "quorum" is still a quorum
+
+`KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094` declares a controller quorum of exactly one voter. Raft elects a leader by majority vote among voters; with one voter, the majority is one, so the node wins instantly and unopposed. There is no contention, no split-brain to resolve — but the *mechanism* is the same one that, with `3` or `5` voters, would run a genuine election and replicate the metadata log across them for fault tolerance.
+
+Pulse runs a single node because this is a local learning cluster, not a production deployment. The election you see above is real; the quorum is just trivially small. Scaling the voter list is the only change needed to make it a multi-node Raft group — no architectural shift.
+
+## The boot delay is why the healthcheck waits
+
+Those few seconds between "container started" and "controller elected" are exactly why Kafka's healthcheck carries `start_period: 20s`. Without it, the probe would mark the container `unhealthy` during a perfectly normal boot. That mechanism is its own concept — see **[Healthchecks](/concepts/healthchecks)**.
+
+<Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

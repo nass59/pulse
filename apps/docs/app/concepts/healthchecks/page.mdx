@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Healthchecks — Pulse docs",
+  description:
+    "What 'healthy' means in Docker Compose, and the start_period that stops a slow-booting service from flapping.",
+};
+
+# Healthchecks
+
+A Docker **healthcheck** is a command the container runs on a schedule to answer one question: *is this service actually able to do its job right now?* Not "is the process running" — Docker already knows that — but "can it serve." All four pieces of Pulse's infrastructure declare one:
+
+| Service | Probe | What it proves |
+|---|---|---|
+| kafka | `kafka-topics.sh --list` | the broker answers metadata requests |
+| postgres | `pg_isready -U postgres -d pulse` | the database accepts connections |
+| redis | `redis-cli ping` | the server responds to commands |
+| apicurio | `curl /health/ready` | the registry is ready to serve schemas |
+
+The distinction matters because a process can be *up* long before it is *useful*. Postgres has to finish recovery; Kafka has to elect a controller. A healthcheck is the difference between "started" and "ready," and downstream services that declare `depends_on: { condition: service_healthy }` wait for *ready*, not merely *started*.
+
+## The `start_period` gotcha
+
+Here is the subtlety that bites everyone once. A healthcheck has an `interval`, a `timeout`, and a `retries` count — fail `retries` times in a row and the container is marked `unhealthy`. But a slow-booting service will *legitimately* fail its first few probes while it is still coming up. Without protection, a normal boot looks like a failure.
+
+`start_period` is that protection. It defines a grace window after start during which **failing probes do not count toward `retries`**. The probe still runs; a failure just doesn't accrue. Once the service passes once, or the window expires, normal counting begins.
+
+```yaml
+healthcheck:
+  test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 20s
+```
+
+Kafka's window is `20s` because single-node KRaft needs a handful of seconds to elect itself controller before `--list` can succeed. You can watch exactly that sequence — the failing probes inside the window, then the flip to green — on the **[KRaft mode](/concepts/kraft-mode)** page.
+
+<Callout variant="note">
+  `start_period` was added to Compose healthchecks precisely for services with a
+  meaningful warm-up. If you find yourself bumping `retries` to paper over boot
+  time, you almost certainly want `start_period` instead — it keeps the
+  steady-state failure threshold honest.
+</Callout>
+
+<Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

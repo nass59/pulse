@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Architecture — Pulse docs",
+  description:
+    "The Pulse control-plane topology and infrastructure substrate — what runs, what talks to what, and what is still planned.",
+};
+
+# Architecture
+
+Pulse is a **control-plane** system: everything _around_ the stream — accounts, follows, chat, presence, analytics — is event-driven, with Kafka as the backbone. The video and audio bytes travel a separate **media plane** that never touches Kafka ([ADR-0001](https://github.com/nass59/pulse/blob/main/docs/adr/0001-media-plane-outside-kafka.md)); it is deliberately absent from the topology below.
+
+## System topology
+
+Three services, deliberately polyglot to force real wire contracts ([ADR-0002](https://github.com/nass59/pulse/blob/main/docs/adr/0002-polyglot-three-services.md)), sit on top of four infrastructure pieces. The diagram encodes **build state** honestly: the infrastructure runs today; the services are designed but not yet built.
+
+<SystemTopology />
+
+What this diagram is telling you, read carefully:
+
+- **The four infra nodes are solid — they run today.** `docker compose up` brings Kafka (KRaft), Apicurio, Postgres, and Redis to a healthy state. That was the whole of Phase 0.
+- **The three service nodes are dashed — they are designed, not built.** `services/{identity,chat,analytics}/` are still empty directories. Their language is fixed (TypeScript, Go, Kotlin) and their events are named in `CONTEXT.md`, but no code produces or consumes yet.
+- **Every edge is dashed.** This is the honest part most architecture diagrams hide: Phase 0 stood up four _isolated_ containers. Nothing flows between them until a service exists to do the producing and consuming. Each future epic flips a node — and its edges — from planned to live.
+
+## In this section
+
+- **[Infrastructure](/architecture/infrastructure)** — the four-piece Compose stack in detail: images, ports, and the reproducibility lessons learned standing it up.
+
+## The contracts the edges imply
+
+The dashed edges are not decoration — each is a decision already recorded:
+
+- `identity → Postgres` and `identity → Kafka` together are the **transactional outbox**: Postgres is canonical, and events flow out as a notification stream ([ADR-0003](https://github.com/nass59/pulse/blob/main/docs/adr/0003-hybrid-source-of-truth.md)).
+- `Apicurio → services` is **Avro schema resolution**: the registry enforces compatibility across the three languages ([ADR-0004](https://github.com/nass59/pulse/blob/main/docs/adr/0004-schema-strategy.md)).
+- `chat → Redis` is a **read projection** off the chat log, not a source of truth.
+
+<Sources adrs={[1, 2, 3, 5]} issues={["foundations/02-docker-compose"]} />
