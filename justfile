@@ -37,6 +37,10 @@ docs-dev:
 docs-build:
     bun --filter '@pulse/docs' build
 
+# Run Storybook (interactive components in isolation) on localhost:6006.
+docs-storybook:
+    bun --filter '@pulse/docs' storybook
+
 # Lint and format-check the workspace via Ultracite (Biome preset).
 lint:
     bunx ultracite check

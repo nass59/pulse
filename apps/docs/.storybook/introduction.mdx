@@ -1,0 +1,43 @@
+{/* introduction.mdx — sidebar landing page for the Pulse component workshop. */}
+
+import { Meta, Subtitle, Title } from "@storybook/addon-docs/blocks";
+
+<Meta title="Get started" />
+
+<Title>Pulse component workshop</Title>
+
+<Subtitle>The isolation lab for the docs site's interactive widgets.</Subtitle>
+
+This Storybook is the **isolation and documentation surface** for the widgets in
+`apps/docs/`. It is _not_ the docs site — it renders components in their own
+React harness, with controls and accessibility checks, so a single widget can be
+built and eyeballed without loading a whole content page.
+
+The site's MDX pages remain the **integration surface**, where the
+server-component-with-client-leaf pattern is proven against real content. See
+`docs/adr/0008-storybook-for-component-isolation.md` for why the two surfaces
+are kept separate.
+
+## What lives here
+
+- **UI primitives** — `Button` and `Card`, the shadcn-derived building blocks.
+  These are the most reused pieces, so their stories cover every variant.
+- **Interactive demos** — `MotionDemo` (a Motion animation) and `FlowDemo` (an
+  `@xyflow/react` graph). These exist to prove the `"use client"` leaf pattern
+  renders correctly in isolation.
+
+## Reading a component's docs
+
+Every component has an auto-generated **Docs** tab (via the `autodocs` tag in
+`.storybook/preview.tsx`) with a props table inferred from its TypeScript types.
+The page description is pulled from the JSDoc block above the component — so a
+well-documented component documents itself here for free.
+
+## Running it
+
+```sh
+just docs-storybook    # or, from apps/docs/: bun run storybook
+```
+
+Stories tagged `ai-generated` were scaffolded by the Storybook AI setup; treat
+them as a starting point, not gospel.
