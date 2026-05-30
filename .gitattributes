@@ -1,0 +1,33 @@
+# Default: normalize text files with LF
+* text=auto eol=lf
+
+# Source files
+*.{js,jsx,ts,tsx} text eol=lf
+*.{json,jsonc} text eol=lf
+*.{md,mdx} text eol=lf
+*.{yml,yaml} text eol=lf
+*.{css,scss} text eol=lf
+*.{html,xml,svg} text eol=lf
+
+# Config & env files
+.gitignore text eol=lf
+.editorconfig text eol=lf
+.prettierrc text eol=lf
+.eslintrc* text eol=lf
+*.config.{js,ts,mjs,cjs,mts,cts} text eol=lf
+*.{env,env.*} text eol=lf
+*.toml text eol=lf
+
+# Shell scripts
+*.{sh,bash} text eol=lf
+
+# Binary assets
+*.{png,jpg,jpeg,gif,ico,avif} binary
+*.{mov,mp4,mp3,flv,fla,swf} binary
+*.{gz,zip,7z} binary
+*.{ttf,otf,eot,woff,woff2} binary
+
+# Prevent normalization for certain binaries
+*.pdf -text
+*.exe -text
+*.dll -text

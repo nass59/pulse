@@ -15,6 +15,28 @@ just infra-ps   # all four should report (healthy)
 
 Tear it down with `just infra-down` (the Postgres named volume is preserved; add `-v` to the underlying `docker compose down` to wipe it).
 
+## Smoke test
+
+Prove the broker is reachable from the host before building anything on top of it. With infra up, use [`kcat`](https://github.com/edenhill/kcat) (`brew install kcat`) to round-trip a message through the `EXTERNAL://localhost:9092` listener:
+
+```bash
+# Produce (auto-creates the topic on first write)
+echo "hello pulse" | kcat -P -b localhost:9092 -t pulse.smoke.test
+
+# Consume from the start of the log, then exit at the end
+kcat -C -b localhost:9092 -t pulse.smoke.test -o beginning -e
+```
+
+The consume should print `hello pulse`. Reading does not remove the record — Kafka's log is append-only and retained, so `-o beginning` replays every message produced so far.
+
+Confirm the Apicurio schema registry is live:
+
+```bash
+curl http://localhost:8080/apis/registry/v2/system/info
+```
+
+It should return JSON with the registry name and version.
+
 ## Where to look first
 
 - **[`CONTEXT.md`](./CONTEXT.md)** — domain glossary, bounded contexts, source-of-truth model, schema strategy, chat topology.

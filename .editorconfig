@@ -1,0 +1,42 @@
+# EditorConfig helps developers define and maintain consistent coding styles
+
+# Root config
+root = true
+
+# Default for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Markdown files — allow trailing spaces (for line breaks)
+[*.md]
+trim_trailing_whitespace = false
+
+# JSON, YAML, and config files
+[*.{json,jsonc,yml,yaml,toml}]
+indent_style = space
+indent_size = 2
+
+# TypeScript & JavaScript
+[*.{ts,tsx,js,jsx}]
+indent_style = space
+indent_size = 2
+
+# CSS & SCSS
+[*.{css,scss}]
+indent_style = space
+indent_size = 2
+
+# HTML & XML
+[*.{html,xml}]
+indent_style = space
+indent_size = 2
+
+# Package.json — keep 2 spaces for npm/pnpm consistency
+[package.json]
+indent_style = space
+indent_size = 2
