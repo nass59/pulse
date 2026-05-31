@@ -6,11 +6,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/**
+ * DevLab design tokens.
+ *
+ * DevLab is the developer-facing design language of Pulse: warm carbon
+ * neutrals, one electric-yellow accent, Spline Sans + JetBrains Mono, pill
+ * buttons, and the signature yellow glow on dark. Every hex/rgba value from the
+ * source `colors_and_type.css` is converted to oklch so the whole system lives
+ * in one colour space (ADR-0009). The DevLab values are mapped onto shadcn's
+ * semantic token names below, so existing shadcn components reskin for free;
+ * the raw brand tokens are also exposed via `@theme` for direct use.
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -50,73 +61,113 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/**
+ * Raw DevLab brand tokens — available as Tailwind utilities
+ * (e.g. `text-olive`, `bg-electric-yellow`, `shadow-glow-md`, `rounded-pill`).
+ */
+@theme {
+  --color-electric-yellow: oklch(0.9424 0.2032 108.53);
+  --color-yellow-ink: oklch(0.2065 0.0133 107.51);
+  --color-yellow-tint: oklch(0.9853 0.0365 103.71);
+
+  --color-carbon-900: oklch(0.1776 0 89.88);
+  --color-carbon-850: oklch(0.1986 0.0078 107.09);
+  --color-carbon-800: oklch(0.2065 0.0133 107.51);
+  --color-carbon-750: oklch(0.2178 0 89.88);
+  --color-carbon-700: oklch(0.2829 0.0107 107.06);
+  --color-carbon-600: oklch(0.3181 0.0155 107.25);
+
+  --color-paper-0: oklch(1 0 89.88);
+  --color-paper-50: oklch(0.9783 0.004 106.47);
+  --color-paper-100: oklch(0.9688 0.0066 106.52);
+  --color-paper-200: oklch(0.9205 0.0067 106.53);
+
+  --color-olive: oklch(0.6264 0.0617 106.95);
+
+  --color-accent-blue: oklch(0.6231 0.188 259.81);
+  --color-accent-purple: oklch(0.6268 0.2325 303.9);
+  --color-accent-green: oklch(0.7227 0.192 149.58);
+  --color-accent-orange: oklch(0.7049 0.1867 47.6);
+  --color-syntax-purple: oklch(0.8005 0.1275 305.86);
+  --color-syntax-green: oklch(0.4391 0.1179 148.07);
+
+  /* The signature yellow glow — depth-as-light on the dark "lab" surface. */
+  --shadow-glow-sm: 0 0 15px oklch(0.9424 0.2032 108.53 / 0.3);
+  --shadow-glow-md: 0 0 15px oklch(0.9424 0.2032 108.53 / 0.5);
+  --shadow-glow-lg: 0 0 30px oklch(0.9424 0.2032 108.53 / 0.4);
+
+  --radius-pill: 9999px;
 }
 
+/* ---------- SEMANTIC: LIGHT THEME (default — paper editorial) ---------- */
+:root {
+  --background: oklch(0.9783 0.004 106.47); /* paper-50 */
+  --foreground: oklch(0.2065 0.0133 107.51); /* carbon-800 ink */
+  --card: oklch(1 0 89.88); /* paper-0 */
+  --card-foreground: oklch(0.2065 0.0133 107.51);
+  --popover: oklch(1 0 89.88);
+  --popover-foreground: oklch(0.2065 0.0133 107.51);
+  --primary: oklch(0.9424 0.2032 108.53); /* electric-yellow */
+  --primary-foreground: oklch(0.2065 0.0133 107.51); /* yellow-ink */
+  --secondary: oklch(0.9688 0.0066 106.52); /* paper-100 */
+  --secondary-foreground: oklch(0.2065 0.0133 107.51);
+  --muted: oklch(0.9688 0.0066 106.52);
+  --muted-foreground: oklch(0.6264 0.0617 106.95); /* olive — captions/meta */
+  --accent: oklch(0.9688 0.0066 106.52);
+  --accent-foreground: oklch(0.2065 0.0133 107.51);
+  --destructive: oklch(0.5771 0.2152 27.33);
+  --border: oklch(0.9205 0.0067 106.53); /* paper-200 warm */
+  --input: oklch(0.9205 0.0067 106.53);
+  --ring: oklch(0.9424 0.2032 108.53); /* yellow focus ring */
+  --chart-1: oklch(0.9424 0.2032 108.53);
+  --chart-2: oklch(0.6231 0.188 259.81);
+  --chart-3: oklch(0.6268 0.2325 303.9);
+  --chart-4: oklch(0.7227 0.192 149.58);
+  --chart-5: oklch(0.7049 0.1867 47.6);
+  --radius: 0.625rem; /* 10px — matches DevLab --r-md */
+  --sidebar: oklch(1 0 89.88);
+  --sidebar-foreground: oklch(0.2065 0.0133 107.51);
+  --sidebar-primary: oklch(0.9424 0.2032 108.53);
+  --sidebar-primary-foreground: oklch(0.2065 0.0133 107.51);
+  --sidebar-accent: oklch(0.9688 0.0066 106.52);
+  --sidebar-accent-foreground: oklch(0.2065 0.0133 107.51);
+  --sidebar-border: oklch(0.9205 0.0067 106.53);
+  --sidebar-ring: oklch(0.9424 0.2032 108.53);
+}
+
+/* ---------- SEMANTIC: DARK THEME (the "lab" — where the glow lives) ---------- */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.1776 0 89.88); /* carbon-900 */
+  --foreground: oklch(1 0 89.88); /* white */
+  --card: oklch(0.1986 0.0078 107.09); /* carbon-850 */
+  --card-foreground: oklch(1 0 89.88);
+  --popover: oklch(0.1986 0.0078 107.09);
+  --popover-foreground: oklch(1 0 89.88);
+  --primary: oklch(0.9424 0.2032 108.53);
+  --primary-foreground: oklch(0.2065 0.0133 107.51);
+  --secondary: oklch(0.2829 0.0107 107.06); /* carbon-700 */
+  --secondary-foreground: oklch(1 0 89.88);
+  --muted: oklch(0.2178 0 89.88); /* carbon-750 */
+  --muted-foreground: oklch(0.6264 0.0617 106.95); /* olive */
+  --accent: oklch(0.2829 0.0107 107.06);
+  --accent-foreground: oklch(1 0 89.88);
+  --destructive: oklch(0.5771 0.2152 27.33);
+  --border: oklch(0.3181 0.0155 107.25); /* carbon-600 warm */
+  --input: oklch(0.3181 0.0155 107.25);
+  --ring: oklch(0.9424 0.2032 108.53);
+  --chart-1: oklch(0.9424 0.2032 108.53);
+  --chart-2: oklch(0.6231 0.188 259.81);
+  --chart-3: oklch(0.6268 0.2325 303.9);
+  --chart-4: oklch(0.7227 0.192 149.58);
+  --chart-5: oklch(0.7049 0.1867 47.6);
+  --sidebar: oklch(0.1986 0.0078 107.09);
+  --sidebar-foreground: oklch(1 0 89.88);
+  --sidebar-primary: oklch(0.9424 0.2032 108.53);
+  --sidebar-primary-foreground: oklch(0.2065 0.0133 107.51);
+  --sidebar-accent: oklch(0.2829 0.0107 107.06);
+  --sidebar-accent-foreground: oklch(1 0 89.88);
+  --sidebar-border: oklch(0.3181 0.0155 107.25);
+  --sidebar-ring: oklch(0.9424 0.2032 108.53);
 }
 
 @layer base {
@@ -128,5 +179,83 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/**
+ * DevLab semantic text roles. Headings are bold with tight negative tracking
+ * for the dense, engineered feel; eyebrows and labels are uppercase mono.
+ */
+@layer components {
+  .ds-eyebrow {
+    @apply font-mono font-medium text-muted-foreground text-xs uppercase tracking-[0.12em];
+  }
+  .ds-hero {
+    text-wrap: balance;
+    @apply font-bold text-5xl text-foreground leading-[1.05] tracking-[-0.03em];
+  }
+
+  /* The highlighter "swipe" behind hero words — solid yellow, ink text. */
+  .ds-mark {
+    background: var(--color-electric-yellow);
+    color: var(--color-yellow-ink);
+    padding: 0 0.12em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* Faint dotted "stage" texture for dark live-component backdrops. */
+  .ds-stage {
+    background-color: oklch(0 0 0);
+    background-image: radial-gradient(oklch(1 0 0 / 0.05) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}
+
+/**
+ * Editorial prose, tuned to DevLab. Body settles in warm grey; headings carry
+ * the tight tracking; links underline on the yellow accent; inline code is
+ * mono on a subtle tint (fenced blocks render through the CodeBlock component).
+ */
+@layer base {
+  .prose {
+    --tw-prose-body: oklch(0.4461 0.0263 256.8); /* gray-600 */
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-links: var(--foreground);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--color-olive);
+    --tw-prose-bullets: var(--border);
+    --tw-prose-hr: var(--border);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--color-electric-yellow);
+    --tw-prose-captions: var(--color-olive);
+    --tw-prose-code: var(--foreground);
+    font-size: 0.9375rem;
+  }
+  .dark .prose {
+    --tw-prose-body: oklch(0.8717 0.0093 258.34); /* gray-300 */
+    --tw-prose-headings: oklch(1 0 89.88);
+    --tw-prose-links: oklch(1 0 89.88);
+    --tw-prose-bold: oklch(1 0 89.88);
+  }
+  .prose :where(h1, h2, h3):not(:where([class~="not-prose"] *)) {
+    letter-spacing: -0.025em;
+  }
+  /* Inline code only — fenced blocks render through the CodeBlock component. */
+  .prose :where(code):not(:where([class~="not-prose"] *, pre code)) {
+    padding: 0.12em 0.35em;
+    font-weight: 500;
+    color: var(--foreground);
+    background: var(--muted);
+    border-radius: var(--radius-sm);
+  }
+  .prose :where(code):not(:where([class~="not-prose"] *, pre code))::before,
+  .prose :where(code):not(:where([class~="not-prose"] *, pre code))::after {
+    content: none;
+  }
+  .prose :where(a):not(:where([class~="not-prose"] *)) {
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--color-electric-yellow);
+    text-underline-offset: 3px;
   }
 }

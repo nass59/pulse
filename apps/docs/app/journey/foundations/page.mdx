@@ -31,7 +31,7 @@ Plus the `kcat` vocabulary itself — `-P`/`-C`/`-b`/`-t` — the universal Kafk
 
 Two of the most valuable lessons in Phase 0 weren't planned — they were forced by the supply chain shifting under the stack. Both failed *silently*: `docker pull` happily fetched something, and the breakage only surfaced at runtime. They are the reason the Compose file is treated as a reproducibility contract.
 
-<Callout variant="warning" title="Bitnami vanished — swapped to apache/kafka">
+<Callout variant="lesson" title="Bitnami vanished — swapped to apache/kafka">
   The stack originally used `bitnami/kafka`. In August 2025 Broadcom moved
   Bitnami's free images behind paid "Bitnami Secure Images," so the pull broke.
   The fix was to move to Apache's own official `apache/kafka:4.3.0` — which also
@@ -40,7 +40,7 @@ Two of the most valuable lessons in Phase 0 weren't planned — they were forced
   templating (`KAFKA_NODE_ID`, not `KAFKA_CFG_NODE_ID`).
 </Callout>
 
-<Callout variant="warning" title="Apicurio -mem deleted in v3 — pinned to v2.6.x">
+<Callout variant="lesson" title="Apicurio -mem deleted in v3 — pinned to v2.6.x">
   Apicurio 3.x removed the in-memory storage backend entirely. The clean-looking
   "upgrade" boots into a broken half-state: `APICURIO_STORAGE_KIND=mem` is no
   longer a valid value. The `-mem` image is a v2-only thing, so the version is

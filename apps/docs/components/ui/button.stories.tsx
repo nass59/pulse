@@ -72,12 +72,12 @@ export const CssCheck: Story = {
   play: async ({ canvas }) => {
     const button = canvas.getByRole("button", { name: "Submit" });
     /**
-     * The base button class carries `rounded-lg`, which resolves to
-     * var(--radius-lg) → var(--radius) → 0.625rem → 10px. A concrete computed
-     * value is the only proof that Tailwind compiled AND the shadcn theme
-     * variables from globals.css actually loaded into the preview — toBeVisible
-     * would pass even on a completely unstyled button.
+     * DevLab buttons are stadium-shaped: the base class carries `rounded-pill`,
+     * which resolves to var(--radius-pill) → 9999px. A concrete computed value
+     * is the only proof that Tailwind compiled AND the DevLab theme variables
+     * from globals.css actually loaded into the preview — toBeVisible would pass
+     * even on a completely unstyled button.
      */
-    await expect(getComputedStyle(button).borderRadius).toBe("10px");
+    await expect(getComputedStyle(button).borderRadius).toBe("9999px");
   },
 };

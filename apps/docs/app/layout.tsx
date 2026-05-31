@@ -1,15 +1,38 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
+
+import { Footer } from "@/components/docs/footer";
+import { Header } from "@/components/docs/header";
+import { ThemeScript, ThemeToggle } from "@/components/docs/theme-toggle";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+/**
+ * DevLab's two typefaces, self-hosted as variable fonts (the brand files
+ * shipped in the design bundle). Spline Sans carries all prose and UI;
+ * JetBrains Mono carries code, eyebrows, labels, and numeric data.
+ */
+const splineSans = localFont({
+  src: "./fonts/SplineSans-VariableFont_wght.ttf",
+  variable: "--font-sans",
+  weight: "300 700",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const jetbrainsMono = localFont({
+  src: [
+    {
+      path: "./fonts/JetBrainsMono-VariableFont_wght.ttf",
+      style: "normal",
+      weight: "100 800",
+    },
+    {
+      path: "./fonts/JetBrainsMono-Italic-VariableFont_wght.ttf",
+      style: "italic",
+      weight: "100 800",
+    },
+  ],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -24,15 +47,22 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${splineSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
       lang="en"
+      suppressHydrationWarning
     >
+      <head>
+        <ThemeScript />
+      </head>
       <body className="flex min-h-full flex-col">
-        <main className="mx-auto w-full max-w-3xl px-6 py-12">
-          <article className="prose prose-slate dark:prose-invert">
+        <Header />
+        <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
+          <article className="prose prose-slate dark:prose-invert max-w-none">
             {children}
           </article>
         </main>
+        <Footer />
+        <ThemeToggle />
       </body>
     </html>
   );

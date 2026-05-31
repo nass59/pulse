@@ -31,6 +31,10 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0008-storybook-for-component-isolation",
     title: "Storybook for component isolation",
   },
+  9: {
+    slug: "0009-devlab-design-system",
+    title: "DevLab design system",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");
@@ -44,24 +48,26 @@ interface SourcesProps {
 
 export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
   <aside
-    className={cn("not-prose mt-12 rounded-lg border bg-muted/30 p-4 text-sm")}
+    className={cn(
+      "not-prose mt-12 rounded-2xl border border-border bg-card p-5 text-sm"
+    )}
   >
-    <p className="font-medium">Sources</p>
-    <p className="mt-1 text-muted-foreground text-xs">
+    <p className="ds-eyebrow">Sources</p>
+    <p className="mt-2 text-muted-foreground text-xs leading-relaxed">
       A derived study artifact. The canonical decisions live in the ADRs below;
       this page only translates them.
     </p>
 
     {adrs.length > 0 && (
-      <div className="mt-3">
-        <span className="text-muted-foreground text-xs">ADRs</span>
-        <ul className="mt-1 flex flex-col gap-1">
+      <div className="mt-4">
+        <span className="ds-eyebrow text-[10px]">ADRs</span>
+        <ul className="mt-1.5 flex flex-col gap-1">
           {adrs.map((n) => {
             const adr = ADR_INDEX[n];
             return (
               <li key={n}>
                 <a
-                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  className="font-medium text-foreground underline decoration-2 decoration-electric-yellow underline-offset-2 hover:decoration-[3px]"
                   href={`${ADR_BLOB_BASE}/${adr?.slug ?? pad(n)}.md`}
                   rel="noreferrer"
                   target="_blank"
@@ -79,14 +85,14 @@ export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
     )}
 
     {issues.length > 0 && (
-      <div className="mt-3">
-        <span className="text-muted-foreground text-xs">
+      <div className="mt-4">
+        <span className="ds-eyebrow text-[10px]">
           Issues (local-only tracker)
         </span>
-        <ul className="mt-1 flex flex-wrap gap-1.5">
+        <ul className="mt-1.5 flex flex-wrap gap-1.5">
           {issues.map((issue) => (
             <li
-              className="rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs"
+              className="rounded-pill border border-border bg-muted px-2.5 py-0.5 font-mono text-muted-foreground text-xs"
               key={issue}
             >
               {issue}

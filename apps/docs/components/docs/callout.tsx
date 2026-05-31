@@ -1,35 +1,57 @@
+import type { LucideIcon } from "lucide-react";
+import { Gauge, Info, Lightbulb, Sparkles, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
 /**
- * A boxed aside for the three recurring shapes of note in the docs: a neutral
- * framing note, an operational warning, and a "footgun in production" flag. No
- * icon library dependency — a coloured rail and a label carry the variant.
+ * A boxed aside, rendered in DevLab's callout language: a tinted box, a 1px
+ * border, a line icon, and a mono UPPERCASE label naming the *kind* of
+ * knowledge. The variant taxonomy is Pulse-tuned — DevLab's visual grammar
+ * carrying distributed-systems semantics rather than its frontend-flavoured
+ * defaults (ADR-0009):
+ *
+ * - `note`    — neutral framing aside (the default)
+ * - `key`     — the central idea of the page (Key Concept)
+ * - `perf`    — a tuning / throughput consideration (Performance Note)
+ * - `lesson`  — the why-trail, a lesson the build taught (Lesson Learned)
+ * - `footgun` — the thing that bites you in production (Footgun in Production)
  */
-type Variant = "note" | "warning" | "footgun";
+type Variant = "note" | "key" | "perf" | "lesson" | "footgun";
 
 const VARIANTS: Record<
   Variant,
-  { rail: string; tint: string; label: string; labelColor: string }
+  { icon: LucideIcon; label: string; box: string; accent: string }
 > = {
   note: {
-    rail: "border-l-sky-400",
-    tint: "bg-sky-50",
+    icon: Info,
     label: "Note",
-    labelColor: "text-sky-700",
+    box: "border-border bg-muted/40",
+    accent: "text-foreground/70",
   },
-  warning: {
-    rail: "border-l-amber-400",
-    tint: "bg-amber-50",
-    label: "Lesson learned",
-    labelColor: "text-amber-700",
+  key: {
+    icon: Lightbulb,
+    label: "Key Concept",
+    box: "border-electric-yellow/40 bg-yellow-tint dark:border-electric-yellow/20 dark:bg-electric-yellow/[0.06]",
+    accent: "text-yellow-ink dark:text-electric-yellow",
+  },
+  perf: {
+    icon: Gauge,
+    label: "Performance Note",
+    box: "border-border bg-muted/50",
+    accent: "text-olive",
+  },
+  lesson: {
+    icon: Sparkles,
+    label: "Lesson Learned",
+    box: "border-electric-yellow/40 bg-yellow-tint dark:border-electric-yellow/20 dark:bg-electric-yellow/[0.06]",
+    accent: "text-yellow-ink dark:text-electric-yellow",
   },
   footgun: {
-    rail: "border-l-red-400",
-    tint: "bg-red-50",
-    label: "Footgun in production",
-    labelColor: "text-red-700",
+    icon: TriangleAlert,
+    label: "Footgun in Production",
+    box: "border-destructive/30 bg-destructive/[0.05] dark:bg-destructive/[0.1]",
+    accent: "text-destructive",
   },
 };
 
@@ -46,24 +68,27 @@ export const Callout = ({
   children,
 }: CalloutProps) => {
   const v = VARIANTS[variant];
+  const Icon = v.icon;
   return (
     <div
       className={cn(
-        "not-prose my-5 rounded-r-lg border border-l-4 p-4",
-        v.rail,
-        v.tint
+        "not-prose my-6 flex gap-3.5 rounded-2xl border p-5",
+        v.box
       )}
     >
-      <p
-        className={cn(
-          "font-semibold text-xs uppercase tracking-wide",
-          v.labelColor
-        )}
-      >
-        {title ?? v.label}
-      </p>
-      <div className="mt-1.5 text-foreground/90 text-sm [&>p:first-child]:mt-0 [&>p]:mt-2">
-        {children}
+      <Icon className={cn("mt-0.5 size-5 shrink-0", v.accent)} />
+      <div>
+        <p
+          className={cn(
+            "font-medium font-mono text-xs uppercase tracking-[0.08em]",
+            v.accent
+          )}
+        >
+          {title ?? v.label}
+        </p>
+        <div className="mt-2 text-foreground/90 text-sm leading-relaxed [&>p:first-child]:mt-0 [&>p]:mt-2">
+          {children}
+        </div>
       </div>
     </div>
   );
