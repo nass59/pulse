@@ -6,7 +6,11 @@ export const metadata = {
 
 # Healthchecks
 
-A Docker **healthcheck** is a command the container runs on a schedule to answer one question: *is this service actually able to do its job right now?* Not "is the process running" — Docker already knows that — but "can it serve." All four pieces of Pulse's infrastructure declare one:
+> **Why you'll hit this:** a service that's "started" isn't always "ready." Tell the next service to wait for the wrong one and your stack races itself on boot.
+
+Think of opening a restaurant. The lights are on and the door's unlocked (*the process is running*) — but the ovens are still cold and nobody's prepped. You don't want diners walking in yet. A Docker **healthcheck** is the chef sticking their head out to say "actually ready now."
+
+It's a command the container runs on a schedule to answer one question: *can this service actually do its job right now?* Not "is the process up" — Docker already knows that — but "can it serve." All four pieces of Pulse's infrastructure declare one:
 
 | Service | Probe | What it proves |
 |---|---|---|
@@ -22,6 +26,8 @@ The distinction matters because a process can be *up* long before it is *useful*
 Here is the subtlety that bites everyone once. A healthcheck has an `interval`, a `timeout`, and a `retries` count — fail `retries` times in a row and the container is marked `unhealthy`. But a slow-booting service will *legitimately* fail its first few probes while it is still coming up. Without protection, a normal boot looks like a failure.
 
 `start_period` is that protection. It defines a grace window after start during which **failing probes do not count toward `retries`**. The probe still runs; a failure just doesn't accrue. Once the service passes once, or the window expires, normal counting begins.
+
+<HealthcheckTimeline />
 
 ```yaml
 healthcheck:

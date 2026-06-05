@@ -6,7 +6,9 @@ export const metadata = {
 
 # Auto topic creation
 
-The very first smoke test against Pulse's Kafka produced a message to a topic that did not exist:
+> **Why you'll hit this:** your first `kcat` produce works against a topic you never created — which feels magical until the same magic eats a typo in production.
+
+It's the autocorrect of Kafka. Type a topic name that doesn't exist and the broker helpfully conjures one for you — wonderful when you mean it, quietly destructive when you don't. The very first smoke test against Pulse's Kafka produced a message to a topic that did not exist:
 
 ```bash
 echo "hello pulse" | kcat -P -b localhost:9092 -t pulse.smoke.test
@@ -15,6 +17,8 @@ echo "hello pulse" | kcat -P -b localhost:9092 -t pulse.smoke.test
 No "create topic" step ran first — and yet the consume side read it straight back. That works because the broker default `auto.create.topics.enable=true` makes a produce (or a metadata request) to an unknown topic **silently create it** with the cluster's default partition count and replication factor.
 
 Locally this is exactly what you want: one fewer ceremony between you and a working pipeline. You are exploring, and the broker gets out of your way.
+
+<AutoTopicFlow />
 
 <Callout variant="footgun">
   In production, the same convenience is a liability. A typo in a topic name —

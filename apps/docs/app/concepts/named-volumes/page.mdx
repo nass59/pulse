@@ -6,7 +6,9 @@ export const metadata = {
 
 # Named volumes
 
-A container's own filesystem is **ephemeral**: remove the container and everything written inside it is gone. That is the right default for a stateless service, and a disaster for a database. Pulse's Postgres keeps its data across restarts because of one line:
+> **Why you'll hit this:** restart your stack the naive way and your database comes back empty. One line in the Compose file is the difference.
+
+A container is like a hotel room. Live there a while, then check out, and housekeeping wipes it clean for the next guest — a container's own filesystem is **ephemeral**, so removing the container takes everything inside with it. Perfect for a stateless service; a disaster for a database. A **named volume** is the safe-deposit box at the front desk: it doesn't belong to your room, so it survives the checkout. Pulse's Postgres keeps its data across restarts because of one line:
 
 ```yaml
 postgres:
@@ -23,6 +25,8 @@ volumes:
 A **named volume** is storage that Docker manages on the host, *outside* any single container's lifecycle. `postgres_data:/var/lib/postgresql/data` mounts that managed storage at the path where Postgres keeps its files. The container can come and go; the volume persists, and the next Postgres container mounts the same data.
 
 The payoff is concrete: `docker compose down` removes the containers but **leaves named volumes intact**, so your data survives. You only lose it if you explicitly ask, with `docker compose down -v`. That `-v` is the line between "restart the stack" and "wipe the database" — worth committing to muscle memory.
+
+<VolumePersistence />
 
 ## Named volume vs bind mount
 

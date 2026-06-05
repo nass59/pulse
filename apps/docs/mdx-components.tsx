@@ -2,6 +2,11 @@ import type { MDXComponents } from "mdx/types";
 
 import { Callout } from "@/components/docs/callout";
 import { CodeBlock } from "@/components/docs/code-block";
+import {
+  AutoTopicFlow,
+  HealthcheckTimeline,
+  VolumePersistence,
+} from "@/components/docs/diagram";
 import { Eyebrow } from "@/components/docs/eyebrow";
 import { Sources } from "@/components/docs/sources";
 import { Tag } from "@/components/docs/tag";
@@ -19,11 +24,14 @@ import { SystemTopology } from "@/components/interactive/system-topology";
  */
 const components: MDXComponents = {
   pre: CodeBlock,
+  AutoTopicFlow,
   Callout,
   CodeBlock,
   Eyebrow,
+  HealthcheckTimeline,
   Sources,
   Tag,
+  VolumePersistence,
   KraftControllerElection,
   SystemTopology,
 };

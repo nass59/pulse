@@ -6,11 +6,11 @@ export const metadata = {
 
 # Architecture
 
-Pulse is a **control-plane** system: everything _around_ the stream — accounts, follows, chat, presence, analytics — is event-driven, with Kafka as the backbone. The video and audio bytes travel a separate **media plane** that never touches Kafka ([ADR-0001](https://github.com/nass59/pulse/blob/main/docs/adr/0001-media-plane-outside-kafka.md)); it is deliberately absent from the topology below.
+Here's the whole system in one breath: Pulse is a **control-plane** — everything that happens _around_ a stream (accounts, follows, chat, presence, analytics) is event-driven, with Kafka as the backbone. The actual video and audio? Those bytes take a different road entirely — the **media plane** — and never touch Kafka. That's why you won't see them in the diagram below.
 
 ## System topology
 
-Three services, deliberately polyglot to force real wire contracts ([ADR-0002](https://github.com/nass59/pulse/blob/main/docs/adr/0002-polyglot-three-services.md)), sit on top of four infrastructure pieces. The diagram encodes **build state** honestly: the infrastructure runs today; the services are designed but not yet built.
+Three services, deliberately written in three different languages so the contracts between them have to be _real_, sit on top of four infrastructure pieces. The diagram is honest about **build state**: the infrastructure runs today; the services are designed but not yet built.
 
 <SystemTopology />
 
@@ -26,10 +26,10 @@ What this diagram is telling you, read carefully:
 
 ## The contracts the edges imply
 
-The dashed edges are not decoration — each is a decision already recorded:
+The dashed edges aren't decoration — each one is a decision already made:
 
-- `identity → Postgres` and `identity → Kafka` together are the **transactional outbox**: Postgres is canonical, and events flow out as a notification stream ([ADR-0003](https://github.com/nass59/pulse/blob/main/docs/adr/0003-hybrid-source-of-truth.md)).
-- `Apicurio → services` is **Avro schema resolution**: the registry enforces compatibility across the three languages ([ADR-0004](https://github.com/nass59/pulse/blob/main/docs/adr/0004-schema-strategy.md)).
-- `chat → Redis` is a **read projection** off the chat log, not a source of truth.
+- `identity → Postgres` and `identity → Kafka` together are the **transactional outbox**: Postgres holds the truth, and events flow out as a notification stream rather than the source of record.
+- `Apicurio → services` is **Avro schema resolution**: the registry is the referee that keeps all three languages agreeing on the shape of every event.
+- `chat → Redis` is a **read projection** off the chat log — a fast cache for the UI, never the source of truth.
 
-<Sources adrs={[1, 2, 3, 5]} issues={["foundations/02-docker-compose"]} />
+<Sources adrs={[1, 2, 3, 4, 5]} issues={["foundations/02-docker-compose"]} />

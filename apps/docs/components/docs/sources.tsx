@@ -47,59 +47,70 @@ interface SourcesProps {
 }
 
 export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
-  <aside
+  <details
     className={cn(
-      "not-prose mt-12 rounded-2xl border border-border bg-card p-5 text-sm"
+      "not-prose group mt-14 rounded-2xl border border-border bg-card/60 text-sm"
     )}
   >
-    <p className="ds-eyebrow">Sources</p>
-    <p className="mt-2 text-muted-foreground text-xs leading-relaxed">
-      A derived study artifact. The canonical decisions live in the ADRs below;
-      this page only translates them.
-    </p>
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-3.5 text-muted-foreground hover:text-foreground">
+      <span className="ds-eyebrow">Sources &amp; provenance</span>
+      <span className="font-mono text-[11px] transition-transform group-open:rotate-90">
+        ›
+      </span>
+    </summary>
+    <div className="px-5 pb-5">
+      <p className="text-muted-foreground text-xs leading-relaxed">
+        This page is a study artifact — it translates decisions recorded
+        elsewhere in the repo. The canonical write-ups live below; when they
+        disagree with this page, they win.
+      </p>
 
-    {adrs.length > 0 && (
-      <div className="mt-4">
-        <span className="ds-eyebrow text-[10px]">ADRs</span>
-        <ul className="mt-1.5 flex flex-col gap-1">
-          {adrs.map((n) => {
-            const adr = ADR_INDEX[n];
-            return (
-              <li key={n}>
-                <a
-                  className="font-medium text-foreground underline decoration-2 decoration-electric-yellow underline-offset-2 hover:decoration-[3px]"
-                  href={`${ADR_BLOB_BASE}/${adr?.slug ?? pad(n)}.md`}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  ADR-{pad(n)}
-                </a>
-                {adr ? (
-                  <span className="text-muted-foreground"> — {adr.title}</span>
-                ) : null}
+      {adrs.length > 0 && (
+        <div className="mt-4">
+          <span className="ds-eyebrow text-[10px]">ADRs</span>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {adrs.map((n) => {
+              const adr = ADR_INDEX[n];
+              return (
+                <li key={n}>
+                  <a
+                    className="font-medium text-foreground underline decoration-2 decoration-electric-yellow underline-offset-2 hover:decoration-[3px]"
+                    href={`${ADR_BLOB_BASE}/${adr?.slug ?? pad(n)}.md`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    ADR-{pad(n)}
+                  </a>
+                  {adr ? (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {adr.title}
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {issues.length > 0 && (
+        <div className="mt-4">
+          <span className="ds-eyebrow text-[10px]">
+            Issues (local-only tracker)
+          </span>
+          <ul className="mt-1.5 flex flex-wrap gap-1.5">
+            {issues.map((issue) => (
+              <li
+                className="rounded-pill border border-border bg-muted px-2.5 py-0.5 font-mono text-muted-foreground text-xs"
+                key={issue}
+              >
+                {issue}
               </li>
-            );
-          })}
-        </ul>
-      </div>
-    )}
-
-    {issues.length > 0 && (
-      <div className="mt-4">
-        <span className="ds-eyebrow text-[10px]">
-          Issues (local-only tracker)
-        </span>
-        <ul className="mt-1.5 flex flex-wrap gap-1.5">
-          {issues.map((issue) => (
-            <li
-              className="rounded-pill border border-border bg-muted px-2.5 py-0.5 font-mono text-muted-foreground text-xs"
-              key={issue}
-            >
-              {issue}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </aside>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </details>
 );

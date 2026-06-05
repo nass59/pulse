@@ -6,7 +6,9 @@ export const metadata = {
 
 # Concepts
 
-The distributed-systems ideas the build forces you to confront, one page each. Phase 0 (foundations) stood up the infrastructure substrate, so the first concepts are about _running Kafka and its neighbours_ — not yet about events flowing through them.
+The distributed-systems ideas the build keeps shoving in your face — one page each, explained the way a friend would over coffee, with a diagram instead of a wall of text wherever one earns its place.
+
+Phase 0 (foundations) stood up the infrastructure substrate, so these first few are about _running Kafka and its neighbours_ — keeping them alive, not yet pushing events through them. The juicier stuff (partitions, consumer groups, the log itself) lands as the services that need it get built.
 
 - **[KRaft mode](/concepts/kraft-mode)** — Kafka without ZooKeeper; how a single broker elects itself controller, and why that takes a moment. _Interactive._
 - **[Healthchecks](/concepts/healthchecks)** — what "healthy" means in Compose, and the `start_period` that keeps a slow-booting service from flapping.

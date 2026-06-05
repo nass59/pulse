@@ -39,7 +39,7 @@ A few non-obvious choices, each recorded rather than guessed:
 - **KRaft over ZooKeeper.** `KAFKA_PROCESS_ROLES: broker,controller` runs both roles in one process — see [KRaft mode](/concepts/kraft-mode).
 - **Apicurio `-mem`, pinned to `2.6.x`.** The in-memory registry is right for local dev; the version pin is load-bearing for a reason covered in the [foundations journey](/journey/foundations).
 - **Apache's Kafka image, not a vendor distro.** Also a story with a sharp edge — see the journey page.
-- **`just` as the entry point.** `just infra-up` wraps the Compose command; the root `justfile` is the documented front door for cross-service workflows ([ADR-0005](https://github.com/nass59/pulse/blob/main/docs/adr/0005-monorepo-orchestration.md)).
+- **`just` as the entry point.** `just infra-up` wraps the Compose command; the root `justfile` is the documented front door for cross-service workflows.
 
 <Sources
   adrs={[5]}

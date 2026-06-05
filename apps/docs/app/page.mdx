@@ -1,30 +1,33 @@
+import { FullBleed } from "@/components/docs/full-bleed";
+import { ConceptRoadmap } from "@/components/home/concept-roadmap";
+import { FirehoseSection } from "@/components/home/firehose-section";
+import { Hero } from "@/components/home/hero";
+import { Tiers } from "@/components/home/tiers";
+
 export const metadata = {
-  title: "Pulse docs",
+  title: "Pulse — learn Kafka by building the system that needs it",
   description:
-    "A derived study artifact for the Pulse Kafka-learning project — concepts, architecture, and the build journey.",
+    "A friendly, diagram-first read of Pulse: a Twitch-style livestream platform built to learn Kafka and distributed-systems architecture, one lesson at a time.",
 };
 
-<Eyebrow>Pulse · Study Artifact</Eyebrow>
+<FullBleed>
+  <Hero />
+</FullBleed>
 
-# Pulse
+<FirehoseSection />
 
-Pulse is a Twitch-style livestream platform built as a vehicle for learning <span className="ds-mark">Kafka</span> and **distributed-systems architecture** deeply. These docs are the tutorial-shaped read of the system: what was built, why, and the concepts each decision teaches. They are organised in three tiers.
+<FullBleed>
+  <ConceptRoadmap />
+</FullBleed>
 
-**[Concepts →](/concepts)**
-The distributed-systems ideas the build forces you to confront — KRaft, healthchecks, auto-topic-creation, named volumes — one page each.
-
-**[Architecture →](/architecture)**
-The system topology and the infrastructure substrate. What runs, what talks to what, and what is still on the drawing board.
-
-**[Journey →](/journey/foundations)**
-Progress by phase and epic: lessons unlocked, issues closed, and the war stories worth remembering.
+<FullBleed>
+  <Tiers />
+</FullBleed>
 
 <Callout variant="note" title="This is a study artifact">
-  These pages are **downstream** of the canonical sources — the Architecture
-  Decision Records in `docs/adr/` and the domain glossary in `CONTEXT.md`. When
-  this site disagrees with an ADR, the ADR wins and the site is wrong. Nothing
-  here invents architecture; it translates decisions that were already made and
-  recorded. See
-  [ADR-0007](https://github.com/nass59/pulse/blob/main/docs/adr/0007-docs-site-as-study-artifact.md)
-  for why the site exists and why it is deliberately not a source of truth.
+  These pages are the *friendly* read of Pulse — they translate decisions made
+  and recorded elsewhere in the repo. They aim to teach, not to be the final
+  word: when a page disagrees with the canonical write-ups, the write-ups win.
+  Every page keeps a collapsed **Sources** trail at the bottom if you want to dig
+  to the original reasoning.
 </Callout>
