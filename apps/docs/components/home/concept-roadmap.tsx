@@ -1,11 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
-import {
-  COMING_CONCEPTS,
-  type Concept,
-  LIVE_CONCEPTS,
-} from "@/lib/concepts";
+import { COMING_CONCEPTS, type Concept, LIVE_CONCEPTS } from "@/lib/concepts";
 import { cn } from "@/lib/utils";
 
 /**
