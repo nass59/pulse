@@ -25,7 +25,11 @@ It's a command the container runs on a schedule to answer one question: *can thi
 | redis | `redis-cli ping` | the server responds to commands |
 | apicurio | `curl /health/ready` | the registry is ready to serve schemas |
 
-The distinction matters because a process can be *up* long before it is *useful*. Postgres has to finish recovery; Kafka has to elect a controller. A healthcheck is the difference between "started" and "ready," and downstream services that declare `depends_on: { condition: service_healthy }` wait for *ready*, not merely *started*.
+The distinction matters because a process can be *up* long before it is *useful*. Postgres has to finish recovery; Kafka has to elect a controller. A healthcheck is the difference between "started" and "ready" — and it's exactly what stops the boot-time race the Hook warned about. A service that waits on `service_started` is let loose the moment the broker process exists, *before* it can serve; one that waits on `service_healthy` blocks until the probe goes green:
+
+<DependsOnRace />
+
+Pulse doesn't wire a dependency like this yet — the foundations stack dropped its one artificial edge on purpose. But the moment a real consumer joins, `depends_on: { condition: service_healthy }` is how it avoids hammering a half-booted broker on startup.
 
 ## The `start_period` gotcha
 
@@ -46,7 +50,7 @@ healthcheck:
 
 Kafka's window is `20s` because single-node KRaft needs a handful of seconds to elect itself controller before `--list` can succeed. You can watch exactly that sequence — the failing probes inside the window, then the flip to green — on the **[KRaft mode](/concepts/kraft-mode)** page.
 
-<Callout variant="note">
+<Callout variant="lesson">
   `start_period` was added to Compose healthchecks precisely for services with a
   meaningful warm-up. If you find yourself bumping `retries` to paper over boot
   time, you almost certainly want `start_period` instead — it keeps the

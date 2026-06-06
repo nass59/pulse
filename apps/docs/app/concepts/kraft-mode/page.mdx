@@ -1,7 +1,7 @@
 export const metadata = {
   title: "KRaft mode — Pulse docs",
   description:
-    "Kafka without ZooKeeper: how a single broker elects itself controller, and why the healthcheck waits.",
+    "Kafka without ZooKeeper: what the controller does, how a broker elects itself one, and why the healthcheck waits out the boot.",
 };
 
 <PageHeader
@@ -10,36 +10,54 @@ export const metadata = {
 />
 
 <Hook>
-  the very first time you run `docker compose up`, Kafka isn't ready for a few
+  The very first time you run `docker compose up`, Kafka isn't ready for a few
   seconds — and you'll wonder why. KRaft is the reason.
 </Hook>
 
-Picture a small club. Someone has to keep the membership roll: who's in, who's in charge, what rooms exist. The old Kafka hired a **separate clerk** for that job — a whole **ZooKeeper** ensemble running alongside the brokers, just to hold the cluster's metadata. Two distributed systems to run and babysit, not one.
+Spin up a Kafka cluster and *someone* has to keep the books: which brokers are alive right now, what topics exist, and who's the leader for each partition. Picture a football squad — somebody has to hold the roster and the starting eleven, or nobody knows who's on the pitch. Kafka calls that node the **controller**.
 
-**KRaft** (Kafka Raft) fires the clerk and lets the brokers keep their own roll. The **controller** — the node responsible for cluster metadata and leader election — now lives *inside* a broker process, backed by an internal Raft-replicated log. One fewer thing to deploy, secure, and reason about. Pulse runs KRaft from day one; ZooKeeper never enters the picture.
+<ControllerRole />
 
-In `infra/docker-compose.yaml` the broker is told to play both parts:
+## For years, the clerk lived off the team
+
+Here's the strange part: for most of Kafka's life, the controller's books *didn't live on the cluster*. Kafka hired an outside agency — a whole separate **ZooKeeper** ensemble — just to hold the metadata. That's two distributed systems to deploy, secure, upgrade and reason about, when you only ever wanted one.
+
+**KRaft** (Kafka + Raft) fires the clerk. One broker is elected controller and keeps the roll itself, in an internal log replicated across the voters by the **Raft** consensus algorithm. Pulse runs KRaft from day one; ZooKeeper never enters the picture.
+
+<KraftVsZookeeper />
+
+In `infra/docker-compose.yaml` the single broker is told to play both parts — the team *and* its scorekeeper:
 
 ```yaml
 KAFKA_PROCESS_ROLES: broker,controller
 KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
 ```
 
-## Watch it boot
+## Watch one broker elect itself
 
-The single most useful thing to understand about KRaft locally is that the broker is **not instantly ready**. It boots, initialises its metadata log, elects a controller, and only *then* can serve. Run the sequence:
+The single most useful thing to feel locally: the broker is **not instantly ready**. It boots, reads its metadata log, runs an election, and only *then* can serve. With one voter that election is over in a blink — but it still happens. Run the sequence:
 
 <KraftControllerElection />
 
-## Why a single-node "quorum" is still a quorum
+## Why one node is still a "quorum"
 
-`KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094` declares a controller quorum of exactly one voter. Raft elects a leader by majority vote among voters; with one voter, the majority is one, so the node wins instantly and unopposed. There is no contention, no split-brain to resolve — but the *mechanism* is the same one that, with `3` or `5` voters, would run a genuine election and replicate the metadata log across them for fault tolerance.
+Raft elects a leader by **majority vote** — picture a crew voting someone out in Among Us, or bandmates naming a frontman: you need more than half to agree before it sticks. `KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094` declares a quorum of exactly one voter, so the majority is one and the node wins instantly, unopposed. No contention, no split-brain to resolve.
 
-Pulse runs a single node because this is a local learning cluster, not a production deployment. The election you see above is real; the quorum is just trivially small. Scaling the voter list is the only change needed to make it a multi-node Raft group — no architectural shift.
+The *same* mechanism, with 3 or 5 voters, runs a genuine election and replicates the metadata log across them — which is how a real cluster survives losing a controller. The quorum size is the only dial that changes:
+
+<QuorumFaultTolerance />
+
+<Callout variant="lesson" title="Single-node is a real quorum, just a trivial one">
+  Pulse runs one voter because this is a local learning cluster, not a
+  production deployment. The election you watch above is genuine; the quorum is
+  simply small enough to be uncontested. Scaling the voter list is the *only*
+  change needed to make it a fault-tolerant multi-node Raft group — no
+  architectural shift, the same code path.
+</Callout>
 
 ## The boot delay is why the healthcheck waits
 
-Those few seconds between "container started" and "controller elected" are exactly why Kafka's healthcheck carries `start_period: 20s`. Without it, the probe would mark the container `unhealthy` during a perfectly normal boot. That mechanism is its own concept — see **[Healthchecks](/concepts/healthchecks)**.
+Those few seconds between "container started" and "controller elected" are exactly why Kafka's healthcheck carries `start_period: 20s`. Without it, the probe would mark the container `unhealthy` during a perfectly normal boot. That mechanism is its own concept — see [Healthchecks](/concepts/healthchecks).
 
 <PageNav
   next={{

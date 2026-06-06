@@ -4,7 +4,11 @@ import { Callout } from "@/components/docs/callout";
 import { CodeBlock } from "@/components/docs/code-block";
 import {
   AutoTopicFlow,
+  ControllerRole,
+  DependsOnRace,
   HealthcheckTimeline,
+  KraftVsZookeeper,
+  QuorumFaultTolerance,
   VolumePersistence,
 } from "@/components/docs/diagram";
 import { Eyebrow } from "@/components/docs/eyebrow";
@@ -36,11 +40,15 @@ const components: MDXComponents = {
   AutoTopicFlow,
   Callout,
   CodeBlock,
+  ControllerRole,
+  DependsOnRace,
   Eyebrow,
   HealthcheckTimeline,
   Hook,
+  KraftVsZookeeper,
   PageHeader,
   PageNav,
+  QuorumFaultTolerance,
   Sources,
   Tag,
   VolumePersistence,
