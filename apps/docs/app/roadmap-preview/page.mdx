@@ -1,0 +1,48 @@
+import { FullBleed } from "@/components/docs/full-bleed";
+import { RoadmapBuildPipeline } from "@/components/home/roadmap/build-pipeline";
+import { RoadmapPhaseDrawers } from "@/components/home/roadmap/phase-drawers";
+import { RoadmapSignalPath } from "@/components/home/roadmap/signal-path";
+
+export const metadata = {
+  title: "Roadmap — three directions (preview)",
+  description:
+    "Scratch comparison page for the three candidate homepage roadmap visualisations. Not linked from the site.",
+};
+
+# Roadmap — three directions
+
+A scratch page to compare the three candidate roadmap visualisations. All three
+read from the same `lib/roadmap.ts`, so the content and build-state honesty are
+identical — only the **form** differs. Pick one and I'll wire it into the
+homepage and delete the other two plus this page.
+
+---
+
+## Version A — Signal Path
+
+_Dark “lab” band · horizontal energised circuit · the line is live where Pulse
+is built and dashed for the road ahead · the current phase pulses._
+
+<RoadmapSignalPath />
+
+---
+
+## Version B — Build Pipeline
+
+_Monospace CI ledger · stages go passed → running → queued · the running phase
+expands into a live done/in-flight checklist._
+
+<FullBleed>
+  <RoadmapBuildPipeline />
+</FullBleed>
+
+---
+
+## Version C — Phase Drawers
+
+_Paper-editorial accordion · oversized numerals with the highlighter swipe on
+“you are here” · open a phase for its concept grid + finish line._
+
+<FullBleed>
+  <RoadmapPhaseDrawers />
+</FullBleed>

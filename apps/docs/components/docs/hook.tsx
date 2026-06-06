@@ -25,9 +25,14 @@ export const Hook = ({ children }: { children: ReactNode }) => (
       <p className="font-medium font-mono text-[11px] text-yellow-ink uppercase tracking-[0.1em] dark:text-electric-yellow">
         Why you'll hit this
       </p>
-      <p className="mt-1.5 text-base text-foreground leading-relaxed">
+      {/*
+       * A `div`, not a `p`: MDX wraps block children in their own `<p>`, and a
+       * `<p>` inside a `<p>` is invalid HTML (hydration error). The text styles
+       * inherit into that inner paragraph; `[&_p]:m-0` keeps its rhythm.
+       */}
+      <div className="mt-1.5 text-base text-foreground leading-relaxed [&_p]:m-0">
         {children}
-      </p>
+      </div>
     </div>
   </aside>
 );

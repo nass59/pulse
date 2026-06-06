@@ -13,11 +13,12 @@ import {
 } from "lucide-react";
 
 /**
- * The single source of truth for the concept catalogue, shared by the homepage
- * roadmap (`components/home/concept-roadmap.tsx`) and the Concepts index
- * (`components/concepts/concept-index.tsx`). Build-state honesty lives here: a
- * concept with an `href` is `live` and links out; one without is `coming` —
- * dashed, dimmed, and never linked until its page ships (see `AGENTS.md`).
+ * The single source of truth for the concept catalogue, rendered by the
+ * Concepts index (`components/concepts/concept-index.tsx`). The homepage
+ * roadmap groups these concepts by phase via its own `lib/roadmap.ts`. Build-
+ * state honesty lives here: a concept with an `href` is `live` and links out;
+ * one without is `coming` — dashed, dimmed, and never linked until its page
+ * ships (see `AGENTS.md`).
  */
 export interface Concept {
   /** One-line, plain-language hook. */
