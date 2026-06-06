@@ -1,0 +1,57 @@
+import { BookOpen, type LucideIcon, Rocket, Workflow } from "lucide-react";
+
+/**
+ * The `Learn` track spine (ADR-0011): a short, linear "Kafka from zero" path for
+ * a senior engineer with no Kafka background. Unlike `lib/concepts.ts`, this is
+ * NOT build-state-gated — it teaches Kafka the technology generically, so every
+ * step is `live` from day one. The index (`components/learn/learn-path.tsx`)
+ * renders this as a numbered path; each page links to the next via `<PageNav>`.
+ */
+export interface LearnStep {
+  /** One-line, plain-language promise of the page. */
+  blurb: string;
+  href: string;
+  icon: LucideIcon;
+  /** Three-ish takeaways, shown on the index card. */
+  takeaways: string[];
+  title: string;
+}
+
+export const LEARN_STEPS: LearnStep[] = [
+  {
+    title: "What is Kafka?",
+    blurb:
+      "The problem it solves: every service wants to know when something happened, and wiring them point-to-point doesn't scale.",
+    href: "/learn/what-is-kafka",
+    icon: BookOpen,
+    takeaways: [
+      "Why N×M point-to-point integrations collapse",
+      "“Almost everything is an event”",
+      "Kafka as the shared log every service taps",
+    ],
+  },
+  {
+    title: "How it works",
+    blurb:
+      "The mechanism, four ideas deep: the append-only log, partitions, offsets, and consumer groups — with a live diagram for each.",
+    href: "/learn/how-it-works",
+    icon: Workflow,
+    takeaways: [
+      "The log: append-only, replay-friendly, not a queue",
+      "Partitions: the unit of parallelism and ordering",
+      "Consumer groups: scale reads without losing messages",
+    ],
+  },
+  {
+    title: "Get started",
+    blurb:
+      "Hands-on: bring a real broker up with Docker and round-trip your first message with kcat — the exact Pulse Phase 0 setup.",
+    href: "/learn/getting-started",
+    icon: Rocket,
+    takeaways: [
+      "docker compose up → a healthy single-node broker",
+      "Produce and consume with kcat, the universal Kafka REPL",
+      "Read every flag: -P, -C, -b, -t — and what they do",
+    ],
+  },
+];

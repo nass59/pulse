@@ -1,0 +1,121 @@
+import { ProducerLogConsumer } from "@/components/learn/figures";
+import { ConsumerGroupRebalance } from "@/components/interactive/consumer-group-rebalance";
+import { LogTape } from "@/components/interactive/log-tape";
+import { PartitionRouter } from "@/components/interactive/partition-router";
+
+export const metadata = {
+  title: "How Kafka works — Pulse docs",
+  description:
+    "The mechanism, four ideas deep: the append-only log, partitions, offsets and consumer groups — each with a live diagram, plus the moving parts of a running cluster.",
+};
+
+<PageHeader
+  eyebrow="Learn · 02"
+  title={<>How Kafka <span className="ds-mark">works</span></>}
+/>
+
+Everything Kafka does rests on one humble data structure: an **append-only log**. Get this picture in your head and the rest — partitions, offsets, consumer groups — are just refinements of it. Here's the whole vocabulary in one breath:
+
+<ProducerLogConsumer />
+
+A producer only ever **appends** to the right end. A consumer reads from wherever it is, at its own speed, and **reading removes nothing**. Now let's pull each idea apart.
+
+## 1 · The log — a thing you can rewind
+
+Picture an F1 car streaming telemetry: every sector time, every DRS toggle, packet after packet, in the exact order they happened. Two very different consumers want this same stream. The **pit wall** wants it *live* — always at the newest record. A **strategy engine** wants to *replay* the whole race from the start to model what-if pit stops.
+
+A queue couldn't serve both. A log serves both trivially, because each consumer keeps its own **offset** — its bookmark into the log. Drag the readers around below: notice the two offsets move independently, and the records never disappear.
+
+<LogTape />
+
+<Callout variant="key" title="The offset is the consumer's, not the log's">
+  The log doesn't track who has read what. Each consumer remembers its own
+  offset and asks "give me from offset N onward." Want to reprocess yesterday?
+  Set your offset back and read again. This is why one bug fix can re-run a
+  week of history without anyone re-sending a single event.
+</Callout>
+
+## 2 · Partitions — the unit of parallelism *and* ordering
+
+One log on one machine eventually hits a ceiling. So Kafka splits a topic into **partitions** — independent logs that live on (potentially) different brokers and are appended to in parallel. More partitions, more throughput.
+
+But which partition does a record go to? Kafka hashes the record's **key**. Same key → same partition, always. Think of the FIFA World Cup: make the *match* the key, and every event for `ARG–FRA` — goal, card, substitution — lands in the same partition and stays in order, while dozens of other matches stream through other partitions at the same time.
+
+Pick a match and send a few events. Then change the partition count and watch the routing reshuffle:
+
+<PartitionRouter />
+
+<Callout variant="footgun" title="Ordering is per-partition, never per-topic">
+  Kafka guarantees order *within* a partition, not across the topic. If global
+  ordering matters for a set of records, they must share a key so they land in
+  one partition — which also caps their throughput to that one partition. Order
+  and parallelism are the same dial pulling in opposite directions; choosing the
+  key is choosing the trade.
+</Callout>
+
+## 3 · Consumer groups — scale reads without double-counting
+
+A single consumer reading a busy topic falls behind. The fix is a **consumer group**: several consumers that share the work, with Kafka handing each partition to exactly *one* member of the group. No partition is read twice, so no event is processed twice.
+
+It's an NBA night with four games in flight (four partitions) and a pool of box-score workers (one group). Spin up more workers to keep up — Kafka **rebalances**, gliding partitions to their new owner. Go past four workers, though, and the extra one has nothing to do: the partition is the smallest unit of work.
+
+<ConsumerGroupRebalance />
+
+<Callout variant="key" title="Groups for scale, separate groups for fan-out">
+  Two consumers in the *same* group split the partitions between them. Two
+  consumers in *different* groups each get the whole stream. That's the one
+  mental model you need: same group = teamwork (scale), different group =
+  independent readers (fan-out). The box-score service and the fantasy-stats
+  service are different groups, so both see every game.
+</Callout>
+
+## The moving parts
+
+Zoom out from the ideas to the things actually running. A real cluster is a handful of cooperating pieces:
+
+| Piece | What it is | The one-liner |
+|---|---|---|
+| **Broker** | A server that stores partitions and serves reads/writes | A cluster is just several brokers; partitions are spread across them |
+| **Topic** | A named log, split into partitions | The unit you produce to and consume from — e.g. `chat.messages.v1` |
+| **Replication** | Copies of each partition on other brokers | A partition has one *leader* and N *followers*; lose the leader's broker and a follower takes over, so a dead machine doesn't lose data |
+| **Controller** | The broker coordinating cluster metadata | Modern Kafka runs this in-process via KRaft — no separate ZooKeeper |
+| **Schema registry** | A service that enforces the *shape* of events | Optional but common — it stops a producer from quietly breaking every consumer with a bad field |
+
+<Callout variant="perf" title="Replication factor is your durability dial">
+  A partition with replication factor 3 survives two broker failures. The cost
+  is write latency (the leader waits for followers to acknowledge) and triple
+  the storage. Local learning clusters often run factor 1 — fine for a laptop,
+  never for production.
+</Callout>
+
+That's the machine. The last page gets your hands on a real one: a single broker up under Docker, and your first message round-tripped with `kcat`.
+
+<PageNav
+  next={{
+    href: "/learn/getting-started",
+    title: "Get started",
+    blurb: "Bring a real broker up and round-trip your first message.",
+  }}
+  prev={{
+    href: "/learn/what-is-kafka",
+    title: "What is Kafka?",
+    blurb: "The problem the log solves in the first place.",
+  }}
+/>
+
+<Sources
+  refs={[
+    {
+      label: "Apache Kafka — Introduction (topics, partitions, consumers)",
+      href: "https://kafka.apache.org/43/getting-started/introduction/",
+    },
+    {
+      label: "Hello Interview — How Kafka works",
+      href: "https://www.hellointerview.com/learn/system-design/deep-dives/kafka#how-kafka-works",
+    },
+    {
+      label: "AWS — What is Apache Kafka?",
+      href: "https://aws.amazon.com/what-is/apache-kafka/",
+    },
+  ]}
+/>

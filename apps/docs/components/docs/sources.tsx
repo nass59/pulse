@@ -39,18 +39,37 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0010-mdx-rendering-pipeline",
     title: "MDX rendering pipeline",
   },
+  11: {
+    slug: "0011-learn-track-general-kafka",
+    title: "Learn track — general Kafka pedagogy",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");
+
+interface ExternalRef {
+  href: string;
+  label: string;
+}
 
 interface SourcesProps {
   /** ADR numbers this page derives from, e.g. `[5, 7]`. */
   adrs?: number[];
   /** Local-only issue references, e.g. `"foundations/02-docker-compose"`. */
   issues?: string[];
+  /**
+   * Outward-pointing references for the `Learn` tier — pages that translate a
+   * public technology rather than an internal decision, so they cite the
+   * canonical external docs instead of (or alongside) an ADR (ADR-0011).
+   */
+  refs?: ExternalRef[];
 }
 
-export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
+export const Sources = ({
+  adrs = [],
+  issues = [],
+  refs = [],
+}: SourcesProps) => (
   <details
     className={cn(
       "not-prose group mt-14 rounded-2xl border border-border bg-card/60 text-sm"
@@ -64,9 +83,9 @@ export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
     </summary>
     <div className="px-5 pb-5">
       <p className="text-muted-foreground text-xs leading-relaxed">
-        This page is a study artifact — it translates decisions recorded
-        elsewhere in the repo. The canonical write-ups live below; when they
-        disagree with this page, they win.
+        {adrs.length === 0 && issues.length === 0 && refs.length > 0
+          ? "This page teaches Kafka the technology, not Pulse — so its sources point outward, to the canonical write-ups it's distilled from."
+          : "This page is a study artifact — it translates decisions recorded elsewhere in the repo. The canonical write-ups live below; when they disagree with this page, they win."}
       </p>
 
       {adrs.length > 0 && (
@@ -110,6 +129,26 @@ export const Sources = ({ adrs = [], issues = [] }: SourcesProps) => (
                 key={issue}
               >
                 {issue}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {refs.length > 0 && (
+        <div className="mt-4">
+          <span className="ds-eyebrow text-[10px]">Further reading</span>
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {refs.map((ref) => (
+              <li key={ref.href}>
+                <a
+                  className="font-medium text-foreground underline decoration-2 decoration-electric-yellow underline-offset-2 hover:decoration-[3px]"
+                  href={ref.href}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {ref.label}
+                </a>
               </li>
             ))}
           </ul>

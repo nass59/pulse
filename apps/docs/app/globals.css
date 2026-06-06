@@ -219,6 +219,26 @@
     border-radius: var(--radius-sm);
   }
 
+  /**
+   * Inline links inside `ds-rich` component bodies (Callout, Hook). Those opt
+   * out of the typography plugin, so the `.prose a` rule can't reach them —
+   * without this they'd render as undecorated text. Same yellow-underline
+   * treatment as prose links so the two read identically. Authoring these as
+   * plain markdown links keeps them inline; a multi-line JSX `<a>` would be
+   * parsed as a block child and break onto its own line.
+   */
+  .ds-rich :where(a) {
+    font-weight: 500;
+    color: var(--foreground);
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--color-electric-yellow);
+    text-underline-offset: 2px;
+  }
+  .ds-rich :where(a):hover {
+    text-decoration-thickness: 3px;
+  }
+
   /* Faint dotted "stage" texture for dark live-component backdrops. */
   .ds-stage {
     background-color: oklch(0 0 0);
