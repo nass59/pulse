@@ -4,7 +4,10 @@ export const metadata = {
     "The Pulse control-plane topology and infrastructure substrate — what runs, what talks to what, and what is still planned.",
 };
 
-# Architecture
+<PageHeader
+  eyebrow="Architecture · Phase 0"
+  title={<>What runs, what's <span className="ds-mark">still planned</span></>}
+/>
 
 Here's the whole system in one breath: Pulse is a **control-plane** — everything that happens _around_ a stream (accounts, follows, chat, presence, analytics) is event-driven, with Kafka as the backbone. The actual video and audio? Those bytes take a different road entirely — the **media plane** — and never touch Kafka. That's why you won't see them in the diagram below.
 
@@ -20,10 +23,6 @@ What this diagram is telling you, read carefully:
 - **The three service nodes are dashed — they are designed, not built.** `services/{identity,chat,analytics}/` are still empty directories. Their language is fixed (TypeScript, Go, Kotlin) and their events are named in `CONTEXT.md`, but no code produces or consumes yet.
 - **Every edge is dashed.** This is the honest part most architecture diagrams hide: Phase 0 stood up four _isolated_ containers. Nothing flows between them until a service exists to do the producing and consuming. Each future epic flips a node — and its edges — from planned to live.
 
-## In this section
-
-- **[Infrastructure](/architecture/infrastructure)** — the four-piece Compose stack in detail: images, ports, and the reproducibility lessons learned standing it up.
-
 ## The contracts the edges imply
 
 The dashed edges aren't decoration — each one is a decision already made:
@@ -31,5 +30,14 @@ The dashed edges aren't decoration — each one is a decision already made:
 - `identity → Postgres` and `identity → Kafka` together are the **transactional outbox**: Postgres holds the truth, and events flow out as a notification stream rather than the source of record.
 - `Apicurio → services` is **Avro schema resolution**: the registry is the referee that keeps all three languages agreeing on the shape of every event.
 - `chat → Redis` is a **read projection** off the chat log — a fast cache for the UI, never the source of truth.
+
+<PageNav
+  next={{
+    href: "/architecture/infrastructure",
+    title: "Infrastructure",
+    blurb:
+      "The four-piece Compose stack in detail — images, ports, the listener topology, and the reproducibility lessons from standing it up.",
+  }}
+/>
 
 <Sources adrs={[1, 2, 3, 4, 5]} issues={["foundations/02-docker-compose"]} />

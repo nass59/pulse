@@ -35,6 +35,10 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0009-devlab-design-system",
     title: "DevLab design system",
   },
+  10: {
+    slug: "0010-mdx-rendering-pipeline",
+    title: "MDX rendering pipeline",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");

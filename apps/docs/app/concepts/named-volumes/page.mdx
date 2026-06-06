@@ -4,9 +4,15 @@ export const metadata = {
     "How Postgres keeps its data across docker compose down, and what a named volume actually is.",
 };
 
-# Named volumes
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Named volumes — surviving the <span className="ds-mark">teardown</span></>}
+/>
 
-> **Why you'll hit this:** restart your stack the naive way and your database comes back empty. One line in the Compose file is the difference.
+<Hook>
+  restart your stack the naive way and your database comes back empty. One line
+  in the Compose file is the difference.
+</Hook>
 
 A container is like a hotel room. Live there a while, then check out, and housekeeping wipes it clean for the next guest — a container's own filesystem is **ephemeral**, so removing the container takes everything inside with it. Perfect for a stateless service; a disaster for a database. A **named volume** is the safe-deposit box at the front desk: it doesn't belong to your room, so it survives the checkout. Pulse's Postgres keeps its data across restarts because of one line:
 
@@ -36,5 +42,18 @@ The other way to persist data is a **bind mount** — pointing a container path 
 - **Bind mount** — you own an exact host path. Right when a human needs to read or edit the files directly (source code, config), at the cost of host-path and permission coupling.
 
 Postgres data is the textbook named-volume case: the database owns those files, nothing else should touch them, and it should travel with the Compose project rather than a hard-coded host path.
+
+<PageNav
+  next={{
+    href: "/journey/foundations",
+    title: "The foundations journey",
+    blurb: "See how these four lessons came together in Phase 0.",
+  }}
+  prev={{
+    href: "/concepts/auto-topic-creation",
+    title: "Auto topic creation",
+    blurb: "The convenience that quietly eats a typo in production.",
+  }}
+/>
 
 <Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

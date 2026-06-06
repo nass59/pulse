@@ -4,9 +4,15 @@ export const metadata = {
     "Why your first kcat produce just works locally, and why that same convenience is a footgun in production.",
 };
 
-# Auto topic creation
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Auto topic creation — the <span className="ds-mark">silent</span> conjurer</>}
+/>
 
-> **Why you'll hit this:** your first `kcat` produce works against a topic you never created — which feels magical until the same magic eats a typo in production.
+<Hook>
+  your first `kcat` produce works against a topic you never created — which feels
+  magical until the same magic eats a typo in production.
+</Hook>
 
 It's the autocorrect of Kafka. Type a topic name that doesn't exist and the broker helpfully conjures one for you — wonderful when you mean it, quietly destructive when you don't. The very first smoke test against Pulse's Kafka produced a message to a topic that did not exist:
 
@@ -35,5 +41,18 @@ Locally this is exactly what you want: one fewer ceremony between you and a work
 **The dotted name is convention, not syntax.** Kafka sees `pulse.smoke.test` as one flat string with no hierarchy. The `<domain>.<entity>.<event>` style is purely for human organisation and collision-avoidance — the broker neither parses nor enforces it.
 
 **A topic auto-created this way gets _default_ everything.** Default partition count, default replication. Fine for a smoke test; rarely what you want for a real event stream, where partition count is a deliberate throughput-and-ordering decision per topic. That deliberate-per-topic design is exactly what auto-creation robs you of — another reason production turns it off.
+
+<PageNav
+  next={{
+    href: "/concepts/named-volumes",
+    title: "Named volumes",
+    blurb: "How Postgres data outlives a container teardown.",
+  }}
+  prev={{
+    href: "/concepts/healthchecks",
+    title: "Healthchecks",
+    blurb: "“Started” vs “ready,” and the grace window between them.",
+  }}
+/>
 
 <Sources adrs={[]} issues={["foundations/03-kcat-smoke-test"]} />

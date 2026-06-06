@@ -11,10 +11,19 @@ import { cn } from "@/lib/utils";
  * `pre` element, so every fenced block in a doc gets the dark chrome and a copy
  * affordance. The copy reads `textContent` off the rendered `<pre>`, so it
  * works without parsing the MDX children.
+ *
+ * Token colours come from Shiki (`@shikijs/rehype`, build-time — ADR-0010),
+ * which hands this component a pre-highlighted `<code>` plus its own `className`
+ * (`shiki …`) and an inline `style` carrying the theme's background + base
+ * colour. This component is the *chrome only*: it keeps the carbon surface and
+ * copy button, and neutralises Shiki's injected `background-color` so the
+ * theme's per-token span colours show through against carbon, not the theme's
+ * own backdrop.
  */
 export const CodeBlock = ({
   className,
   children,
+  style,
   ...props
 }: ComponentProps<"pre">) => {
   const preRef = useRef<HTMLPreElement>(null);
@@ -31,7 +40,7 @@ export const CodeBlock = ({
     <div className="not-prose group/code relative my-6 overflow-hidden rounded-xl border border-carbon-600 bg-carbon-800 dark:bg-black">
       <button
         aria-label={copied ? "Copied" : "Copy code"}
-        className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-lg border border-carbon-600 bg-carbon-800 px-2.5 py-1.5 font-medium font-mono text-gray-400 text-xs opacity-0 transition-all hover:text-white focus-visible:opacity-100 group-hover/code:opacity-100"
+        className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-lg border border-carbon-600 bg-carbon-800/90 px-2.5 py-1.5 font-medium font-mono text-gray-400 text-xs opacity-0 backdrop-blur-sm transition-all hover:text-white focus-visible:opacity-100 group-hover/code:opacity-100"
         onClick={copy}
         type="button"
       >
@@ -48,6 +57,9 @@ export const CodeBlock = ({
           className
         )}
         ref={preRef}
+        // Drop Shiki's theme background so the carbon chrome shows; keep the
+        // rest of its inline style (base text colour) for un-tokenised text.
+        style={{ ...style, backgroundColor: "transparent" }}
         {...props}
       >
         {children}

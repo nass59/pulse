@@ -4,7 +4,10 @@ export const metadata = {
     "Phase 0 recap: the infrastructure substrate, the lessons unlocked, and the image-hygiene war stories worth remembering.",
 };
 
-# Journey · Phase 0 — Foundations
+<PageHeader
+  eyebrow="Journey · Phase 0"
+  title={<>Laying the <span className="ds-mark">foundations</span></>}
+/>
 
 **Goal:** get the empty repo to the point where `docker compose up` brings the whole infrastructure stack online and you can verify it with `kcat`.
 
@@ -61,6 +64,19 @@ From the local-only tracker (`.scratch/foundations/`):
 ## Next
 
 Phase 1 brings the first service to life — at which point the architecture topology flips its first node from **planned** to **live**.
+
+<PageNav
+  next={{
+    href: "/concepts",
+    title: "Browse the concepts",
+    blurb: "The distributed-systems ideas this phase forced — one page each.",
+  }}
+  prev={{
+    href: "/architecture/infrastructure",
+    title: "Infrastructure",
+    blurb: "The four-piece substrate this phase produced, in detail.",
+  }}
+/>
 
 <Sources
   adrs={[1, 2, 3, 5, 6]}

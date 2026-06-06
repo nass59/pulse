@@ -52,7 +52,7 @@ export const LIVE_CONCEPTS: Concept[] = [
   },
   {
     title: "Named volumes",
-    blurb: "How a database survives `docker compose down`.",
+    blurb: "How Postgres data outlives a container teardown.",
     href: "/concepts/named-volumes",
     icon: HardDrive,
   },

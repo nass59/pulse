@@ -86,7 +86,7 @@ export const Callout = ({
         >
           {title ?? v.label}
         </p>
-        <div className="mt-2 text-foreground/90 text-sm leading-relaxed [&>p:first-child]:mt-0 [&>p]:mt-2">
+        <div className="ds-rich mt-2 text-foreground/90 text-sm leading-relaxed [&>p:first-child]:mt-0 [&>p]:mt-2">
           {children}
         </div>
       </div>

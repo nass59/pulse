@@ -204,6 +204,21 @@
     -webkit-box-decoration-break: clone;
   }
 
+  /**
+   * Inline `code` inside `not-prose` component bodies (Callout, Hook) — those
+   * opt out of the typography plugin, so the prose inline-code rule below can't
+   * reach them. Same chip treatment, scoped to a marker class.
+   */
+  .ds-rich :where(code):not(pre code) {
+    padding: 0.1em 0.34em;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    font-weight: 500;
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--foreground) 7%, transparent);
+    border-radius: var(--radius-sm);
+  }
+
   /* Faint dotted "stage" texture for dark live-component backdrops. */
   .ds-stage {
     background-color: oklch(0 0 0);
@@ -241,21 +256,45 @@
   .prose :where(h1, h2, h3):not(:where([class~="not-prose"] *)) {
     letter-spacing: -0.025em;
   }
-  /* Inline code only — fenced blocks render through the CodeBlock component. */
-  .prose :where(code):not(:where([class~="not-prose"] *, pre code)) {
-    padding: 0.12em 0.35em;
-    font-weight: 500;
-    color: var(--foreground);
-    background: var(--muted);
-    border-radius: var(--radius-sm);
-  }
-  .prose :where(code):not(:where([class~="not-prose"] *, pre code))::before,
-  .prose :where(code):not(:where([class~="not-prose"] *, pre code))::after {
-    content: none;
-  }
   .prose :where(a):not(:where([class~="not-prose"] *)) {
     text-decoration-thickness: 2px;
     text-decoration-color: var(--color-electric-yellow);
     text-underline-offset: 3px;
   }
+}
+
+/**
+ * Inline `code` in prose — chip treatment, and the backticks removed. Authored
+ * UNLAYERED on purpose: the typography plugin emits its own `code::before`
+ * backtick rule and `code` font rule at equal specificity, and cascade layers
+ * outrank specificity — an `@layer base` override loses to the plugin's layer no
+ * matter how specific. Unlayered styles outrank every layer, so this is the one
+ * placement that reliably wins. Matches the `.ds-rich` chip so prose and
+ * component (Callout/Hook) inline code look identical. Fenced blocks are
+ * excluded (`pre code`) — those render through CodeBlock + Shiki.
+ */
+.prose :where(code):not(:where([class~="not-prose"] *, pre code)) {
+  padding: 0.1em 0.34em;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--foreground) 7%, transparent);
+  border-radius: var(--radius-sm);
+}
+.prose :where(code):not(:where([class~="not-prose"] *, pre code))::before,
+.prose :where(code):not(:where([class~="not-prose"] *, pre code))::after {
+  content: "";
+}
+
+/**
+ * Tables are wrapped in a bordered scroll container (`components/docs/table.tsx`)
+ * that owns the vertical rhythm via its own margin. Zero the table's own margin
+ * so the header — which carries a background — sits flush against the top border
+ * instead of floating below a gap. Unlayered for the same reason as above: the
+ * typography plugin's `:where(table){margin:2em 0}` beats even the `my-0`
+ * utility on the element, so only an unlayered rule reliably wins.
+ */
+.prose :where(table):not(:where([class~="not-prose"] *)) {
+  margin-top: 0;
+  margin-bottom: 0;
 }

@@ -4,9 +4,15 @@ export const metadata = {
     "What 'healthy' means in Docker Compose, and the start_period that stops a slow-booting service from flapping.",
 };
 
-# Healthchecks
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Healthchecks — “started” isn't <span className="ds-mark">“ready”</span></>}
+/>
 
-> **Why you'll hit this:** a service that's "started" isn't always "ready." Tell the next service to wait for the wrong one and your stack races itself on boot.
+<Hook>
+  a service that's "started" isn't always "ready." Tell the next service to wait
+  for the wrong one and your stack races itself on boot.
+</Hook>
 
 Think of opening a restaurant. The lights are on and the door's unlocked (*the process is running*) — but the ovens are still cold and nobody's prepped. You don't want diners walking in yet. A Docker **healthcheck** is the chef sticking their head out to say "actually ready now."
 
@@ -46,5 +52,18 @@ Kafka's window is `20s` because single-node KRaft needs a handful of seconds to 
   time, you almost certainly want `start_period` instead — it keeps the
   steady-state failure threshold honest.
 </Callout>
+
+<PageNav
+  next={{
+    href: "/concepts/auto-topic-creation",
+    title: "Auto topic creation",
+    blurb: "The convenience that quietly eats a typo in production.",
+  }}
+  prev={{
+    href: "/concepts/kraft-mode",
+    title: "KRaft mode",
+    blurb: "The boot delay this probe is waiting out, up close.",
+  }}
+/>
 
 <Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

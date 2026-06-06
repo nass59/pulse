@@ -4,7 +4,10 @@ export const metadata = {
     "The four-piece Docker Compose stack behind Pulse: images, ports, the listener topology, and image-pinning lessons.",
 };
 
-# Infrastructure
+<PageHeader
+  eyebrow="Architecture · Infrastructure"
+  title={<>The <span className="ds-mark">four-piece</span> substrate</>}
+/>
 
 Phase 0 produced one artifact: `infra/docker-compose.yaml`. One `docker compose up` brings four services to a healthy state, and that stack is the substrate every future service stands on.
 
@@ -40,6 +43,19 @@ A few non-obvious choices, each recorded rather than guessed:
 - **Apicurio `-mem`, pinned to `2.6.x`.** The in-memory registry is right for local dev; the version pin is load-bearing for a reason covered in the [foundations journey](/journey/foundations).
 - **Apache's Kafka image, not a vendor distro.** Also a story with a sharp edge — see the journey page.
 - **`just` as the entry point.** `just infra-up` wraps the Compose command; the root `justfile` is the documented front door for cross-service workflows.
+
+<PageNav
+  next={{
+    href: "/journey/foundations",
+    title: "The foundations journey",
+    blurb: "How this stack came together in Phase 0 — and the war stories.",
+  }}
+  prev={{
+    href: "/architecture",
+    title: "Architecture",
+    blurb: "The whole control-plane topology, and what's still planned.",
+  }}
+/>
 
 <Sources
   adrs={[5]}

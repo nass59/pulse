@@ -8,7 +8,11 @@ import {
   VolumePersistence,
 } from "@/components/docs/diagram";
 import { Eyebrow } from "@/components/docs/eyebrow";
+import { Hook } from "@/components/docs/hook";
+import { PageHeader } from "@/components/docs/page-header";
+import { PageNav } from "@/components/docs/page-nav";
 import { Sources } from "@/components/docs/sources";
+import { Table, Td, Th, Thead, Tr } from "@/components/docs/table";
 import { Tag } from "@/components/docs/tag";
 import { KraftControllerElection } from "@/components/interactive/kraft-controller-election";
 import { SystemTopology } from "@/components/interactive/system-topology";
@@ -24,11 +28,19 @@ import { SystemTopology } from "@/components/interactive/system-topology";
  */
 const components: MDXComponents = {
   pre: CodeBlock,
+  table: Table,
+  thead: Thead,
+  tr: Tr,
+  th: Th,
+  td: Td,
   AutoTopicFlow,
   Callout,
   CodeBlock,
   Eyebrow,
   HealthcheckTimeline,
+  Hook,
+  PageHeader,
+  PageNav,
   Sources,
   Tag,
   VolumePersistence,

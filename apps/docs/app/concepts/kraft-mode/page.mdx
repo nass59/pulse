@@ -4,9 +4,15 @@ export const metadata = {
     "Kafka without ZooKeeper: how a single broker elects itself controller, and why the healthcheck waits.",
 };
 
-# KRaft mode
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>KRaft — Kafka minus the <span className="ds-mark">clerk</span></>}
+/>
 
-> **Why you'll hit this:** the very first time you run `docker compose up`, Kafka isn't ready for a few seconds — and you'll wonder why. KRaft is the reason.
+<Hook>
+  the very first time you run `docker compose up`, Kafka isn't ready for a few
+  seconds — and you'll wonder why. KRaft is the reason.
+</Hook>
 
 Picture a small club. Someone has to keep the membership roll: who's in, who's in charge, what rooms exist. The old Kafka hired a **separate clerk** for that job — a whole **ZooKeeper** ensemble running alongside the brokers, just to hold the cluster's metadata. Two distributed systems to run and babysit, not one.
 
@@ -34,5 +40,18 @@ Pulse runs a single node because this is a local learning cluster, not a product
 ## The boot delay is why the healthcheck waits
 
 Those few seconds between "container started" and "controller elected" are exactly why Kafka's healthcheck carries `start_period: 20s`. Without it, the probe would mark the container `unhealthy` during a perfectly normal boot. That mechanism is its own concept — see **[Healthchecks](/concepts/healthchecks)**.
+
+<PageNav
+  next={{
+    href: "/concepts/healthchecks",
+    title: "Healthchecks",
+    blurb: "Why the broker's boot delay is exactly what the probe waits out.",
+  }}
+  prev={{
+    href: "/concepts",
+    title: "All concepts",
+    blurb: "The full catalogue — what's live and what's coming.",
+  }}
+/>
 
 <Sources adrs={[]} issues={["foundations/02-docker-compose"]} />
