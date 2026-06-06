@@ -40,3 +40,9 @@ build/
 # --- Generated code (Avro codegen output) ---
 **/generated/
 **/__generated__/
+
+# --- Claude Code: track project skills, keep the rest of .claude/ local ---
+!.claude/
+.claude/*
+!.claude/skills/
+!.claude/skills/**
