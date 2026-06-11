@@ -38,8 +38,14 @@ build/
 *.class
 
 # --- Generated code (Avro codegen output) ---
+# Per-service codegen is regenerated at build time and stays local.
 **/generated/
 **/__generated__/
+
+# ...but the shared schema package commits its TS output on purpose, so a
+# schema change shows up as a reviewable diff in the PR (ADR-0004 loudness).
+!packages/schemas/generated/
+!packages/schemas/generated/**
 
 # --- Claude Code: track project skills, keep the rest of .claude/ local ---
 !.claude/

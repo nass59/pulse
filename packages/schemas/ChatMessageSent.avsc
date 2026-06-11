@@ -1,0 +1,31 @@
+{
+  "type": "record",
+  "name": "ChatMessageSent",
+  "namespace": "pulse.events.v1",
+  "fields": [
+    {
+      "name": "messageId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "channelId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "streamId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "userId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "body",
+      "type": "string"
+    },
+    {
+      "name": "sentAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}

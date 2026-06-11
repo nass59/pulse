@@ -16,6 +16,9 @@ A single live broadcast session by a creator. Has a lifecycle: scheduled → liv
 ### Channel
 The creator's persistent identity that owns streams over time. A channel exists between streams; a stream is a single instance.
 
+### Viewer
+An account in its stream-watching role — *not* a distinct entity. The same `userId` identifies a person whether they are watching, chatting, or following; there is no separate viewer identity and no anonymous viewing (an account is required to watch). _Avoid:_ a separate `viewerId`, "viewer account."
+
 ## Bounded contexts (services)
 
 Pulse starts as three services, deliberately polyglot to force real contracts across the wire.
@@ -43,7 +46,10 @@ Pulse is deliberately hybrid: each bounded context picks the SoT model that fits
 |---|---|---|---|---|
 | `chat.messages.v1` | `channelId` | 7 days | No | Canonical message log |
 | `chat.redactions.v1` | `messageId` | Forever | Yes | Moderation overrides, joined at read |
-| `chat.presence.v1` | `channelId` | 1 day | No | Viewer join/leave |
+| `chat.presence.joined.v1` | `channelId` | 1 day | No | Viewer join events |
+| `chat.presence.left.v1` | `channelId` | 1 day | No | Viewer leave events |
+
+Presence is **split into two topics**, not one `chat.presence.v1` carrying both — one event type per topic, per [ADR-0004](docs/adr/0004-schema-strategy.md). The alternative (a single `chat.presence.v1` with a `ViewerPresenceChanged { kind }` envelope) would give per-channel total ordering of join/leave, but presence is consumed by `analytics` as a windowed, approximate concurrent-viewer count, so single-partition ordering buys nothing worth a `TopicNameStrategy` exception.
 
 **Projections off the chat log:**
 - **Redis** — per-channel last-N ring buffer for mid-stream-join UX
@@ -56,6 +62,9 @@ Pulse is deliberately hybrid: each bounded context picks the SoT model that fits
 - **Source of schemas:** monorepo, in `packages/schemas/`. Each service runs Avro codegen from the shared `.avsc` files at build time. The registry *enforces* compatibility (CI publishes and rejects on break); the `.avsc` files in the repo are the human-readable SoT.
 - **Compatibility mode:** `BACKWARD` — producers can add optional fields with defaults; consumers can upgrade later.
 - **Subject naming:** `TopicNameStrategy` — one event type per topic. Forces each event's lifecycle (retention, partitioning, consumers) to be designed independently.
+- **Event → topic mapping** is owned by the `SCHEMA_TOPICS` map in `packages/schemas/publish.ts` — the single executable source of truth that registers subjects with the registry. This document records only *domain* decisions about a topic (keying, retention, compaction, and the rationale), never the bare mapping, which would inevitably drift.
+
+**Stream lifecycle topics:** `StreamStarted` and `StreamEnded` are two separate topics (`stream.started.v1`, `stream.ended.v1`), produced by `identity`. Keying and retention are deliberately undecided until `identity` is built — registering the schema does not configure the topic.
 
 ## Repo layout
 

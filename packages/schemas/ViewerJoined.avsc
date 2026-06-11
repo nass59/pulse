@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "ViewerJoined",
+  "namespace": "pulse.events.v1",
+  "fields": [
+    {
+      "name": "channelId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "streamId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "userId",
+      "type": { "type": "string", "logicalType": "uuid" }
+    },
+    {
+      "name": "joinedAt",
+      "type": { "type": "long", "logicalType": "timestamp-millis" }
+    }
+  ]
+}
