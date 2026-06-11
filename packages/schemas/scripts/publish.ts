@@ -78,7 +78,7 @@ const getCompatibility = async (subject: string): Promise<string> => {
 const getVersions = (subject: string): Promise<number[]> =>
   request("GET", `/subjects/${subject}/versions`);
 
-const schemaDir = new URL(".", import.meta.url).pathname;
+const schemaDir = new URL("../avro/", import.meta.url).pathname;
 
 const publish = async () => {
   for (const [file, topic] of Object.entries(SCHEMA_TOPICS)) {

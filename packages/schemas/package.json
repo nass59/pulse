@@ -7,8 +7,8 @@
     ".": "./generated/ts/index.ts"
   },
   "scripts": {
-    "codegen": "bun codegen.ts",
-    "publish-schemas": "bun publish.ts",
+    "codegen": "bun scripts/codegen.ts",
+    "publish-schemas": "bun scripts/publish.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

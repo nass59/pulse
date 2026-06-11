@@ -4,7 +4,7 @@
  * runtime decode failure in another language — is the whole point of codegen.
  */
 
-import type { ChatMessageSent, StreamEnded } from "./generated/ts";
+import type { ChatMessageSent, StreamEnded } from "../generated/ts";
 
 const message: ChatMessageSent = {
   messageId: "8f3b2a10-0000-4000-8000-000000000000",
