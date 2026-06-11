@@ -46,7 +46,7 @@ It should return JSON with the registry name and version.
 
 ```
 services/
-  identity/       TypeScript / Node    — accounts, channels, follows
+  identity/       TypeScript / Bun     — accounts, channels, follows
   chat/           Go                   — WebSocket gateway, chat ingestion
   analytics/      Kotlin + Streams     — windowed aggregates
 packages/

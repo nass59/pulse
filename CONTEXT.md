@@ -23,7 +23,7 @@ An account in its stream-watching role — *not* a distinct entity. The same `us
 
 Pulse starts as three services, deliberately polyglot to force real contracts across the wire.
 
-### `identity` — TypeScript / Node
+### `identity` — TypeScript / Bun
 Owns accounts, channels, and the follow graph. The user-facing API. Produces lifecycle events: `AccountCreated`, `ChannelCreated`, `FollowAdded`, `FollowRemoved`, `StreamScheduled`, `StreamStarted`, `StreamEnded`.
 
 ### `chat` — Go
@@ -73,7 +73,7 @@ Monorepo. Operational cost of 3 separate repos for 3 services outweighs the boun
 ```
 pulse/
 ├── services/
-│   ├── identity/       (TypeScript / Node)
+│   ├── identity/       (TypeScript / Bun)
 │   ├── chat/           (Go)
 │   └── analytics/      (Kotlin + Kafka Streams)
 ├── packages/

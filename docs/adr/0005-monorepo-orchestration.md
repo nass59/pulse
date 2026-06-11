@@ -1,6 +1,6 @@
 # Monorepo orchestration via `just` (no Turborepo yet)
 
-Pulse is a polyglot monorepo (TypeScript, Go, Kotlin). Cross-service orchestration lives in a single root `justfile`; each service uses its native toolchain (`pnpm`, `go`, `gradle`) underneath. Turborepo is deliberately deferred: at three services with one in each language, there is no cross-package build graph for Turborepo to optimise.
+Pulse is a polyglot monorepo (TypeScript, Go, Kotlin). Cross-service orchestration lives in a single root `justfile`; each service uses its native toolchain (`bun`, `go`, `gradle`) underneath. Turborepo is deliberately deferred: at three services with one in each language, there is no cross-package build graph for Turborepo to optimise.
 
 ## Considered options
 
