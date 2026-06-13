@@ -29,6 +29,14 @@ infra-ps:
 infra-logs service="":
     docker compose -f infra/docker-compose.yaml logs -f {{service}}
 
+# Generate TypeScript types from the Avro schemas into packages/schemas/generated/.
+codegen-schemas:
+    bun --filter '@pulse/schemas' codegen
+
+# Publish every .avsc to the local Apicurio registry (needs `infra-up` first).
+schemas-publish:
+    bun --filter '@pulse/schemas' publish-schemas
+
 # Run the docs site in dev mode (Next.js + Turbopack).
 docs-dev:
     bun --filter '@pulse/docs' dev

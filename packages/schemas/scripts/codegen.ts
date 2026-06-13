@@ -18,11 +18,14 @@ interface AvroComplex {
   symbols?: string[];
   type: string;
 }
+
 type AvroType = string | AvroComplex | AvroType[];
+
 interface AvroField {
   name: string;
   type: AvroType;
 }
+
 interface AvroRecord {
   fields: AvroField[];
   name: string;
@@ -50,9 +53,11 @@ const PRIMITIVE_TS: Record<string, string> = {
 const resolveType = (type: AvroType, enums: Map<string, string>): string => {
   if (typeof type === "string") {
     const ts = PRIMITIVE_TS[type];
+
     if (!ts) {
       throw new Error(`Unsupported Avro primitive: ${type}`);
     }
+
     return ts;
   }
 
@@ -66,8 +71,10 @@ const resolveType = (type: AvroType, enums: Map<string, string>): string => {
     if (!(type.name && type.symbols)) {
       throw new Error(`Malformed enum: ${JSON.stringify(type)}`);
     }
+
     const union = type.symbols.map((s) => `"${s}"`).join(" | ");
     enums.set(type.name, `export type ${type.name} = ${union};`);
+
     return type.name;
   }
 
@@ -77,9 +84,11 @@ const resolveType = (type: AvroType, enums: Map<string, string>): string => {
    * This is the same erasure that happens on the wire.
    */
   const ts = PRIMITIVE_TS[type.type];
+
   if (!ts) {
     throw new Error(`Unsupported Avro type: ${JSON.stringify(type)}`);
   }
+
   return ts;
 };
 
@@ -115,15 +124,18 @@ const main = async () => {
     const record: AvroRecord = JSON.parse(
       await readFile(`${AVRO_DIR}${file}`, "utf8")
     );
+
     const { code, names } = generate(record);
 
     await writeFile(
       `${OUT_DIR}/${record.name}.ts`,
       `${BANNER}\n// Source: ${file}\n\n${code}\n`
     );
+
     reexports.push(
       `export type { ${names.join(", ")} } from "./${record.name}";`
     );
+
     console.log(`✓ ${file.padEnd(22)} → generated/ts/${record.name}.ts`);
   }
 
@@ -131,6 +143,7 @@ const main = async () => {
     `${OUT_DIR}/index.ts`,
     `${BANNER}\n\n${reexports.join("\n")}\n`
   );
+
   console.log(
     `✓ barrel               → generated/ts/index.ts (${files.length} records)`
   );
