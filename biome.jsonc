@@ -3,7 +3,7 @@
   "extends": ["ultracite/biome/core", "ultracite/biome/next"],
   "overrides": [
     {
-      "includes": ["packages/schemas/scripts/*.ts"],
+      "includes": ["**/scripts/*.ts"],
       "linter": {
         "rules": {
           "suspicious": { "noConsole": "off" }

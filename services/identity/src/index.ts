@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import { config } from "./config";
 import { sql } from "./db";
+import { startRelay, stopRelay } from "./relay";
 
 const app = Fastify({
   logger: true,
@@ -42,7 +43,8 @@ const shutdown = async (signal: string) => {
   app.log.info(`${signal} received, shutting down`);
 
   try {
-    await app.close();
+    await stopRelay(); // ① stop the loop + disconnect producer FIRST
+    await app.close(); // ② drain HTTP, then the onClose hook closes the pool
     process.exit(0);
   } catch (error) {
     app.log.error(error, "error during shutdown");
@@ -55,6 +57,7 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 
 try {
   await app.listen({ port: config.port, host: "0.0.0.0" });
+  startRelay(app.log);
 } catch (error) {
   app.log.error(error, "failed to start");
   process.exit(1);

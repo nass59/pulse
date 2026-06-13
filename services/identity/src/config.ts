@@ -13,4 +13,5 @@ export const config = {
   databaseUrl: required("DATABASE_URL"),
   kafkaBrokers: required("KAFKA_BROKERS"),
   schemaRegistryUrl: required("SCHEMA_REGISTRY_URL"),
+  relayPollMs: Number(process.env.RELAY_POLL_MS ?? 500),
 } as const;

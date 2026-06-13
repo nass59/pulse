@@ -10,4 +10,5 @@ import { config } from "./config";
  */
 export const sql = postgres(config.databaseUrl, {
   max: 10,
+  transform: postgres.camel,
 });
