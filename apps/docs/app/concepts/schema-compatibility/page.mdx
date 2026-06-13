@@ -1,0 +1,97 @@
+export const metadata = {
+  title: "Schema compatibility — Pulse docs",
+  description:
+    "How a registry lets you evolve an event schema without breaking the services that already read it — reader/writer resolution, the BACKWARD rule, and why the default field is the hinge.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={
+    <>
+      Schema compatibility — change without <span className="ds-mark">breaking</span> readers
+    </>
+  }
+/>
+
+<Hook>
+  The day you add a field to `ChatMessageSent` — already consumed by `chat` in
+  Go and `analytics` in Kotlin — something has to stop you from shipping a break.
+  That something is the compatibility gate.
+</Hook>
+
+Here's the trap event-driven systems walk into. You define `ChatMessageSent`, three services start reading it, and months later you want to add an `editedAt` field. You change the schema, redeploy the producer, and a Kotlin consumer that hasn't been touched in weeks starts throwing deserialization errors on every message. Nothing in your build caught it, because the producer and the consumer were compiled at different times against different ideas of what the event *is*.
+
+A schema registry exists to make that impossible. It sits between everyone who writes events and everyone who reads them, holding the canonical version of each schema and refusing to register a new one that would strand an existing reader. The break that used to surface at 3 a.m. in production now surfaces as a `409` at publish time.
+
+## Every message carries its writer's schema
+
+The mechanism underneath is Avro's quiet superpower: a message on the wire isn't self-describing JSON, it's compact binary stamped with the **id of the schema it was written with**. When a consumer reads it, it has two schemas in hand — the **writer's** (fetched from the registry by that id) and its own **reader's** schema — and it *resolves* one against the other field by field.
+
+Compatibility is simply a promise about which (reader, writer) pairs are allowed to resolve. Pin a subject to a mode and the registry enforces that promise on every future version.
+
+<Callout variant="key" title="Reader and writer schemas are allowed to differ">
+  This is the idea that makes the whole thing work. A consumer never has to read
+  with the *exact* schema a message was written with — it reads with its own and
+  Avro reconciles the two. Compatibility rules just bound how far apart those two
+  schemas are permitted to drift.
+</Callout>
+
+## BACKWARD runs exactly one test
+
+Pulse pins every subject to **`BACKWARD`**, the most-deployed choice. It asks one question of any proposed change: *can a consumer running the new schema still read a message written with the old one?* Try it — propose a change and watch the registry accept or reject it:
+
+<SchemaEvolution />
+
+The whole lesson lives in the first two scenarios. Adding a field is fine **if it has a default**, because a new consumer reading an old message that lacks the field falls back to that default. Drop the default and the same add becomes a break: there's no value to supply and nothing to fall back on. Deleting a field is always safe (the new reader just ignores it); renaming is a delete-plus-add and fails on the add half — which is the precise `409` the `viewerId → userId` collapse hit while the schemas were first being registered.
+
+## The four modes, and why BACKWARD
+
+`BACKWARD` is one of four promises a subject can carry. They differ in *which direction* the reader/writer pair points, which in turn dictates the order you can safely roll out a change:
+
+| Mode | The promise it keeps | What it lets you do | Roll out first |
+|---|---|---|---|
+| **`BACKWARD`** | New reader reads old data | Add fields **with a default**; delete fields | Consumers |
+| `FORWARD` | Old reader reads new data | Add fields; delete **optional** fields | Producers |
+| `FULL` | Both directions hold | Add or delete **optional** fields only | Either |
+| `NONE` | No promise | Anything | — |
+
+`BACKWARD` matches the deploy order Pulse will actually live with: a producer can add an optional field and ship it, and consumers upgrade **whenever they get to it** — because the new schema is guaranteed to still read the backlog of old-format messages sitting in the topic. For the `chat.messages.v1` log with its 7-day retention, that backlog is real: a consumer redeployed today must read messages written six days ago without a hiccup.
+
+```bash
+# every subject is pinned to BACKWARD, verified by read-back at publish time
+curl -s .../config/chat.messages.v1-value | jq .compatibilityLevel
+# "BACKWARD"
+```
+
+<Callout variant="footgun" title="A rename is a remove plus an add — and the add has no default">
+  Avro matches fields by name, so there is no "rename" operation: the old name
+  is deleted and a new one is added. Under `BACKWARD` the add half needs a
+  default it can't have, so the registry returns `409`. The fix that shipped
+  during first-schemas wasn't a clever migration — the rename happened before any
+  data was produced, so the two pre-release subjects were simply hard-reset. Once
+  events are flowing, a rename means a new field carried alongside the old one.
+</Callout>
+
+The deliberate version of this — *break a schema on purpose in CI and feel `BACKWARD` / `FORWARD` / `FULL` reject it* — is a Phase 3 drill. For now the rule is live on all five subjects, quietly doing its job: it's the reason a contract change shows up as a reviewable diff and a publish-time verdict, never a runtime surprise in a language you weren't even editing.
+
+<PageNav
+  next={{
+    href: "/journey/foundations",
+    title: "Journey · Foundations",
+    blurb: "Where this gate shipped — the Phase 0 recap, schemas included.",
+  }}
+  prev={{
+    href: "/concepts",
+    title: "All concepts",
+    blurb: "The full catalogue — what's live and what's coming.",
+  }}
+/>
+
+<Sources
+  adrs={[4]}
+  issues={[
+    "first-schemas/01-define-schemas",
+    "first-schemas/02-publish-to-apicurio",
+    "first-schemas/03-ts-codegen",
+  ]}
+/>

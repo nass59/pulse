@@ -6,8 +6,9 @@
  *
  * Honesty rules carried over from `AGENTS.md`:
  *  - Status is hand-set from the real issue tracker, never invented progress.
- *    `foundations/` is done and `first-schemas/` is still open, so Phase 0 is
- *    `current` ("you are here"); everything after it is `planned`.
+ *    `foundations/` and `first-schemas/` are both shipped, so Phase 0 is
+ *    `shipped` and Phase 1 — First Light — is now `current` ("you are here");
+ *    everything after it is `planned`.
  *  - `items` with an `href` are `live` concept pages and link out; the rest are
  *    `coming` — rendered dashed/dimmed, never linked, until their page ships.
  *  - Effort is weekend-scale, the way the roadmap actually measures itself.
@@ -49,7 +50,7 @@ export const PHASES: Phase[] = [
     name: "Foundations",
     lesson: "The substrate — Kafka, enforced schemas, a reproducible dev box.",
     effort: "~1 weekend",
-    status: "current",
+    status: "shipped",
     shipsWhen:
       "docker compose up brings up Kafka + Apicurio + Postgres + Redis, a kcat message round-trips, and TypeScript codegen builds from the five registered schemas.",
     items: [
@@ -61,7 +62,11 @@ export const PHASES: Phase[] = [
         done: true,
       },
       { label: "Named volumes", href: "/concepts/named-volumes", done: true },
-      { label: "Schema compatibility", done: false },
+      {
+        label: "Schema compatibility",
+        href: "/concepts/schema-compatibility",
+        done: true,
+      },
     ],
   },
   {
@@ -70,7 +75,7 @@ export const PHASES: Phase[] = [
     lesson:
       "Cross-language event-driven contracts. “Almost everything is an event,” made real.",
     effort: "3–4 weekends",
-    status: "planned",
+    status: "current",
     shipsWhen:
       "In a browser: flip a channel live, see a player + chat box, send messages other tabs receive in real time, and watch the viewer count tick — all routed through Kafka.",
     items: [

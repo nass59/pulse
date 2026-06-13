@@ -19,6 +19,7 @@ import { Sources } from "@/components/docs/sources";
 import { Table, Td, Th, Thead, Tr } from "@/components/docs/table";
 import { Tag } from "@/components/docs/tag";
 import { KraftControllerElection } from "@/components/interactive/kraft-controller-election";
+import { SchemaEvolution } from "@/components/interactive/schema-evolution";
 import { SystemTopology } from "@/components/interactive/system-topology";
 
 /**
@@ -49,6 +50,7 @@ const components: MDXComponents = {
   PageHeader,
   PageNav,
   QuorumFaultTolerance,
+  SchemaEvolution,
   Sources,
   Tag,
   VolumePersistence,

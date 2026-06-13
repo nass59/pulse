@@ -57,6 +57,13 @@ export const LIVE_CONCEPTS: Concept[] = [
     href: "/concepts/named-volumes",
     icon: HardDrive,
   },
+  {
+    title: "Schema compatibility",
+    blurb: "Evolving events without breaking readers.",
+    href: "/concepts/schema-compatibility",
+    icon: ShieldCheck,
+    interactive: true,
+  },
 ];
 
 export const COMING_CONCEPTS: Concept[] = [
@@ -74,11 +81,6 @@ export const COMING_CONCEPTS: Concept[] = [
     title: "The log & offsets",
     blurb: "Why Kafka is a log, not a queue.",
     icon: ScrollText,
-  },
-  {
-    title: "Schema compatibility",
-    blurb: "Evolving events without breaking readers.",
-    icon: ShieldCheck,
   },
   {
     title: "Transactional outbox",
