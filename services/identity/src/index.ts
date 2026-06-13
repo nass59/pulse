@@ -31,12 +31,13 @@ app.addHook("onClose", async () => {
   await sql.end({ timeout: 5 });
 });
 
-const shuttingDown = false;
+let shuttingDown = false;
 
 const shutdown = async (signal: string) => {
   if (shuttingDown) {
     return;
   }
+  shuttingDown = true;
 
   app.log.info(`${signal} received, shutting down`);
 
