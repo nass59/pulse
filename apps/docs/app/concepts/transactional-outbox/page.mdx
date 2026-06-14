@@ -1,0 +1,109 @@
+export const metadata = {
+  title: "Transactional outbox — Pulse docs",
+  description:
+    "How identity changes state and emits an event without ever letting the two disagree — the dual-write trap, the one-transaction fix, at-least-once delivery, and why Postgres stays the truth while Kafka is the broadcast.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 1"
+  title={
+    <>
+      The transactional outbox — one write, no <span className="ds-mark">lost events</span>
+    </>
+  }
+/>
+
+<Hook>
+  alice hits **go live**. In the next second a dozen things must happen — chat
+  spins up, followers get a push, the homepage reshuffles. The outbox is what
+  guarantees "alice is live" and "tell everyone alice is live" can never
+  disagree.
+</Hook>
+
+Picture the `go-live` handler doing the obvious thing. It updates Postgres — insert a `streams` row, flip `channels.is_live` to true — and then publishes a `StreamStarted` event to Kafka so the other services wake up. Two writes, back to back. What could go wrong?
+
+The gap between them, that's what. These are two different systems, and the process can die in the half-second between the `COMMIT` and the `publish()`. Now Postgres says alice is live, but no event ever reached Kafka: her followers are never notified, chat never opens, and nothing in your code is even *aware* anything broke. Flip the order to publish first and you get the mirror image — a `StreamStarted` goes out for a stream that then fails to commit, so every consumer reacts to a broadcast that never actually happened.
+
+This is the **dual-write problem**, and it has no clever fix at the call site. There is no order of two independent systems that survives a crash in the middle.
+
+## Feel the gap, then close it
+
+Pick a strategy and a moment to crash. Watch where Postgres (the truth) and Kafka (what consumers saw) end up — and notice that the *same* crash that corrupts dual-write either rolls back cleanly or merely duplicates under the outbox.
+
+<OutboxLab />
+
+The trick the outbox plays is almost cheeky: stop trying to write to two systems at once. Write only to Postgres — but make "we need to publish this event" *one of the rows you commit*. The event becomes a line in an `outbox` table, inserted in the **same transaction** as the state change. Either all of it commits or none of it does. State and intent-to-publish now share a single fate, because they're a single transaction.
+
+<OutboxFlow />
+
+A separate worker — the **relay** — polls the outbox for unpublished rows, sends each to Kafka, and marks it done. The handler's job ends at `COMMIT`; delivery is somebody else's problem now. That's the second quiet win: the request path never blocks on Kafka, so a slow or down broker can't slow down or fail a go-live.
+
+<Callout variant="key" title="The event rides inside the transaction">
+  This is the whole idea. `writeEvent(tx, …)` takes the *transaction handle*, not
+  a connection pool, so the event row is inserted on the exact same transaction
+  as the business write. Hand it a pool by mistake and the insert lands on a
+  different transaction — and you've quietly rebuilt the dual-write bug you were
+  trying to kill.
+</Callout>
+
+## The referee is the database, not the app
+
+There's a sharp invariant hiding in "go live": a channel can have at most one *active* stream. The naive guard — read "is it live?", then insert if not — is a race two simultaneous taps on the button will win together, opening two streams.
+
+So Pulse doesn't guard it in the app at all. A **partial unique index** (`UNIQUE (channel_id) WHERE ended_at IS NULL`) lets the database itself reject the second open stream; the handler just inserts optimistically and translates the resulting `23505` into a `409`. It's goal-line technology, not two defenders shouting at each other: the call is made by the system that physically can't be raced, and the app simply respects the verdict.
+
+## Why the relay delivers twice — and why that's fine
+
+Here's the part that trips people up. The relay gives you **at-least-once** delivery, not exactly-once. If it crashes *after* Kafka acks the message but *before* it writes `published_at`, the row still looks unpublished on restart — so it gets sent again.
+
+You already know this in your bones as a viewer. Every so often Twitch or YouTube sends you the same "**alice went live**" push notification twice. The platform didn't lose its mind; a delivery pipeline re-sent an event it wasn't sure had landed. A well-built phone shows it to you once anyway. That dedupe is the consumer being **idempotent**, and it's the price of admission for at-least-once systems.
+
+<Callout variant="lesson" title="Exactly-once is mostly a consumer's job">
+  The outbox makes the *producer* safe — the event can't be lost and can't
+  outlive a rolled-back write. It does **not** make Kafka exactly-once. The
+  residue is the occasional duplicate, and the fix lives on the read side:
+  consumers key off the event id and ignore one they've already processed. "No
+  duplicates" is something you build, not something the broker hands you.
+</Callout>
+
+## Postgres is the scoreboard, Kafka is the commentary
+
+It's tempting, once events are flowing, to treat Kafka as the source of truth. Pulse deliberately doesn't. Postgres is the **canonical** store — the official scoreboard you query when you need to *know* whether alice is live right now. Kafka is the **derivative** — the live commentary feed other services tune into to *learn that something changed*.
+
+| | Postgres | Kafka |
+|---|---|---|
+| Role | Canonical state (the scoreboard) | Derived notification stream (the commentary) |
+| Answers | "Is alice live *right now*?" | "Did alice's state just change?" |
+| Read by | `identity` itself, for queries | Other services — chat, analytics, notifications |
+| If it disagreed | It's the truth by definition | Re-derive it from Postgres |
+
+Keeping that split straight is what lets the same `StreamStarted` row carry two different identities without contradiction: its `aggregate_id` is the *stream* (what changed in the database), while its `partition_key` is the *channelId* (how Kafka orders it, so one channel's events stay in sequence). The database's notion of "the thing that changed" and the log's notion of "the ordering key" are answering different questions — and conflating them is one of the most common outbox mistakes.
+
+<Callout variant="footgun" title="Never publish to Kafka from the handler">
+  The instant a request handler calls `producer.send()` directly, the whole
+  pattern is defeated — you're back to two systems and a crash window between
+  them. Handlers write rows; the relay writes to Kafka. That line never blurs.
+</Callout>
+
+<PageNav
+  next={{
+    href: "/architecture",
+    title: "Architecture",
+    blurb: "See it in the live topology — identity now drives its edges to Postgres and Kafka.",
+  }}
+  prev={{
+    href: "/concepts",
+    title: "All concepts",
+    blurb: "The full catalogue — what's live and what's coming.",
+  }}
+/>
+
+<Sources
+  adrs={[3, 12, 13, 14]}
+  issues={[
+    "identity-mvp/01-postgres-schema",
+    "identity-mvp/03-outbox-table",
+    "identity-mvp/04-outbox-relay",
+    "identity-mvp/05-go-live-endpoint",
+  ]}
+/>

@@ -43,6 +43,18 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0011-learn-track-general-kafka",
     title: "Learn track — general Kafka pedagogy",
   },
+  12: {
+    slug: "0012-stream-lifecycle-topic-topology",
+    title: "Stream lifecycle topic topology",
+  },
+  13: {
+    slug: "0013-in-process-polling-outbox-relay",
+    title: "In-process polling outbox relay",
+  },
+  14: {
+    slug: "0014-murmur2-partitioning-across-producers",
+    title: "murmur2 partitioning across producers",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");

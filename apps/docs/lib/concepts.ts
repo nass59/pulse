@@ -64,6 +64,13 @@ export const LIVE_CONCEPTS: Concept[] = [
     icon: ShieldCheck,
     interactive: true,
   },
+  {
+    title: "Transactional outbox",
+    blurb: "Postgres truth, Kafka notification — atomically.",
+    href: "/concepts/transactional-outbox",
+    icon: Mailbox,
+    interactive: true,
+  },
 ];
 
 export const COMING_CONCEPTS: Concept[] = [
@@ -81,11 +88,6 @@ export const COMING_CONCEPTS: Concept[] = [
     title: "The log & offsets",
     blurb: "Why Kafka is a log, not a queue.",
     icon: ScrollText,
-  },
-  {
-    title: "Transactional outbox",
-    blurb: "Postgres truth, Kafka notification — atomically.",
-    icon: Mailbox,
   },
   {
     title: "Stream–table joins",

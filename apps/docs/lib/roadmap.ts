@@ -79,11 +79,15 @@ export const PHASES: Phase[] = [
     shipsWhen:
       "In a browser: flip a channel live, see a player + chat box, send messages other tabs receive in real time, and watch the viewer count tick — all routed through Kafka.",
     items: [
-      { label: "Transactional outbox" },
-      { label: "The log & offsets" },
-      { label: "Partitions & ordering" },
-      { label: "Consumer groups" },
-      { label: "Stream–table joins" },
+      {
+        label: "Transactional outbox",
+        href: "/concepts/transactional-outbox",
+        done: true,
+      },
+      { label: "The log & offsets", done: false },
+      { label: "Partitions & ordering", done: false },
+      { label: "Consumer groups", done: false },
+      { label: "Stream–table joins", done: false },
     ],
   },
   {

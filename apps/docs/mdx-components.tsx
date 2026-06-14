@@ -8,6 +8,7 @@ import {
   DependsOnRace,
   HealthcheckTimeline,
   KraftVsZookeeper,
+  OutboxFlow,
   QuorumFaultTolerance,
   VolumePersistence,
 } from "@/components/docs/diagram";
@@ -19,6 +20,7 @@ import { Sources } from "@/components/docs/sources";
 import { Table, Td, Th, Thead, Tr } from "@/components/docs/table";
 import { Tag } from "@/components/docs/tag";
 import { KraftControllerElection } from "@/components/interactive/kraft-controller-election";
+import { OutboxLab } from "@/components/interactive/outbox-lab";
 import { SchemaEvolution } from "@/components/interactive/schema-evolution";
 import { SystemTopology } from "@/components/interactive/system-topology";
 
@@ -47,6 +49,7 @@ const components: MDXComponents = {
   HealthcheckTimeline,
   Hook,
   KraftVsZookeeper,
+  OutboxFlow,
   PageHeader,
   PageNav,
   QuorumFaultTolerance,
@@ -55,6 +58,7 @@ const components: MDXComponents = {
   Tag,
   VolumePersistence,
   KraftControllerElection,
+  OutboxLab,
   SystemTopology,
 };
 

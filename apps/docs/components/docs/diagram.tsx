@@ -5,7 +5,9 @@ import {
   Crown,
   Database,
   HardDrive,
+  Inbox,
   ListChecks,
+  Radio,
   ScrollText,
   Send,
   Server,
@@ -485,6 +487,73 @@ export const KraftVsZookeeper = () => (
             </span>
           </div>
         </div>
+      </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Transactional outbox — two planes: one atomic write, one async relay.*/
+/* ------------------------------------------------------------------ */
+
+/**
+ * The outbox's whole shape in one figure. The request path commits the state
+ * change AND the event row in a single Postgres transaction, then returns — it
+ * never touches Kafka. A separate relay polls the unpublished rows and delivers
+ * them. Splitting the diagram into two planes is the lesson: the request can't
+ * fail because Kafka is slow, and the event can't be lost because it committed
+ * with the state. This is the live `identity → Postgres → Kafka` path today.
+ */
+export const OutboxFlow = () => (
+  <DiagramFrame caption="One transaction commits the stream, the is_live flag, and the event row together — then the handler returns. A separate relay drains unpublished rows to Kafka and marks them done. The request path never waits on Kafka; the event can never outlive a rolled-back write.">
+    <div className="flex flex-col gap-1.5">
+      <span className="ds-eyebrow text-[10px] text-accent-green">
+        the request path · one transaction
+      </span>
+      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <FlowBox mono tone="neutral">
+          <Send className="size-4" />
+          POST /go-live
+        </FlowBox>
+        <Connector label="BEGIN" />
+        <FlowBox mono tone="green">
+          <Database className="size-4" />
+          <span className="leading-snug">
+            streams + channels.is_live
+            <br />+ outbox row
+          </span>
+        </FlowBox>
+        <Connector label="COMMIT" />
+        <FlowBox mono tone="ink">
+          <Check className="size-4" />
+          200 streamId
+        </FlowBox>
+      </div>
+    </div>
+
+    <div className="mt-5 flex flex-col gap-1.5 border-border border-t pt-5">
+      <span className="ds-eyebrow text-[10px] text-electric-yellow">
+        the delivery path · async relay
+      </span>
+      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <FlowBox mono tone="neutral">
+          <Inbox className="size-4" />
+          <span className="leading-snug">
+            outbox WHERE
+            <br />
+            published_at IS NULL
+          </span>
+        </FlowBox>
+        <Connector label="poll 500ms" />
+        <FlowBox mono tone="ink">
+          <Radio className="size-4" />
+          stream.started.v1
+        </FlowBox>
+        <Connector label="on ack" />
+        <FlowBox mono tone="green">
+          <Check className="size-4" />
+          set published_at
+        </FlowBox>
       </div>
     </div>
   </DiagramFrame>

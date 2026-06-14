@@ -9,12 +9,13 @@ import { Background, type Edge, type Node, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 /**
- * The target control-plane topology from CONTEXT.md, with Phase 0 build-state
- * encoded honestly: the four infra pieces actually run today (`live`); the three
- * services are designed but not yet built (`planned`). Crucially, no edges are
- * `live` yet — Phase 0 stood up four isolated containers; nothing produces or
- * consumes until the services land. Each future epic flips a node (and its
- * edges) from planned to live.
+ * The target control-plane topology from CONTEXT.md, with build-state encoded
+ * honestly. The four infra pieces run today (`live`). As of Phase 1's
+ * identity-mvp, `identity` is `live` too — and so are the three edges it drives:
+ * it writes canonical state + the outbox to Postgres, produces StreamStarted /
+ * StreamEnded to Kafka, and resolves Avro schemas from Apicurio. `chat` and
+ * `analytics` remain `planned`, and every edge that needs them stays dashed.
+ * Each future epic flips the next node (and its edges) from planned to live.
  */
 type BuildState = "live" | "planned";
 
@@ -49,8 +50,8 @@ const nodes: Node[] = [
   {
     id: "identity",
     position: { x: 0, y: 0 },
-    data: { label: label("identity", "planned · TS") },
-    style: nodeStyle("planned"),
+    data: { label: label("identity", "live · TS") },
+    style: nodeStyle("live"),
   },
   {
     id: "chat",
@@ -91,12 +92,19 @@ const nodes: Node[] = [
 ];
 
 /**
- * Every edge is `planned`: it requires a service that does not exist yet.
- * Rendered dashed + animated so the diagram reads as "wiring to come."
+ * A `planned` edge requires a service that does not exist yet: dashed + animated
+ * so the diagram reads as "wiring to come." A `live` edge runs today: solid and
+ * calm, no marching ants.
  */
 const plannedEdge = {
   animated: true,
   style: { strokeDasharray: "5 5", stroke: "var(--color-muted-foreground)" },
+  labelStyle: { fontSize: 10, fill: "var(--color-muted-foreground)" },
+};
+
+const liveEdge = {
+  animated: false,
+  style: { stroke: "var(--color-foreground)", strokeWidth: 1.5 },
   labelStyle: { fontSize: 10, fill: "var(--color-muted-foreground)" },
 };
 
@@ -106,14 +114,14 @@ const edges: Edge[] = [
     source: "identity",
     target: "postgres",
     label: "canonical store + outbox",
-    ...plannedEdge,
+    ...liveEdge,
   },
   {
     id: "identity-kafka",
     source: "identity",
     target: "kafka",
-    label: "AccountCreated, StreamStarted…",
-    ...plannedEdge,
+    label: "StreamStarted, StreamEnded",
+    ...liveEdge,
   },
   {
     id: "chat-kafka",
@@ -140,8 +148,8 @@ const edges: Edge[] = [
     id: "apicurio-identity",
     source: "apicurio",
     target: "identity",
-    label: "Avro schemas (all services)",
-    ...plannedEdge,
+    label: "Avro schemas",
+    ...liveEdge,
   },
 ];
 
@@ -165,8 +173,8 @@ export const SystemTopology = () => (
         <LegendDot state="planned" /> planned (designed, not yet built)
       </span>
       <span>
-        Edges are dashed because every flow needs a service that does not exist
-        yet.
+        Solid edges run today; dashed edges still need a service that doesn't
+        exist yet.
       </span>
     </div>
     <div className="h-[28rem] w-full rounded-lg border bg-muted/20">
