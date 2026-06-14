@@ -25,3 +25,17 @@ property of the system, not a bug to fix on the producer side.
 `writeEvent` takes a `TransactionSql`, never a pool. Encoding to Kafka happens
 only in the relay. Never `kafka.publish()` from a request handler — that
 reintroduces the dual-write bug and defeats the entire pattern.
+
+## Aggregate identity is not the partition key
+
+An outbox row carries both `aggregate_id` and `partition_key`, and for stream
+lifecycle events they are deliberately _different_:
+
+- `aggregate_type` / `aggregate_id` describe **what changed in the database** —
+  the stream whose lifecycle moved (`"stream"` / `streamId`). It's the durable,
+  Debezium-shaped identity of the entity that produced the event.
+- `partition_key` describes **how Kafka orders the event** — `channelId`, so a
+  channel's events share a partition (ADR-0012's co-partitioning).
+
+Conflating them is a common outbox mistake. The DB's notion of "the aggregate"
+and the log's notion of "the ordering key" answer different questions.

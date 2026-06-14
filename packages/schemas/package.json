@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./generated/ts/index.ts"
+    ".": "./generated/ts/index.ts",
+    "./topics": "./topics.ts"
   },
   "scripts": {
     "codegen": "bun scripts/codegen.ts",

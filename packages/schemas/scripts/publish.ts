@@ -10,23 +10,11 @@
  */
 
 import { readFile } from "node:fs/promises";
+import { EVENT_TOPICS } from "../topics";
 
 const REGISTRY_URL = process.env.REGISTRY_URL ?? "http://localhost:8080";
 const CCOMPAT = `${REGISTRY_URL}/apis/ccompat/v6`;
 const COMPATIBILITY = "BACKWARD";
-
-/**
- * The single source of truth mapping each schema file to its Kafka topic.
- * Subjects follow TopicNameStrategy (`<topic>-value`); the codegen step reads
- * the same table so producers, consumers, and the registry never disagree.
- */
-const SCHEMA_TOPICS: Record<string, string> = {
-  "StreamStarted.avsc": "stream.started.v1",
-  "StreamEnded.avsc": "stream.ended.v1",
-  "ChatMessageSent.avsc": "chat.messages.v1",
-  "ViewerJoined.avsc": "chat.presence.joined.v1",
-  "ViewerLeft.avsc": "chat.presence.left.v1",
-};
 
 const subjectOf = (topic: string) => `${topic}-value`;
 
@@ -81,9 +69,9 @@ const getVersions = (subject: string): Promise<number[]> =>
 const schemaDir = new URL("../avro/", import.meta.url).pathname;
 
 const publish = async () => {
-  for (const [file, topic] of Object.entries(SCHEMA_TOPICS)) {
+  for (const [eventType, topic] of Object.entries(EVENT_TOPICS)) {
     const subject = subjectOf(topic);
-    const schemaText = await readFile(`${schemaDir}${file}`, "utf8");
+    const schemaText = await readFile(`${schemaDir}${eventType}.avsc`, "utf8");
 
     /**
      * Order is deliberate: register first so the subject exists, then pin its
@@ -108,5 +96,5 @@ const publish = async () => {
 await publish();
 
 console.log(
-  `\nAll ${Object.keys(SCHEMA_TOPICS).length} schemas registered and pinned to ${COMPATIBILITY}.`
+  `\nAll ${Object.keys(EVENT_TOPICS).length} schemas registered and pinned to ${COMPATIBILITY}.`
 );

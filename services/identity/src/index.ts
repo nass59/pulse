@@ -1,3 +1,4 @@
+import { EVENT_TOPICS } from "@pulse/schemas/topics";
 import Fastify from "fastify";
 import { config } from "./config";
 import { sql } from "./db";
@@ -62,12 +63,14 @@ registerStreamRoutes(app);
 try {
   await app.listen({ port: config.port, host: "0.0.0.0" });
   startRelay(app.log);
-  warmSchemaCache(["stream.started.v1", "stream.ended.v1"]).catch((error) => {
-    app.log.warn(
-      error,
-      "schema cache warm failed; will lazy-load on first event"
-    );
-  });
+  warmSchemaCache([EVENT_TOPICS.StreamStarted, EVENT_TOPICS.StreamEnded]).catch(
+    (error) => {
+      app.log.warn(
+        error,
+        "schema cache warm failed; will lazy-load on first event"
+      );
+    }
+  );
 } catch (error) {
   app.log.error(error, "failed to start");
   process.exit(1);

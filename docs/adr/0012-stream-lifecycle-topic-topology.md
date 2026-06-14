@@ -20,9 +20,9 @@ deliberately open until `identity` was built.
 - **Compacted retention.** Rejected, and it would be a correctness bug.
   Compaction keeps only the latest value per key; keyed by `channelId`, that
   would erase the history of every prior stream for a channel. Lifecycle events
-  are immutable *facts*, not a current-state *snapshot* — delete-retained, not
+  are immutable _facts_, not a current-state _snapshot_ — delete-retained, not
   compacted. (Contrast `chat.redactions.v1`, where latest-per-key is the intent.)
-- **Infinite retention (event-sourced history).** Rejected *for `identity`*:
+- **Infinite retention (event-sourced history).** Rejected _for `identity`_:
   Postgres is canonical and already holds the durable `streams` history with
   `started_at`/`ended_at`, so a permanent log duplicating it earns nothing. The
   log is a notification stream, not the source of truth.
@@ -43,6 +43,8 @@ deliberately open until `identity` was built.
 - Partition count is a **system-wide constraint**, not a per-topic choice: every
   `channelId`-keyed topic (lifecycle now, chat in Phase 2) must share the same
   count, sized for the highest-throughput member (chat). We commit to **6**.
+- Co-partitioning also requires every producer to hash keys identically across
+  languages — see [ADR-0014](0014-murmur2-partitioning-across-producers.md).
 - Topics must be provisioned by an explicit infra step before producers run;
   the relay no longer relies on auto-create.
 - Changing the key or the partition count later is a topic migration, not a

@@ -1,3 +1,4 @@
+import type { Topic } from "@pulse/schemas/topics";
 import type { TransactionSql } from "postgres";
 import { registry, schemaIdForTopic } from "./registry";
 
@@ -7,7 +8,7 @@ export interface OutboxEvent {
   eventType: string;
   partitionKey: string;
   payload: Record<string, unknown>;
-  topic: string;
+  topic: Topic;
 }
 
 export const writeEvent = async (

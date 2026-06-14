@@ -68,6 +68,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@kafkajs/confluent-schema-registry": "^4.1.0",
+        "@pulse/schemas": "workspace:*",
         "fastify": "^5.8.5",
         "kafkajs": "^2.2.4",
         "postgres": "^3.4.9",

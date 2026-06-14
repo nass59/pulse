@@ -1,4 +1,5 @@
 import { SchemaRegistry } from "@kafkajs/confluent-schema-registry";
+import type { Topic } from "@pulse/schemas/topics";
 import { config } from "./config";
 
 /**
@@ -17,7 +18,7 @@ const idCache = new Map<string, Promise<number>>();
  * (TopicNameStrategy → `<topic>-value`). We cache the *promise*, so concurrent
  * first-callers share one HTTP round-trip instead of racing several.
  */
-export const schemaIdForTopic = (topic: string): Promise<number> => {
+export const schemaIdForTopic = (topic: Topic): Promise<number> => {
   const subject = `${topic}-value`;
   let id = idCache.get(subject);
 
@@ -43,5 +44,5 @@ export const schemaIdForTopic = (topic: string): Promise<number> => {
  * Best-effort warm of the id cache at boot so the first request's transaction
  * isn't blocked on a registry round-trip while holding row locks.
  */
-export const warmSchemaCache = (topics: string[]): Promise<number[]> =>
+export const warmSchemaCache = (topics: Topic[]): Promise<number[]> =>
   Promise.all(topics.map(schemaIdForTopic));
