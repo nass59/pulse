@@ -1,12 +1,16 @@
 import {
   ArrowRight,
   Box,
+  Boxes,
+  Braces,
   Check,
   Crown,
   Database,
+  FileCode,
   HardDrive,
   Inbox,
   ListChecks,
+  type LucideIcon,
   Radio,
   ScrollText,
   Send,
@@ -556,6 +560,123 @@ export const OutboxFlow = () => (
         </FlowBox>
       </div>
     </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Smoke test — the run-it-yourself ladder for the identity pipeline.   */
+/* ------------------------------------------------------------------ */
+
+interface Rung {
+  cmd: string;
+  icon: LucideIcon;
+  /** The payoff rung — the decoded event arriving — wears the yellow accent. */
+  payoff?: boolean;
+  /** The proof the step prints — what tells you it actually worked. */
+  proof: string;
+  /** The system this command brings online or exercises. */
+  system: string;
+}
+
+const RUNGS: Rung[] = [
+  {
+    cmd: "just infra-up",
+    icon: Boxes,
+    system: "Docker stack",
+    proof: "4 containers, all healthy",
+  },
+  {
+    cmd: "just schemas-publish",
+    icon: FileCode,
+    system: "Apicurio registry",
+    proof: "5 Avro subjects registered",
+  },
+  {
+    cmd: "just identity-migrate",
+    icon: Database,
+    system: "Postgres",
+    proof: "tables created · alice & bob seeded",
+  },
+  {
+    cmd: "just identity-dev",
+    icon: Server,
+    system: "identity service",
+    proof: "relay polling · :3100 live",
+  },
+  {
+    cmd: "just identity-go-live alices-channel",
+    icon: Send,
+    system: "request path",
+    proof: "200 · state + outbox row committed",
+  },
+  {
+    cmd: "just identity-consume",
+    icon: Braces,
+    system: "Kafka → your terminal",
+    proof: "StreamStarted prints, decoded",
+    payoff: true,
+  },
+];
+
+/**
+ * The whole tutorial as one glanceable stepper: each `just` recipe, the system
+ * it brings online, and the proof it prints. It's the race engineer's telemetry
+ * check — bring each channel up, confirm its signal, and only the last rung (the
+ * decoded event landing in your terminal) is the green light that the end-to-end
+ * pipeline is real. Static by design: the dynamics live in the interactive
+ * `OutboxLab` on the outbox concept page; this is the operator's runbook map.
+ */
+export const SmokeTestLadder = () => (
+  <DiagramFrame caption="Six commands, top to bottom. Each brings one system online and prints its own proof — so when a run breaks, you know exactly which rung failed. The last rung is the only one that proves the whole chain: a real event, decoded, in your terminal.">
+    <ol className="flex flex-col gap-2">
+      {RUNGS.map((rung) => {
+        const Icon = rung.icon;
+        return (
+          <li
+            className={cn(
+              "flex flex-col gap-3 rounded-xl border p-3.5 sm:flex-row sm:items-center sm:gap-4",
+              rung.payoff
+                ? "border-electric-yellow/50 bg-yellow-tint dark:border-electric-yellow/25 dark:bg-electric-yellow/[0.06]"
+                : "border-border"
+            )}
+            key={rung.cmd}
+          >
+            <div className="flex min-w-0 items-center gap-3 sm:basis-1/2">
+              <span
+                className={cn(
+                  "flex size-6 shrink-0 items-center justify-center rounded-md border font-mono text-[11px]",
+                  rung.payoff
+                    ? "border-electric-yellow/60 text-yellow-ink dark:text-electric-yellow"
+                    : "border-border text-muted-foreground"
+                )}
+              >
+                {RUNGS.indexOf(rung) + 1}
+              </span>
+              <code className="truncate font-mono text-foreground text-xs">
+                {rung.cmd}
+              </code>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground sm:basis-1/4">
+              <Icon className="size-3.5 shrink-0" />
+              <span className="truncate">{rung.system}</span>
+            </div>
+
+            <div
+              className={cn(
+                "flex items-center gap-1.5 font-mono text-[11px] sm:basis-1/4 sm:justify-end",
+                rung.payoff
+                  ? "text-yellow-ink dark:text-electric-yellow"
+                  : "text-accent-green"
+              )}
+            >
+              <Check className="size-3.5 shrink-0" />
+              <span>{rung.proof}</span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   </DiagramFrame>
 );
 

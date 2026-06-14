@@ -4,7 +4,14 @@ services:
     ports:
       - "9092:9092"
     healthcheck:
-      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      test:
+        [
+          "CMD",
+          "/opt/kafka/bin/kafka-topics.sh",
+          "--bootstrap-server",
+          "localhost:9092",
+          "--list",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -18,6 +25,21 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      # Single-broker dev cluster: pin every broker-internal topic's replication
+      # factor to 1. These default to 3, which a 1-broker cluster cannot satisfy,
+      # so the coordinator can never create the topic and its clients hang.
+      # __consumer_offsets blocks consumer groups; __transaction_state blocks
+      # idempotent/transactional producers. See ADR-0015.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # The image defaults log.dir to /tmp/kafka-logs; move it to a conventional
+      # path and back it with a named volume so the log (and KRaft's cluster
+      # metadata) survives a container recreate. Without this, every broker
+      # config change wipes all topics, events, and committed offsets.
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
   postgres:
     image: postgres:16
     ports:
@@ -54,3 +76,4 @@ services:
 
 volumes:
   postgres_data:
+  kafka_data:

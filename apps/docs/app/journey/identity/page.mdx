@@ -1,0 +1,202 @@
+import { SmokeTestLadder } from "@/components/docs/diagram";
+
+export const metadata = {
+  title: "Journey · Identity — prove the pipeline works — Pulse docs",
+  description:
+    "Phase 1, hands-on: six just recipes that take you from an empty stack to a real StreamStarted event arriving in your terminal, decoded — the run-it-yourself proof the transactional outbox and relay actually work end to end.",
+};
+
+<PageHeader
+  eyebrow="Journey · Phase 1"
+  title={
+    <>
+      Watch a real event <span className="ds-mark">flow end to end</span>
+    </>
+  }
+/>
+
+**Goal:** start from nothing running and, in six commands, watch one `StreamStarted` event travel the whole pipeline you built this phase — from a `go-live` request, through the Postgres outbox, out via the relay to Kafka, and back into your terminal as decoded JSON.
+
+Think of it the way an F1 team treats an installation lap. Nobody trusts the car because the build is "done" — they bring each telemetry channel online one at a time and watch its signal come good before the car ever races. That's this page. Each `just` recipe lights up one system and prints its own proof, so if a run breaks you know *exactly* which rung failed instead of staring at a dead pipeline. The last rung — alice's event landing in your terminal, readable — is the only green light that means the whole chain is real.
+
+<SmokeTestLadder />
+
+Every recipe below already lives in the repo's `justfile`; run `just --list` to see them. You'll want two terminals open by the end: one running the service, one watching the topic.
+
+## Before lights out — one-time setup
+
+The service reads its config from `services/identity/.env`. Copy the example once:
+
+```bash
+cp services/identity/.env.example services/identity/.env
+```
+
+The defaults already match `infra/docker-compose.yaml` — Postgres on `5432`, Kafka on `9092`, the schema registry on `8080` — so there's nothing to edit on a laptop.
+
+## 1 · Bring the substrate online
+
+Same broker you met in [Get started](/learn/getting-started), plus the pieces the service needs. One command starts the stack, a second publishes the Avro schemas the relay will encode against:
+
+```bash
+just infra-up          # Kafka, Apicurio, Postgres, Redis
+just schemas-publish   # register the 5 Avro subjects in Apicurio
+```
+
+Give it a few seconds, then confirm the containers are healthy:
+
+```bash
+just infra-ps
+```
+
+<Callout variant="lesson" title="Publish the schemas before the service, not after">
+  The relay encodes every event against a registered schema id it fetches from
+  Apicurio. If the registry is empty, the first event has nothing to encode
+  against. `schemas-publish` is the step that makes the contract exist — the same
+  subjects the [schema compatibility](/concepts/schema-compatibility) page covers.
+</Callout>
+
+## 2 · Migrate and seed the database
+
+The tables don't exist yet, and neither do the channels you're about to send live. One recipe runs both migrations — the schema, then the seed:
+
+```bash
+just identity-migrate
+```
+
+That seeds two accounts and their channels: **alice** (`alices-channel`) and **bob** (`bobs-channel`). They're the slugs every endpoint recipe defaults to, so the rest of the tutorial has something real to act on.
+
+## 3 · Start the service
+
+In your **first terminal**, run the service in watch mode:
+
+```bash
+just identity-dev
+```
+
+Two things start together here: the HTTP server on `:3100`, and the **relay** — a background loop polling the outbox for unpublished rows every 500ms. Watch the logs; once you see the relay connect to Kafka, the producer side is armed and waiting for something to deliver.
+
+<Callout variant="lesson" title="That stack trace on startup is cosmetic — keep going">
+  The instant the relay opens its Kafka connection you'll see a
+  `TimeoutNegativeWarning` trailing a nine-line stack trace. Nothing broke. On
+  Bun, kafkajs's request queue computes a negative timer delay; Node would clamp
+  it silently, Bun clamps it to 1ms and prints this. The connection succeeds —
+  the `relay connected to Kafka` line right below it is the proof. You'll meet the
+  exact same warning once more when `identity-consume` opens *its* connection: one
+  per Kafka connection, never a sign of trouble. (The clean fix — a
+  librdkafka-backed client with no JS timer quirk — is deferred on purpose while
+  kafkajs stays the easier thing to read.)
+</Callout>
+
+## 4 · Make an event happen
+
+There are two ways to put an event into the outbox, and the difference is a genuinely useful debugging tool.
+
+**The real path — hit the endpoint.** In your **second terminal**, send alice live:
+
+```bash
+just identity-go-live alices-channel
+```
+
+You get back `200` and a `streamId`. Under the hood the handler did the state change *and* staged the `StreamStarted` event in **one Postgres transaction**, then returned — it never touched Kafka. That's the whole outbox trick, and the [transactional outbox](/concepts/transactional-outbox) page is the deep dive on *why*.
+
+**The synthetic path — stage straight into the outbox:**
+
+```bash
+just identity-stage-event
+```
+
+This skips the endpoint entirely and writes one event row directly. It looks like a shortcut, but it's really a *probe*: it isolates the delivery half of the system from the request half.
+
+<Callout variant="lesson" title="Two probes that fail differently">
+  If `identity-stage-event` produces a decoded event downstream but
+  `identity-go-live` doesn't, the relay is fine and your bug is in the handler or
+  the database. If *neither* delivers, the relay or Kafka is the problem. Splitting
+  "did the event get written?" from "did the event get delivered?" is how you bisect
+  a dead pipeline in seconds instead of guessing.
+</Callout>
+
+## 5 · Watch it arrive — decoded
+
+This is the green light. In your **second terminal**, consume the topic:
+
+```bash
+just identity-consume          # defaults to stream.started.v1
+```
+
+A readable event prints — the same `StreamStarted` that started life as a row in a Postgres table:
+
+```json
+{
+  "partition": 0,
+  "offset": "0",
+  "key": "9f2c…",
+  "value": {
+    "streamId": "b41e…",
+    "channelId": "9f2c…",
+    "startedAt": 1750000000000,
+    "title": "Live: alices-channel"
+  }
+}
+```
+
+If that JSON is on your screen, every rung of the ladder held: the transaction committed, the relay drained the outbox, Kafka stored the record, and the registry decoded the Avro bytes back into a shape you can read. That's the entire phase, proven.
+
+Here's the architecture those six commands just exercised — the request path that commits and returns, and the relay path that delivers, completely decoupled:
+
+<OutboxFlow />
+
+<Callout variant="lesson" title="That consumer is a stage prop, not a service">
+  `identity-consume` joins a fresh random consumer group and reads from the
+  beginning every run, so it always replays the whole topic — perfect for
+  eyeballing, useless as a real service. No committed offsets, no idempotency, no
+  rebalance handling. Pulse's first *real* consumer arrives in a later phase and
+  will look nothing like this; this one exists only to make the wire format
+  human-readable. The genuinely interesting half — making a consumer safe under
+  the relay's at-least-once delivery — is still ahead.
+</Callout>
+
+## The cases worth triggering on purpose
+
+The happy path is one run. The interesting behaviour is at the edges — and you can provoke all of it from the same recipes. The status code is the database refereeing, not the app guessing:
+
+| You run | Then run | You get | Why |
+|---|---|---|---|
+| `go-live alices-channel` | `go-live alices-channel` again | `409` already live | a partial unique index rejects a second active stream on one channel |
+| `go-live alices-channel` | `end-stream alices-channel` | `200` ended | the active stream closes, a `StreamEnded` event stages |
+| `end-stream alices-channel` | `end-stream alices-channel` again | `409` not live | nothing active to end — the update matches zero rows |
+| `go-live nonsuch-channel` | — | `404` no channel | the slug doesn't exist |
+
+Run `go-live` twice and watch the `409`: two simultaneous taps on alice's button can't open two streams, because the database — not a check in the handler — is the only thing that physically can't be raced. The [transactional outbox](/concepts/transactional-outbox) page calls this goal-line technology; here you get to score against yourself and watch it disallowed.
+
+## What you just proved
+
+- The **outbox** works: state and the event commit together, or not at all.
+- The **relay** works: it drains unpublished rows to Kafka on its own, off the request path.
+- The **registry** works: events go out as Avro bytes and come back as readable JSON.
+- The **invariant** holds: one active stream per channel, refereed by Postgres.
+
+Six commands, one event, the whole Phase 1 contract — verifiable on demand, any time you touch this code.
+
+<PageNav
+  prev={{
+    href: "/journey/foundations",
+    title: "Foundations",
+    blurb: "Phase 0: the substrate this service stands on.",
+  }}
+  next={{
+    href: "/concepts/transactional-outbox",
+    title: "The transactional outbox",
+    blurb: "Now the why: the dual-write trap this whole flow is built to dodge.",
+  }}
+/>
+
+<Sources
+  adrs={[3, 12, 13, 14]}
+  issues={[
+    "identity-mvp/01-postgres-schema",
+    "identity-mvp/02-fastify-app-bootstrap",
+    "identity-mvp/03-outbox-table",
+    "identity-mvp/04-outbox-relay",
+    "identity-mvp/05-go-live-endpoint",
+  ]}
+/>

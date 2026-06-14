@@ -9,7 +9,7 @@ const required = (name: string): string => {
 };
 
 export const config = {
-  port: Number(process.env.PORT ?? 3000),
+  port: Number(process.env.PORT ?? 3100),
   databaseUrl: required("DATABASE_URL"),
   kafkaBrokers: required("KAFKA_BROKERS"),
   schemaRegistryUrl: required("SCHEMA_REGISTRY_URL"),
