@@ -4,6 +4,7 @@
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.6",
+    "@pulse/schemas": "workspace:*",
     "@shikijs/rehype": "^4.2.0",
     "@xyflow/react": "^12.10.2",
     "class-variance-authority": "^0.7.1",

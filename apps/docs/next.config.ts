@@ -4,6 +4,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   pageExtensions: ["ts", "tsx", "md", "mdx"],
+  /**
+   * `@pulse/schemas` ships raw `.ts` source (its `./topics` export points at
+   * `topics.ts`, not a build artefact), so Next must transpile it like first-party
+   * code. This lets `<SystemTopology>` import the canonical `EVENT_TOPICS` map
+   * directly — the diagram's event list is then provably in sync with the real
+   * Kafka topics, never a hand-copied duplicate that can drift.
+   */
+  transpilePackages: ["@pulse/schemas"],
 };
 
 /**

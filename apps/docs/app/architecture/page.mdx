@@ -17,7 +17,7 @@ Three services, deliberately written in three different languages so the contrac
 
 <SystemTopology />
 
-What this diagram is telling you, read carefully:
+Hover any node to trace its flows; click one to pin the exact contracts it owns. What the diagram is telling you, read carefully:
 
 - **The four infra nodes are solid — they run today.** `docker compose up` brings Kafka (KRaft), Apicurio, Postgres, and Redis to a healthy state. That was the whole of Phase 0.
 - **`identity` is now solid too.** Phase 1's identity-mvp shipped the first real service: a Fastify app on Bun that owns accounts, channels, and streams in Postgres and emits stream-lifecycle events through a transactional outbox. `chat` (Go) and `analytics` (Kotlin) are still designed-not-built — their language is fixed and their events are named in `CONTEXT.md`, but no code produces or consumes yet.
@@ -25,11 +25,7 @@ What this diagram is telling you, read carefully:
 
 ## The contracts the edges imply
 
-The edges aren't decoration — each one is a decision already made:
-
-- `identity → Postgres` and `identity → Kafka` together are the **transactional outbox**, now live: Postgres holds the truth, and events flow out as a notification stream rather than the source of record. ([Read the concept →](/concepts/transactional-outbox))
-- `Apicurio → identity` is **Avro schema resolution**: the registry is the referee that keeps all three languages agreeing on the shape of every event. `identity` resolves and caches schema ids from it today; `chat` and `analytics` will join the same registry.
-- `chat → Redis` is a **read projection** off the chat log — a fast cache for the UI, never the source of truth. Still dashed: it waits on the `chat` service.
+Each edge is a decision already made — click a node above to read its contracts in full. The two flows that run today: `identity → Postgres` together with `identity → Kafka` is the **transactional outbox** — Postgres holds the truth, and events leave as a notification stream rather than the source of record ([read the concept →](/concepts/transactional-outbox)) — while `Apicurio → identity` is **Avro schema resolution**, the registry keeping all three languages agreeing on the shape of every event. The dashed `chat → Redis` is a **read projection** off the chat log — a fast cache for the UI, never the source of truth — still waiting on the `chat` service.
 
 <PageNav
   next={{
