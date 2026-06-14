@@ -22,9 +22,26 @@ export const schemaIdForTopic = (topic: string): Promise<number> => {
   let id = idCache.get(subject);
 
   if (!id) {
-    id = registry.getLatestSchemaId(subject);
+    /**
+     * Cache the promise so concurrent first-callers share one round-trip — but
+     * evict it on rejection. Otherwise a registry hiccup at boot would cache a
+     * permanently-rejected promise, and every later encode for this subject
+     * would fail even after the registry recovered.
+     */
+    id = registry.getLatestSchemaId(subject).catch((error) => {
+      idCache.delete(subject);
+      throw error;
+    });
+
     idCache.set(subject, id);
   }
 
   return id;
 };
+
+/**
+ * Best-effort warm of the id cache at boot so the first request's transaction
+ * isn't blocked on a registry round-trip while holding row locks.
+ */
+export const warmSchemaCache = (topics: string[]): Promise<number[]> =>
+  Promise.all(topics.map(schemaIdForTopic));

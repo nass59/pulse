@@ -1,7 +1,9 @@
 import Fastify from "fastify";
 import { config } from "./config";
 import { sql } from "./db";
+import { warmSchemaCache } from "./registry";
 import { startRelay, stopRelay } from "./relay";
+import { registerStreamRoutes } from "./routes";
 
 const app = Fastify({
   logger: true,
@@ -55,9 +57,17 @@ const shutdown = async (signal: string) => {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
+registerStreamRoutes(app);
+
 try {
   await app.listen({ port: config.port, host: "0.0.0.0" });
   startRelay(app.log);
+  warmSchemaCache(["stream.started.v1", "stream.ended.v1"]).catch((error) => {
+    app.log.warn(
+      error,
+      "schema cache warm failed; will lazy-load on first event"
+    );
+  });
 } catch (error) {
   app.log.error(error, "failed to start");
   process.exit(1);

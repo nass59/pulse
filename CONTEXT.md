@@ -36,7 +36,7 @@ Pure stream-processing service. Consumes events from `identity` and `chat`; prod
 
 Pulse is deliberately hybrid: each bounded context picks the SoT model that fits its data shape.
 
-- **`identity`** — Postgres is canonical. Events flow out via the **transactional outbox** pattern; the log is a notification stream, not the truth.
+- **`identity`** — Postgres is canonical. Events flow out via the **transactional outbox** pattern; the log is a notification stream, not the truth. The relay is an in-process polling loop ([ADR-0013](docs/adr/0013-in-process-polling-outbox-relay.md)); CDC is deferred to Phase 3.
 - **`chat`** — Kafka *is* the source of truth. Messages are an append-only log; redactions are additive events on a compacted side topic. Reads are served from projections (Redis ring buffer for mid-stream join; S3 chat-replay archives for VOD).
 - **`analytics`** — No original state. State stores (RocksDB under Kafka Streams) are materialised views over upstream topics; loss is recovered by replay.
 
@@ -64,7 +64,14 @@ Presence is **split into two topics**, not one `chat.presence.v1` carrying both 
 - **Subject naming:** `TopicNameStrategy` — one event type per topic. Forces each event's lifecycle (retention, partitioning, consumers) to be designed independently.
 - **Event → topic mapping** is owned by the `SCHEMA_TOPICS` map in `packages/schemas/publish.ts` — the single executable source of truth that registers subjects with the registry. This document records only *domain* decisions about a topic (keying, retention, compaction, and the rationale), never the bare mapping, which would inevitably drift.
 
-**Stream lifecycle topics:** `StreamStarted` and `StreamEnded` are two separate topics (`stream.started.v1`, `stream.ended.v1`), produced by `identity`. Keying and retention are deliberately undecided until `identity` is built — registering the schema does not configure the topic.
+**Stream lifecycle topics:** `StreamStarted` and `StreamEnded` are two separate topics (`stream.started.v1`, `stream.ended.v1`), produced by `identity`.
+
+| Topic | Key | Retention | Compacted | Purpose |
+|---|---|---|---|---|
+| `stream.started.v1` | `channelId` | 7 days | No | Channel went live |
+| `stream.ended.v1` | `channelId` | 7 days | No | Channel stream ended |
+
+Both are **keyed by `channelId`**, deliberately co-partitioned with the chat topics so a channel's stream-state and its chat land on the same partition — the precondition for joining stream-state against the chat stream in `analytics` without a repartition. Retention is 7-day **delete, not compacted**: these are immutable lifecycle *facts*, not a current-state snapshot, and Postgres holds the canonical `streams` history, so the log needs no permanent record for state reconstruction. Keying, retention, and the system-wide partition count are recorded in [ADR-0012](docs/adr/0012-stream-lifecycle-topic-topology.md).
 
 ## Repo layout
 
