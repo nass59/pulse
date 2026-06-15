@@ -3,7 +3,7 @@ import { SmokeTestLadder } from "@/components/docs/diagram";
 export const metadata = {
   title: "Journey · Identity — prove the pipeline works — Pulse docs",
   description:
-    "Phase 1, hands-on: six just recipes that take you from an empty stack to a real StreamStarted event arriving in your terminal, decoded — the run-it-yourself proof the transactional outbox and relay actually work end to end.",
+    "Phase 1, hands-on: seven just recipes that take you from an empty stack to a real StreamStarted event arriving in your terminal, decoded — the run-it-yourself proof the transactional outbox and relay actually work end to end.",
 };
 
 <PageHeader
@@ -15,7 +15,7 @@ export const metadata = {
   }
 />
 
-**Goal:** start from nothing running and, in six commands, watch one `StreamStarted` event travel the whole pipeline you built this phase — from a `go-live` request, through the Postgres outbox, out via the relay to Kafka, and back into your terminal as decoded JSON.
+**Goal:** start from nothing running and, in seven commands, watch one `StreamStarted` event travel the whole pipeline you built this phase — from a `go-live` request, through the Postgres outbox, out via the relay to Kafka, and back into your terminal as decoded JSON.
 
 Think of it the way an F1 team treats an installation lap. Nobody trusts the car because the build is "done" — they bring each telemetry channel online one at a time and watch its signal come good before the car ever races. That's this page. Each `just` recipe lights up one system and prints its own proof, so if a run breaks you know *exactly* which rung failed instead of staring at a dead pipeline. The last rung — alice's event landing in your terminal, readable — is the only green light that means the whole chain is real.
 
@@ -35,11 +35,12 @@ The defaults already match `infra/docker-compose.yaml` — Postgres on `5432`, K
 
 ## 1 · Bring the substrate online
 
-Same broker you met in [Get started](/learn/getting-started), plus the pieces the service needs. One command starts the stack, a second publishes the Avro schemas the relay will encode against:
+Same broker you met in [Get started](/learn/getting-started), plus the pieces the service needs. Start the stack, publish the Avro schemas the relay will encode against, then provision the topics those events flow through:
 
 ```bash
 just infra-up          # Kafka, Apicurio, Postgres, Redis
 just schemas-publish   # register the 5 Avro subjects in Apicurio
+just infra-topics      # create the 5 topics at 6 partitions each
 ```
 
 Give it a few seconds, then confirm the containers are healthy:
@@ -53,6 +54,16 @@ just infra-ps
   Apicurio. If the registry is empty, the first event has nothing to encode
   against. `schemas-publish` is the step that makes the contract exist — the same
   subjects the [schema compatibility](/concepts/schema-compatibility) page covers.
+</Callout>
+
+<Callout variant="footgun" title="Provision the topics, or go-live fails on a missing topic">
+  Pulse turns `auto.create.topics.enable` **off**, so the broker no longer
+  conjures a topic the first time the relay produces to it. Skip `infra-topics`
+  and step 4's `go-live` fails loudly — the topic simply doesn't exist. That loud
+  failure is deliberate: it's the whole point of [explicit topic
+  provisioning](/concepts/explicit-topic-provisioning), which also gets every
+  `channelId`-keyed topic its contracted 6 partitions instead of the 1-partition
+  default. Idempotent, so re-running it between attempts is safe.
 </Callout>
 
 ## 2 · Migrate and seed the database
@@ -141,7 +152,7 @@ A readable event prints — the same `StreamStarted` that started life as a row 
 
 If that JSON is on your screen, every rung of the ladder held: the transaction committed, the relay drained the outbox, Kafka stored the record, and the registry decoded the Avro bytes back into a shape you can read. That's the entire phase, proven.
 
-Here's the architecture those six commands just exercised — the request path that commits and returns, and the relay path that delivers, completely decoupled:
+Here's the architecture those seven commands just exercised — the request path that commits and returns, and the relay path that delivers, completely decoupled:
 
 <OutboxFlow />
 
@@ -175,7 +186,7 @@ Run `go-live` twice and watch the `409`: two simultaneous taps on alice's button
 - The **registry** works: events go out as Avro bytes and come back as readable JSON.
 - The **invariant** holds: one active stream per channel, refereed by Postgres.
 
-Six commands, one event, the whole Phase 1 contract — verifiable on demand, any time you touch this code.
+Seven commands, one event, the whole Phase 1 contract — verifiable on demand, any time you touch this code.
 
 <PageNav
   prev={{
@@ -193,6 +204,7 @@ Six commands, one event, the whole Phase 1 contract — verifiable on demand, an
 <Sources
   adrs={[3, 12, 13, 14]}
   issues={[
+    "foundations/04-topic-provisioning",
     "identity-mvp/01-postgres-schema",
     "identity-mvp/02-fastify-app-bootstrap",
     "identity-mvp/03-outbox-table",

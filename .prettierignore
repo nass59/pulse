@@ -1,0 +1,4 @@
+# Just command runner — Makefile-style, not a Prettier-formattable language.
+# Without this, Prettier reflows it as Markdown and breaks recipe indentation.
+justfile
+*.just

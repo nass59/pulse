@@ -8,6 +8,7 @@ import {
   Network,
   ScrollText,
   ShieldCheck,
+  SlidersHorizontal,
   UsersRound,
   Wand2,
 } from "lucide-react";
@@ -50,6 +51,12 @@ export const LIVE_CONCEPTS: Concept[] = [
     blurb: "The convenience that quietly eats a typo in production.",
     href: "/concepts/auto-topic-creation",
     icon: Wand2,
+  },
+  {
+    title: "Explicit topic provisioning",
+    blurb: "Partition count is a contract — a 1-partition default lies.",
+    href: "/concepts/explicit-topic-provisioning",
+    icon: SlidersHorizontal,
   },
   {
     title: "Named volumes",

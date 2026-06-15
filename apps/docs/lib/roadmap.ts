@@ -61,6 +61,11 @@ export const PHASES: Phase[] = [
         href: "/concepts/auto-topic-creation",
         done: true,
       },
+      {
+        label: "Explicit topic provisioning",
+        href: "/concepts/explicit-topic-provisioning",
+        done: true,
+      },
       { label: "Named volumes", href: "/concepts/named-volumes", done: true },
       {
         label: "Schema compatibility",

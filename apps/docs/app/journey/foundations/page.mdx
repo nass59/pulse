@@ -18,6 +18,7 @@ Phase 0 shipped no service code on purpose. It built the *substrate* — the run
 - A monorepo skeleton: `services/{identity,chat,analytics}/`, `packages/schemas/`, `infra/`.
 - `infra/docker-compose.yaml` — Kafka (KRaft), Apicurio, Postgres, Redis, all healthchecked. See **[Infrastructure](/architecture/infrastructure)**.
 - A `kcat` smoke test proving a produced message is readable back.
+- Explicit topic provisioning — every `channelId`-keyed topic created at its contracted **6 partitions** with `auto.create.topics.enable` turned **off**, so a missing or misspelled topic fails loudly instead of being born at the 1-partition default. See **[Explicit topic provisioning](/concepts/explicit-topic-provisioning)**.
 - The five starter event schemas — `StreamStarted`, `StreamEnded`, `ChatMessageSent`, `ViewerJoined`, `ViewerLeft` — in Avro, registered in Apicurio under `TopicNameStrategy` subjects pinned to `BACKWARD`, with TypeScript codegen emitting typed payloads. See **[Schema compatibility](/concepts/schema-compatibility)**.
 
 ## Lessons unlocked
@@ -27,6 +28,7 @@ Phase 0 shipped no service code on purpose. It built the *substrate* — the run
 | **[KRaft mode](/concepts/kraft-mode)** | Kafka without ZooKeeper; a single broker electing itself controller |
 | **[Healthchecks](/concepts/healthchecks)** | "started" vs "ready," and the `start_period` grace window |
 | **[Auto topic creation](/concepts/auto-topic-creation)** | convenient locally, a footgun in production |
+| **[Explicit topic provisioning](/concepts/explicit-topic-provisioning)** | partition count is a contract; a 1-partition default lies |
 | **[Named volumes](/concepts/named-volumes)** | how Postgres survives `docker compose down` |
 | **[Schema compatibility](/concepts/schema-compatibility)** | evolving an event without breaking the services that read it |
 
@@ -64,6 +66,9 @@ From the local-only tracker — two sub-epics make up Phase 0.
 - `foundations/01-init-repo` — git init + monorepo skeleton + README
 - `foundations/02-docker-compose` — the four-service infra stack
 - `foundations/03-kcat-smoke-test` — produce + consume a message via `kcat`
+- `foundations/04-topic-provisioning` — provision every topic at 6 partitions, auto-create off
+
+`04-topic-provisioning` landed *after* Phase 0 was otherwise closed — it was a drift caught while building Phase 1's outbox (`stream.started.v1` had been auto-created at 1 partition). But it belongs to the substrate, not to a service, so it's recorded here with the rest of the foundation.
 
 `.scratch/first-schemas/`:
 
@@ -89,11 +94,12 @@ Phase 1 brought the first service to life — `identity` — and flipped its nod
 />
 
 <Sources
-  adrs={[1, 2, 3, 4, 5, 6]}
+  adrs={[1, 2, 3, 4, 5, 6, 12, 14]}
   issues={[
     "foundations/01-init-repo",
     "foundations/02-docker-compose",
     "foundations/03-kcat-smoke-test",
+    "foundations/04-topic-provisioning",
     "first-schemas/01-define-schemas",
     "first-schemas/02-publish-to-apicurio",
     "first-schemas/03-ts-codegen",

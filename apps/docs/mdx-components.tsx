@@ -9,6 +9,7 @@ import {
   HealthcheckTimeline,
   KraftVsZookeeper,
   OutboxFlow,
+  PartitionContractTrap,
   QuorumFaultTolerance,
   VolumePersistence,
 } from "@/components/docs/diagram";
@@ -52,6 +53,7 @@ const components: MDXComponents = {
   OutboxFlow,
   PageHeader,
   PageNav,
+  PartitionContractTrap,
   QuorumFaultTolerance,
   SchemaEvolution,
   Sources,

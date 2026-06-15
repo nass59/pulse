@@ -4,6 +4,7 @@ import {
   Boxes,
   Braces,
   Check,
+  Columns3,
   Crown,
   Database,
   FileCode,
@@ -360,6 +361,135 @@ export const AutoTopicFlow = () => (
 );
 
 /* ------------------------------------------------------------------ */
+/* Explicit provisioning — the 1-partition mirage vs the real contract. */
+/* ------------------------------------------------------------------ */
+
+interface ChannelKey {
+  dot: string;
+  /** Illustrative partition under the 6-partition contract (toy placement). */
+  grown: number;
+  key: string;
+  ring: string;
+}
+
+/**
+ * Four channel keys. `grown` is where each lands once the topic is provisioned
+ * at its contracted six partitions — a toy placement (not real murmur2), but it
+ * makes the lesson exact: three of the four leave P0, so anything written while
+ * the topic was a 1-partition default is now in the wrong place.
+ */
+const CHANNEL_KEYS: ChannelKey[] = [
+  {
+    key: "alices-channel",
+    dot: "bg-accent-blue",
+    ring: "border-accent-blue/50 text-accent-blue",
+    grown: 0,
+  },
+  {
+    key: "danas-channel",
+    dot: "bg-accent-purple",
+    ring: "border-accent-purple/50 text-accent-purple",
+    grown: 1,
+  },
+  {
+    key: "bobs-channel",
+    dot: "bg-accent-green",
+    ring: "border-accent-green/50 text-accent-green",
+    grown: 3,
+  },
+  {
+    key: "carols-channel",
+    dot: "bg-accent-orange",
+    ring: "border-accent-orange/50 text-accent-orange",
+    grown: 5,
+  },
+];
+
+const SIX_PARTITIONS = [0, 1, 2, 3, 4, 5];
+
+const KeyChip = ({ channel }: { channel: ChannelKey }) => (
+  <span
+    className={cn(
+      "inline-flex items-center gap-1.5 rounded-pill border bg-transparent px-2 py-0.5 font-mono text-[10px]",
+      channel.ring
+    )}
+  >
+    <span className={cn("size-1.5 rounded-full", channel.dot)} />
+    {channel.key}
+  </span>
+);
+
+/**
+ * The headline trap. Auto-create hands you a 1-partition topic where every key
+ * funnels into P0 — so ordering looks flawless because there's nowhere else to
+ * go. Provision the contracted six and the same keys rehash across them, so the
+ * topic born at the wrong count isn't a smaller copy of the real one: it's a
+ * different topic whose keys all need re-homing. A migration, not a config edit.
+ */
+export const PartitionContractTrap = () => (
+  <DiagramFrame caption="Toy key placement, but the lesson is exact: a topic auto-created at one partition isn't a smaller copy of the contracted one — it's a different topic whose keys all live in P0. Provision the six partitions the design calls for and the same keys rehash across them, so everything already written to P0 is now in the wrong place. That's a migration, not a config edit.">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="ds-eyebrow text-[10px] text-accent-orange">
+            auto-created · 1 partition
+          </span>
+          <span className="font-mono text-[10px] text-accent-orange">
+            the mirage
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col gap-2 rounded-xl border border-accent-orange/40 p-3">
+          <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+            <span>P0</span>
+            <span>{CHANNEL_KEYS.length}</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {CHANNEL_KEYS.map((c) => (
+              <KeyChip channel={c} key={c.key} />
+            ))}
+          </div>
+          <p className="mt-1 font-mono text-[10px] text-accent-orange leading-relaxed">
+            looks perfectly ordered — because there's nowhere else to go
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="ds-eyebrow text-[10px] text-accent-green">
+            contracted · 6 partitions
+          </span>
+          <span className="font-mono text-[10px] text-accent-green">
+            the real topic
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col gap-1.5 rounded-xl border border-accent-green/40 p-3">
+          {SIX_PARTITIONS.map((p) => {
+            const here = CHANNEL_KEYS.filter((c) => c.grown === p);
+            return (
+              <div className="flex items-center gap-2" key={p}>
+                <span className="w-6 shrink-0 font-mono text-[10px] text-muted-foreground">
+                  P{p}
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {here.length > 0 ? (
+                    here.map((c) => <KeyChip channel={c} key={c.key} />)
+                  ) : (
+                    <span className="font-mono text-[10px] text-muted-foreground/40">
+                      —
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
 /* KRaft — the controller's job, and where its metadata lives.          */
 /* ------------------------------------------------------------------ */
 
@@ -592,6 +722,12 @@ const RUNGS: Rung[] = [
     proof: "5 Avro subjects registered",
   },
   {
+    cmd: "just infra-topics",
+    icon: Columns3,
+    system: "Kafka topics",
+    proof: "5 topics · 6 partitions each",
+  },
+  {
     cmd: "just identity-migrate",
     icon: Database,
     system: "Postgres",
@@ -627,7 +763,7 @@ const RUNGS: Rung[] = [
  * `OutboxLab` on the outbox concept page; this is the operator's runbook map.
  */
 export const SmokeTestLadder = () => (
-  <DiagramFrame caption="Six commands, top to bottom. Each brings one system online and prints its own proof — so when a run breaks, you know exactly which rung failed. The last rung is the only one that proves the whole chain: a real event, decoded, in your terminal.">
+  <DiagramFrame caption="Seven commands, top to bottom. Each brings one system online and prints its own proof — so when a run breaks, you know exactly which rung failed. infra-topics is non-optional now that auto-create is off: skip it and go-live produces to a topic that doesn't exist. The last rung is the only one that proves the whole chain: a real event, decoded, in your terminal.">
     <ol className="flex flex-col gap-2">
       {RUNGS.map((rung) => {
         const Icon = rung.icon;
