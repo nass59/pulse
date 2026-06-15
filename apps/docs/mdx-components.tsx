@@ -20,6 +20,7 @@ import { PageNav } from "@/components/docs/page-nav";
 import { Sources } from "@/components/docs/sources";
 import { Table, Td, Th, Thead, Tr } from "@/components/docs/table";
 import { Tag } from "@/components/docs/tag";
+import { ConceptQuiz } from "@/components/interactive/concept-quiz";
 import { KraftControllerElection } from "@/components/interactive/kraft-controller-election";
 import { OutboxLab } from "@/components/interactive/outbox-lab";
 import { SchemaEvolution } from "@/components/interactive/schema-evolution";
@@ -44,6 +45,7 @@ const components: MDXComponents = {
   AutoTopicFlow,
   Callout,
   CodeBlock,
+  ConceptQuiz,
   ControllerRole,
   DependsOnRace,
   Eyebrow,

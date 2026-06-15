@@ -74,6 +74,10 @@ curl -s .../config/chat.messages.v1-value | jq .compatibilityLevel
 
 The deliberate version of this — *break a schema on purpose in CI and feel `BACKWARD` / `FORWARD` / `FULL` reject it* — is a Phase 3 drill. For now the rule is live on all five subjects, quietly doing its job: it's the reason a contract change shows up as a reviewable diff and a publish-time verdict, never a runtime surprise in a language you weren't even editing.
 
+## Did it stick?
+
+<ConceptQuiz slug="schema-compatibility" />
+
 <PageNav
   next={{
     href: "/journey/foundations",

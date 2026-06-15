@@ -42,6 +42,10 @@ Locally this is exactly what you want: one fewer ceremony between you and a work
 
 **A topic auto-created this way gets _default_ everything.** Default partition count, default replication. Fine for a smoke test; rarely what you want for a real event stream, where partition count is a deliberate throughput-and-ordering decision per topic. That deliberate-per-topic design is exactly what auto-creation robs you of — another reason production turns it off.
 
+## Did it stick?
+
+<ConceptQuiz slug="auto-topic-creation" />
+
 <PageNav
   next={{
     href: "/concepts/explicit-topic-provisioning",

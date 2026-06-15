@@ -59,6 +59,10 @@ The *same* mechanism, with 3 or 5 voters, runs a genuine election and replicates
 
 Those few seconds between "container started" and "controller elected" are exactly why Kafka's healthcheck carries `start_period: 20s`. Without it, the probe would mark the container `unhealthy` during a perfectly normal boot. That mechanism is its own concept — see [Healthchecks](/concepts/healthchecks).
 
+## Did it stick?
+
+<ConceptQuiz slug="kraft-mode" />
+
 <PageNav
   next={{
     href: "/concepts/healthchecks",
