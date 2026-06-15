@@ -10,7 +10,11 @@
   "scripts": {
     "codegen": "bun scripts/codegen.ts",
     "publish-schemas": "bun scripts/publish.ts",
+    "provision-topics": "bun scripts/provision-topics.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4"
   },
   "devDependencies": {
     "@types/node": "^20",

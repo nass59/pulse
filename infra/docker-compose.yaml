@@ -33,6 +33,13 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Topics are provisioned explicitly by `just infra-topics` at their
+      # contracted partition count (ADR-0012). With auto-create on, a producer
+      # hitting a missing topic would silently birth it at 1 partition, which
+      # rehashes every key once grown to 6 — so a missing topic must fail loudly
+      # instead. Locked pair: this stays `false` only because the provisioning
+      # script exists; never flip it on without removing that script.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
       # The image defaults log.dir to /tmp/kafka-logs; move it to a conventional
       # path and back it with a named volume so the log (and KRaft's cluster
       # metadata) survives a container recreate. Without this, every broker

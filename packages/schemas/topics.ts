@@ -16,3 +16,55 @@ export const EVENT_TOPICS = {
 
 export type EventType = keyof typeof EVENT_TOPICS;
 export type Topic = (typeof EVENT_TOPICS)[EventType];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The provisioning contract for each topic. Partition count is part of a keyed
+ * topic's *contract*, not a runtime detail (ADR-0012): every `channelId`-keyed
+ * topic shares 6 partitions so co-partitioned joins in `analytics` work without
+ * a repartition, and changing the count later rehashes every key — a migration
+ * (recreate + republish), not a config edit. `cleanupPolicy`/`retentionMs` are
+ * set explicitly rather than inherited from broker defaults.
+ */
+interface TopicConfig {
+  cleanupPolicy: "delete" | "compact";
+  partitions: number;
+  retentionMs: number;
+}
+
+/**
+ * Co-located with the name map so the two cannot drift: `satisfies
+ * Record<Topic, ...>` makes the compiler reject any topic in `EVENT_TOPICS`
+ * that lacks a config here. `scripts/provision-topics.ts` is the executable
+ * source of truth that turns this into real Kafka topics; the broker's
+ * `auto.create.topics.enable` is `false` so a missing topic fails loudly
+ * instead of being born at the 1-partition default.
+ */
+export const TOPIC_CONFIGS = {
+  "stream.started.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: 7 * DAY_MS,
+  },
+  "stream.ended.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: 7 * DAY_MS,
+  },
+  "chat.messages.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: 7 * DAY_MS,
+  },
+  "chat.presence.joined.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: DAY_MS,
+  },
+  "chat.presence.left.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: DAY_MS,
+  },
+} as const satisfies Record<Topic, TopicConfig>;

@@ -59,6 +59,9 @@
     "packages/schemas": {
       "name": "@pulse/schemas",
       "version": "0.0.0",
+      "dependencies": {
+        "kafkajs": "^2.2.4",
+      },
       "devDependencies": {
         "@types/node": "^20",
         "typescript": "^5",
