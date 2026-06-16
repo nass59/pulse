@@ -41,7 +41,8 @@ deliberately open until `identity` was built.
 ## Consequences
 
 - Partition count is a **system-wide constraint**, not a per-topic choice: every
-  `channelId`-keyed topic (lifecycle now, chat in Phase 2) must share the same
+  `channelId`-keyed topic (stream-lifecycle and the chat topics, all provisioned
+  from Phase 1; multi-node chat *scale* arrives in Phase 2) must share the same
   count, sized for the highest-throughput member (chat). We commit to **6**.
 - Co-partitioning also requires every producer to hash keys identically across
   languages — see [ADR-0014](0014-murmur2-partitioning-across-producers.md).
@@ -50,3 +51,6 @@ deliberately open until `identity` was built.
 - Changing the key or the partition count later is a topic migration, not a
   config edit — by design, this is the irreversibility the choice buys ordering
   and join-ability with.
+- How `chat` *consumes* these topics (an ephemeral, full-replay consumer group,
+  rather than a shared or offset-resuming one) is a separate decision, recorded in
+  [ADR-0017](0017-chat-ephemeral-full-replay-consumer-group.md).

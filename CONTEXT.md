@@ -28,6 +28,12 @@ A channel's stable, human-readable public address (e.g. `alices-channel`) — un
 
 An account in its stream-watching role — _not_ a distinct entity. The same `userId` identifies a person whether they are watching, chatting, or following; there is no separate viewer identity and no anonymous viewing (an account is required to watch). _Avoid:_ a separate `viewerId`, "viewer account."
 
+Viewer is the _identity_ (who is watching). The _unit of presence_ — what "concurrent viewers" counts — is the **Viewer session**, not the account.
+
+### Viewer session
+
+A single live WebSocket connection from a viewer to `chat`. It is the unit of presence: `ViewerJoined` is emitted when a session opens and passes the liveness gate, `ViewerLeft` when it closes (for any reason), and "concurrent viewers" is the count of currently-open sessions — which `analytics` approximates via windowing. One account may hold several simultaneous sessions (e.g. two browser tabs), and each counts; presence is session-grained, not account-grained. (In the MVP the `userId` is hardcoded, so every session shares one account — the count still reflects sessions, which is the point.) _Avoid:_ deduplicating presence by `userId`, or treating "viewer count" as "distinct accounts watching."
+
 ## Bounded contexts (services)
 
 Pulse starts as three services, deliberately polyglot to force real contracts across the wire.
@@ -60,8 +66,8 @@ Pulse is deliberately hybrid: each bounded context picks the SoT model that fits
 | ------------------------- | ----------- | --------- | --------- | ------------------------------------ |
 | `chat.messages.v1`        | `channelId` | 7 days    | No        | Canonical message log                |
 | `chat.redactions.v1`      | `messageId` | Forever   | Yes       | Moderation overrides, joined at read |
-| `chat.presence.joined.v1` | `channelId` | 1 day     | No        | Viewer join events                   |
-| `chat.presence.left.v1`   | `channelId` | 1 day     | No        | Viewer leave events                  |
+| `chat.presence.joined.v1` | `channelId` | 1 day     | No        | Viewer-session open events           |
+| `chat.presence.left.v1`   | `channelId` | 1 day     | No        | Viewer-session close events          |
 
 Presence is **split into two topics**, not one `chat.presence.v1` carrying both — one event type per topic, per [ADR-0004](docs/adr/0004-schema-strategy.md). The alternative (a single `chat.presence.v1` with a `ViewerPresenceChanged { kind }` envelope) would give per-channel total ordering of join/leave, but presence is consumed by `analytics` as a windowed, approximate concurrent-viewer count, so single-partition ordering buys nothing worth a `TopicNameStrategy` exception.
 
