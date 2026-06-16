@@ -6,6 +6,7 @@ export type StreamEndReason = "NORMAL" | "CRASHED" | "MODERATED";
 export interface StreamEnded {
   streamId: string;
   channelId: string;
+  channelSlug: string;
   endedAt: number;
   reason: StreamEndReason;
 }

@@ -4,6 +4,7 @@
 export interface StreamStarted {
   streamId: string;
   channelId: string;
+  channelSlug: string;
   startedAt: number;
   title: string;
 }

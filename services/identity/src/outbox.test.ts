@@ -12,11 +12,11 @@ test("writeEvent rolls back with the surrounding transaction", async () => {
       aggregateType: "stream",
       aggregateId: crypto.randomUUID(),
       eventType: "StreamStarted",
-      topic: "stream.started.v1",
       partitionKey: crypto.randomUUID(),
       payload: {
         streamId: crypto.randomUUID(),
         channelId: crypto.randomUUID(),
+        channelSlug: "alices-channel",
         startedAt: Date.now(),
         title: "rollback test",
       },

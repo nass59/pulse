@@ -1,21 +1,25 @@
-import type { Topic } from "@pulse/schemas/topics";
+import {
+  EVENT_TOPICS,
+  type EventPayloads,
+  type EventType,
+} from "@pulse/schemas/topics";
 import type { TransactionSql } from "postgres";
 import { registry, schemaIdForTopic } from "./registry";
 
-export interface OutboxEvent {
+export interface OutboxEvent<K extends EventType> {
   aggregateId: string;
   aggregateType: string;
-  eventType: string;
+  eventType: K;
   partitionKey: string;
-  payload: Record<string, unknown>;
-  topic: Topic;
+  payload: EventPayloads[K];
 }
 
-export const writeEvent = async (
+export const writeEvent = async <K extends EventType>(
   tx: TransactionSql,
-  event: OutboxEvent
+  event: OutboxEvent<K>
 ): Promise<void> => {
-  const schemaId = await schemaIdForTopic(event.topic);
+  const topic = EVENT_TOPICS[event.eventType];
+  const schemaId = await schemaIdForTopic(topic);
   const payload = await registry.encode(schemaId, event.payload);
 
   await tx`
@@ -23,6 +27,6 @@ export const writeEvent = async (
       (aggregate_type, aggregate_id, event_type, payload, topic, partition_key)
     VALUES
       (${event.aggregateType}, ${event.aggregateId}, ${event.eventType},
-       ${payload}, ${event.topic},${event.partitionKey})
+       ${payload}, ${topic},${event.partitionKey})
   `;
 };

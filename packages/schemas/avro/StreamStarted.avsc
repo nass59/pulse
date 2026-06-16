@@ -3,15 +3,34 @@
   "name": "StreamStarted",
   "namespace": "pulse.events.v1",
   "fields": [
-    { "name": "streamId", "type": { "type": "string", "logicalType": "uuid" } },
+    {
+      "name": "streamId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
     {
       "name": "channelId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "channelSlug",
+      "type": "string"
     },
     {
       "name": "startedAt",
-      "type": { "type": "long", "logicalType": "timestamp-millis" }
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
     },
-    { "name": "title", "type": "string" }
+    {
+      "name": "title",
+      "type": "string"
+    }
   ]
 }

@@ -3,7 +3,6 @@
  * commit, and exit. Run it while the app is up to watch the relay drain it to
  * Kafka. Not part of the service — a smoke-test convenience.
  */
-import { EVENT_TOPICS } from "@pulse/schemas/topics";
 import { sql } from "../src/db";
 import { writeEvent } from "../src/outbox";
 
@@ -15,11 +14,11 @@ await sql.begin(async (tx) => {
     aggregateType: "stream",
     aggregateId: streamId,
     eventType: "StreamStarted",
-    topic: EVENT_TOPICS.StreamStarted,
     partitionKey: channelId,
     payload: {
       streamId,
       channelId,
+      channelSlug: "alices-channel",
       startedAt: Date.now(),
       title: "relay smoke test",
     },

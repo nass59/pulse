@@ -18,6 +18,7 @@ const message: ChatMessageSent = {
 const ended: StreamEnded = {
   streamId: message.streamId,
   channelId: message.channelId,
+  channelSlug: "alices-channel",
   endedAt: Date.now(),
   reason: "NORMAL", // ← only NORMAL | CRASHED | MODERATED type-check here
 };

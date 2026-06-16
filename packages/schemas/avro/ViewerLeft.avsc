@@ -5,19 +5,31 @@
   "fields": [
     {
       "name": "channelId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "streamId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "userId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "leftAt",
-      "type": { "type": "long", "logicalType": "timestamp-millis" }
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
     }
   ]
 }

@@ -1,4 +1,3 @@
-import { EVENT_TOPICS } from "@pulse/schemas/topics";
 import type { FastifyInstance } from "fastify";
 import { sql } from "./db";
 import { writeEvent } from "./outbox";
@@ -76,11 +75,11 @@ export const registerStreamRoutes = (app: FastifyInstance): void => {
             aggregateType: "stream",
             aggregateId: stream.id,
             eventType: "StreamStarted",
-            topic: EVENT_TOPICS.StreamStarted,
             partitionKey: channel.id,
             payload: {
               streamId: stream.id,
               channelId: channel.id,
+              channelSlug: slug,
               startedAt: stream.startedAt.getTime(),
               title,
             },
@@ -141,11 +140,11 @@ export const registerStreamRoutes = (app: FastifyInstance): void => {
           aggregateType: "stream",
           aggregateId: stream.id,
           eventType: "StreamEnded",
-          topic: EVENT_TOPICS.StreamEnded,
           partitionKey: channel.id,
           payload: {
             streamId: stream.id,
             channelId: channel.id,
+            channelSlug: slug,
             endedAt: stream.endedAt.getTime(),
             reason: "NORMAL",
           },

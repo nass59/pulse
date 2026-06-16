@@ -5,19 +5,31 @@
   "fields": [
     {
       "name": "messageId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "channelId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "streamId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "userId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
     },
     {
       "name": "body",
@@ -25,7 +37,10 @@
     },
     {
       "name": "sentAt",
-      "type": { "type": "long", "logicalType": "timestamp-millis" }
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
     }
   ]
 }

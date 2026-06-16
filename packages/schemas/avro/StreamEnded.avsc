@@ -3,21 +3,41 @@
   "name": "StreamEnded",
   "namespace": "pulse.events.v1",
   "fields": [
-    { "name": "streamId", "type": { "type": "string", "logicalType": "uuid" } },
+    {
+      "name": "streamId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
     {
       "name": "channelId",
-      "type": { "type": "string", "logicalType": "uuid" }
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "channelSlug",
+      "type": "string"
     },
     {
       "name": "endedAt",
-      "type": { "type": "long", "logicalType": "timestamp-millis" }
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
     },
     {
       "name": "reason",
       "type": {
         "type": "enum",
         "name": "StreamEndReason",
-        "symbols": ["NORMAL", "CRASHED", "MODERATED"]
+        "symbols": [
+          "NORMAL",
+          "CRASHED",
+          "MODERATED"
+        ]
       }
     }
   ]

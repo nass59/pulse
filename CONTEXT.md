@@ -20,6 +20,10 @@ A single live broadcast session by a creator. Has a lifecycle: scheduled → liv
 
 The creator's persistent identity that owns streams over time. A channel exists between streams; a stream is a single instance.
 
+### Slug
+
+A channel's stable, human-readable public address (e.g. `alices-channel`) — unique, owned by `identity`. The `channelId` (a uuid) is the internal identity used for partitioning and joins; the slug is what a viewer's URL carries. The two are distinct: viewers connect to `/ws/{slug}`, but every event is keyed by `channelId`. Because `chat` must map one to the other without querying `identity`, the slug travels **inside** the stream-lifecycle events (see Chat topology). _Avoid:_ using the slug as a partition key or treating it as mutable identity.
+
 ### Viewer
 
 An account in its stream-watching role — _not_ a distinct entity. The same `userId` identifies a person whether they are watching, chatting, or following; there is no separate viewer identity and no anonymous viewing (an account is required to watch). _Avoid:_ a separate `viewerId`, "viewer account."
@@ -35,6 +39,8 @@ Owns accounts, channels, and the follow graph. The user-facing API. Produces lif
 ### `chat` — Go
 
 WebSocket gateway and chat ingestion. Handles thousands of concurrent viewer connections per node. Produces `ChatMessageSent`, `EmoteReacted`, `ViewerJoined`, `ViewerLeft`. Consumes channel/stream state from `identity` to validate who can chat where.
+
+This liveness gate is **eventually consistent**: `chat` learns a channel is live by consuming `stream.started.v1` / `stream.ended.v1`, so it lags `identity` by its own consumer lag. Two windows follow and are accepted deliberately (the alternative — a synchronous check against `identity` — is the coupling we're avoiding): a viewer who connects between `StreamStarted` and `chat` consuming it is rejected (close `1008`) though the channel is genuinely live; a message sent on a still-open socket between `StreamEnded` and its consumption is produced against an already-ended `streamId`. Both are self-healing (the client retries the upgrade). On `StreamEnded`, `chat` force-closes the channel's open connections with close code `1001` ("going away").
 
 ### `analytics` — Kotlin + Kafka Streams
 
@@ -81,6 +87,8 @@ Presence is **split into two topics**, not one `chat.presence.v1` carrying both 
 | `stream.ended.v1`   | `channelId` | 7 days    | No        | Channel stream ended |
 
 Both are **keyed by `channelId`**, deliberately co-partitioned with the chat topics so a channel's stream-state and its chat land on the same partition — the precondition for joining stream-state against the chat stream in `analytics` without a repartition. Retention is 7-day **delete, not compacted**: these are immutable lifecycle _facts_, not a current-state snapshot, and Postgres holds the canonical `streams` history, so the log needs no permanent record for state reconstruction. Keying, retention, and the system-wide partition count are recorded in [ADR-0012](docs/adr/0012-stream-lifecycle-topic-topology.md).
+
+Both events also carry the channel's **`channelSlug`** in their payload. `chat` accepts viewer connections by slug but tracks liveness and produces by `channelId`; carrying the slug in the lifecycle event lets `chat` build its `slug → channelId` mapping purely from the log, with no synchronous call back to `identity`. The slug is denormalized channel reference data riding along with the lifecycle fact — the consumer's needs, not the producer's, shape the payload.
 
 ## Repo layout
 

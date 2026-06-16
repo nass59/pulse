@@ -1,3 +1,11 @@
+import type {
+  ChatMessageSent,
+  StreamEnded,
+  StreamStarted,
+  ViewerJoined,
+  ViewerLeft,
+} from "./generated/ts";
+
 /**
  * The single source of truth mapping each event type to its Kafka topic.
  * TopicNameStrategy means the registry subject is `<topic>-value`. Producers,
@@ -68,3 +76,21 @@ export const TOPIC_CONFIGS = {
     retentionMs: DAY_MS,
   },
 } as const satisfies Record<Topic, TopicConfig>;
+
+/** Each event type → the shape codegen produced for its .avsc. */
+export interface EventPayloads {
+  ChatMessageSent: ChatMessageSent;
+  StreamEnded: StreamEnded;
+  StreamStarted: StreamStarted;
+  ViewerJoined: ViewerJoined;
+  ViewerLeft: ViewerLeft;
+}
+
+/** Drift guard: this line stops compiling if EventPayloads' keys ≠ EventType. */
+type _KeysMatch = [keyof EventPayloads] extends [EventType]
+  ? [EventType] extends [keyof EventPayloads]
+    ? true
+    : never
+  : never;
+
+const _keysMatch: _KeysMatch = true;
