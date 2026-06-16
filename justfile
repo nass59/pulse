@@ -23,6 +23,15 @@ default:
 infra-up:
 	docker compose -f infra/docker-compose.yaml up -d
 
+# Bring the whole local environment up and ready in one shot: start infra and wait on
+# healthchecks, then (the `&&` post-deps) migrate + seed Postgres, publish schemas,
+# provision Kafka topics. Idempotent — migrate's ledger, byte-identical schema
+# registration, and topic-exists checks are all no-ops — so it's safe on a fresh clone
+# or an already-running stack.
+# One-shot "get me to a working state" — infra + migrate + schemas + topics. Run after `infra-down`/a clone.
+up-all: && identity-migrate schemas-publish infra-topics
+	docker compose -f infra/docker-compose.yaml up -d --wait
+
 # Take the local infra stack down. Keeps the Postgres volume (add `-v` to wipe).
 infra-down:
 	docker compose -f infra/docker-compose.yaml down
@@ -59,6 +68,16 @@ identity-migrate:
 # Destructive but dev-only; wipes Postgres only, leaves Kafka topics untouched. Needs `infra-up`.
 db-reset: && identity-migrate
 	docker compose -f infra/docker-compose.yaml exec -T postgres psql -U postgres -d pulse -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+# Nuke ALL local state and rebuild from scratch: `down -v` wipes the named volumes
+# (Postgres + Kafka) and recreates Apicurio's in-memory store, then `up-all` brings
+# everything back and re-bootstraps it. Clears every place stale state can hide at
+# once: registry subjects, Kafka topic data, AND the Postgres outbox (which stores
+# *pre-encoded* event bytes — purging Kafka alone leaves an undelivered old-schema
+# row that the relay resurrects on boot).
+# The full nuke — registry + topics + Postgres/outbox. Destructive, dev-only; stop `identity-dev` first.
+reset-all: && up-all
+	docker compose -f infra/docker-compose.yaml down -v
 
 # Run the identity service in watch mode: HTTP on :3100 + the outbox relay polling.
 identity-dev:
