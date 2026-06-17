@@ -21,6 +21,9 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
+	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger}
+	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
+
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
 
 	// The go keyword launches a goroutine — concurrent, cheap.
