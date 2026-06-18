@@ -42,10 +42,14 @@ loss and "fixes" it — into one of the three options below, each of which is wo
 
 ## Consequences
 
-- **MVP caveat (today):** there is no Kafka produce and no history replay yet, so
-  a dropped frame is genuinely gone for that viewer. The guarantee is
-  **best-effort now, recoverable-from-log once issue 03 lands** — at which point
-  the socket's best-effort role becomes safe rather than lossy.
+- **MVP status:** as of issue 03 the produce path is live, so a dropped live frame
+  is now **durably recorded in `chat.messages.v1`** — the message itself is no
+  longer lost, only its real-time push to that one viewer was missed. What is still
+  unbuilt is the **client backfill path** (the Redis ring buffer for mid-stream
+  join, Phase 2): until that lands, a viewer who drops a frame has no way to
+  *recover* it, even though the log holds it. So the socket's best-effort role is
+  now **safe at the log** but **not yet recoverable end-to-end** — closing that gap
+  is Phase 2, not a change to this decision.
 - The outbox capacity (`16`) is the tuning knob between "absorb brief slowness"
   and "drop sooner to bound memory." It is a per-connection cost, so it scales
   with concurrent viewers.

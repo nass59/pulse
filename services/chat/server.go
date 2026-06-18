@@ -4,20 +4,26 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"pulse/chat/internal/producer"
 	"sync"
+	"time"
 
 	"github.com/coder/websocket"
+	"github.com/google/uuid"
 )
 
 type conn struct {
-	ws   *websocket.Conn
-	send chan []byte // this viewer's send buffer (drops when full -- ADR-0018)
+	ws        *websocket.Conn
+	send      chan []byte // this viewer's send buffer (drops when full -- ADR-0018)
+	channelID string
+	streamID  string
 }
 
 type server struct {
 	mu       sync.RWMutex                  // guards the registry
 	channels map[string]map[*conn]struct{} // slug -> set of conns
 	log      *slog.Logger
+	prod     *producer.Producer
 }
 
 func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +61,15 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// TODO(issue 05): capture the real channelId/streamId from the stream-lifecycle
+	// log (the wristband, read at the liveness gate). Until then these are
+	// UUIDv5(slug) placeholders — deterministic so a channel co-partitions with
+	// itself, but they DO NOT match identity's real channelIds. No consumer may
+	// join chat.messages.v1 on channelId before issue 05 lands, or it joins on ids
+	// identity has never minted.
+	c.channelID = uuid.NewSHA1(uuid.NameSpaceURL, []byte(slug)).String()
+	c.streamID = uuid.NewSHA1(uuid.NameSpaceURL, []byte("stream:"+slug)).String()
+
 	// READ loop -- this goroutine. Never do slow work in here.
 	for {
 		_, data, err := ws.Read(ctx)
@@ -62,7 +77,21 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 			return // -> defer unregister fires
 		}
 
-		// produce to Kafka here, then...
+		id, _ := uuid.NewV7() // server-minted UUIDv7 (time-ordered)
+
+		msg := producer.ChatMessageSent{
+			MessageID: id.String(),
+			ChannelID: c.channelID,      // ← the WRISTBAND (placeholder for now)
+			StreamID:  c.streamID,       // ← the WRISTBAND (placeholder for now)
+			UserID:    "u_demo",         // hardcoded MVP
+			Body:      string(data),     // the ONLY client input
+			SentAt:    time.Now().UTC(), // server receipt time
+		}
+
+		if err := s.prod.Produce(ctx, c.channelID, msg); err != nil {
+			s.log.Error("produce failed", "err", err)
+		}
+
 		s.broadcast(slug, c, data) // fan out to everyone else
 	}
 }

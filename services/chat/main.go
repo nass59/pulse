@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"pulse/chat/internal/producer"
 	"syscall"
 	"time"
 )
@@ -21,7 +22,17 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger}
+	brokers := getenv("KAFKA_BROKERS", "localhost:9092")
+	registryURL := getenv("SCHEMA_REGISTRY_URL", "http://localhost:8080")
+
+	prod, err := producer.New(brokers, registryURL, logger)
+	if err != nil {
+		logger.Error("producer init failed", "err", err)
+		os.Exit(1)
+	}
+	defer prod.Close()
+
+	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod}
 	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}

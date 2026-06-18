@@ -57,7 +57,7 @@ Pure stream-processing service. Consumes events from `identity` and `chat`; prod
 Pulse is deliberately hybrid: each bounded context picks the SoT model that fits its data shape.
 
 - **`identity`** — Postgres is canonical. Events flow out via the **transactional outbox** pattern; the log is a notification stream, not the truth. The relay is an in-process polling loop ([ADR-0013](docs/adr/0013-in-process-polling-outbox-relay.md)); CDC is deferred to Phase 3.
-- **`chat`** — Kafka _is_ the source of truth. Messages are an append-only log; redactions are additive events on a compacted side topic. Reads are served from projections (Redis ring buffer for mid-stream join; S3 chat-replay archives for VOD).
+- **`chat`** — Kafka _is_ the source of truth. Messages are an append-only log of **server-authored** records: a client supplies only the message `body`, and the gateway stamps every other field — `messageId`, `userId`, the channel/stream identity, and `sentAt` as **server receipt time** (never a client clock). Authorship therefore cannot be forged and a message cannot be backdated, and because `sentAt` is the gateway's own clock, a channel's messages are totally ordered as the gateway saw them. Redactions are additive events on a compacted side topic. Reads are served from projections (Redis ring buffer for mid-stream join; S3 chat-replay archives for VOD).
 - **`analytics`** — No original state. State stores (RocksDB under Kafka Streams) are materialised views over upstream topics; loss is recovered by replay.
 
 ## Chat topology
