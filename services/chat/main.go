@@ -10,6 +10,8 @@ import (
 	"pulse/chat/internal/producer"
 	"syscall"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -24,6 +26,15 @@ func main() {
 
 	brokers := getenv("KAFKA_BROKERS", "localhost:9092")
 	registryURL := getenv("SCHEMA_REGISTRY_URL", "http://localhost:8080")
+
+	host, err := os.Hostname()
+	if err != nil {
+		host = "unknown"
+	}
+
+	bootID, _ := uuid.NewV7()
+	groupID := "chat-gateway-" + host + "-" + bootID.String()
+	logger.Info("consumer group", "groupId", groupID)
 
 	prod, err := producer.New(brokers, registryURL, logger)
 	if err != nil {
