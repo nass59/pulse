@@ -52,6 +52,7 @@ func main() {
 	go cons.Run()
 
 	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod, cons: cons}
+	cons.OnEnded(s.closeChannel)
 	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}

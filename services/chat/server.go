@@ -131,3 +131,19 @@ func (s *server) unregister(slug string, c *conn) {
 		delete(s.channels, slug)
 	}
 }
+
+func (s *server) closeChannel(slug string) {
+	s.mu.RLock()
+	conns := make([]*conn, 0, len(s.channels[slug]))
+
+	for c := range s.channels[slug] {
+		conns = append(conns, c)
+	}
+
+	s.mu.RUnlock()
+	s.log.Info("force-closing channel", "slug", slug, "conns", len(conns))
+
+	for _, c := range conns {
+		_ = c.ws.Close(websocket.StatusGoingAway, "stream ended")
+	}
+}

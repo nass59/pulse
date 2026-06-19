@@ -16,7 +16,7 @@ members, and it **commits offsets** so a restart resumes where it left off. `cha
 wants **neither**, and a reader who doesn't know that will "fix" this into a bug.
 
 - **Every instance must see every partition.** Any viewer can connect to any
-  channel, so each node needs the *complete* live-channel picture — a broadcast
+  channel, so each node needs the _complete_ live-channel picture — a broadcast
   read, not a load-balanced split. A shared group would partition the lifecycle
   topics across nodes, and each node would reject viewers for channels whose
   `StreamStarted` landed on a partition it wasn't assigned.
@@ -28,7 +28,7 @@ wants **neither**, and a reader who doesn't know that will "fix" this into a bug
 - **Stable per-host group, `chat-gateway-${HOSTNAME}` (no `bootId`).** Rejected —
   this is the subtle trap. `auto.offset.reset=earliest` only applies when the
   group has **no committed offset**. A group id that survives a container restart
-  would, on its *second* boot, resume from the last committed offset and replay
+  would, on its _second_ boot, resume from the last committed offset and replay
   only recent events — rebuilding an **incomplete** map and silently rejecting
   viewers for channels that went live before the last commit. The id must be new
   every process start, and there is nothing worth committing, so auto-commit is
@@ -52,7 +52,18 @@ wants **neither**, and a reader who doesn't know that will "fix" this into a bug
 - The production answer is a **compacted "current stream state per channel" topic**
   (latest-per-`channelId`), turning the full replay into a small snapshot read.
   Deferred to Phase 2 (`chat-multi-node`) — this ADR is the thing that motivates it.
-- This consuming pattern is orthogonal to ADR-0012, which records the *topic*
+- **The boot replay has a cold-start window.** Until the consumer catches up to the
+  high-water mark, the live-channel map is _incomplete_, so genuinely-live channels
+  appear absent and their viewers are rejected (`1008`). This is the steady-state
+  consumer-lag window (CONTEXT.md, `chat` entry) at its most severe: a restart
+  briefly rejects _every_ channel, not just a freshly-started one. The fix is **not**
+  an in-process barrier — that reintroduces the synchronous "wait for state before
+  serving" coupling the event-driven gate exists to avoid — but an operational
+  **readiness probe**: a restarted `chat` instance reports unready (so the load
+  balancer routes no viewers to it) until its initial replay reaches the high-water
+  mark. The compacted snapshot topic above shrinks the window to a near-instant read.
+  Deferred to Phase 2 with the rest of the multi-node work.
+- This consuming pattern is orthogonal to ADR-0012, which records the _topic_
   topology (keying, retention, partition count); ADR-0017 records how `chat`
-  *reads* those topics. The eventual-consistency window the gate inherits is
+  _reads_ those topics. The eventual-consistency window the gate inherits is
   documented in `CONTEXT.md` (the `chat` bounded-context entry).

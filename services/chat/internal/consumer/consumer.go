@@ -36,6 +36,7 @@ type Consumer struct {
 	mu           sync.RWMutex
 	liveChannels map[string]string
 	slugToID     map[string]string
+	onEnded      func(slug string)
 }
 
 func New(brokers, groupID, registryURL string, log *slog.Logger) (*Consumer, error) {
@@ -149,9 +150,15 @@ func (c *Consumer) applyStarted(ev StreamStarted) {
 
 func (c *Consumer) applyEnded(ev StreamEnded) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	delete(c.liveChannels, ev.ChannelID)
 	delete(c.slugToID, ev.ChannelSlug)
+	defer c.mu.Unlock()
+
+	c.log.Info("stream ended", "slug", ev.ChannelSlug, "channelId", ev.ChannelID, "streamId", ev.StreamID)
+
+	if c.onEnded != nil {
+		c.onEnded(ev.ChannelSlug)
+	}
 }
 
 func (c *Consumer) Resolve(slug string) (channelID, streamID string, ok bool) {
@@ -187,4 +194,8 @@ func (c *Consumer) Run() {
 
 func (c *Consumer) Close() {
 	_ = c.c.Close()
+}
+
+func (c *Consumer) OnEnded(fn func(slug string)) {
+	c.onEnded = fn
 }

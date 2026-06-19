@@ -16,6 +16,8 @@ Everything _around_ the stream: account lifecycle, follows, chat, emotes, notifi
 
 A single live broadcast session by a creator. Has a lifecycle: scheduled → live → ended. Stream lifecycle transitions are first-class control-plane events.
 
+A channel has **at most one live stream at a time** — streams are strictly sequential, never concurrent, and `identity` rejects a go-live on an already-live channel. This is a relied-upon contract, not an incidental property: `chat` can track liveness per `channelId` (a single live stream per channel), and because lifecycle events are co-partitioned and per-channel ordered, a channel's `start → end → start` always arrives in that order — so liveness keyed by `channelId` alone is correct.
+
 ### Channel
 
 The creator's persistent identity that owns streams over time. A channel exists between streams; a stream is a single instance.
