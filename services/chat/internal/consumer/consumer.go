@@ -64,6 +64,17 @@ func New(brokers, groupID, registryURL string, log *slog.Logger) (*Consumer, err
 	}, nil
 }
 
+func unwire(data []byte) (schemaID int, body []byte, err error) {
+	if len(data) < 5 || data[0] != 0x0 {
+		return 0, nil, fmt.Errorf("not a confluent wire message")
+	}
+
+	schemaID = int(binary.BigEndian.Uint32(data[1:5]))
+	body = data[5:]
+
+	return schemaID, body, nil
+}
+
 func (c *Consumer) schemaFor(id int) (avro.Schema, error) {
 	if s, ok := c.schemas[id]; ok {
 		return s, nil
@@ -133,6 +144,7 @@ func (c *Consumer) applyStarted(ev StreamStarted) {
 	defer c.mu.Unlock()
 	c.liveChannels[ev.ChannelID] = ev.StreamID
 	c.slugToID[ev.ChannelSlug] = ev.ChannelID
+	c.log.Info("stream started", "slug", ev.ChannelSlug, "channelId", ev.ChannelID, "streamId", ev.StreamID)
 }
 
 func (c *Consumer) applyEnded(ev StreamEnded) {
@@ -142,7 +154,7 @@ func (c *Consumer) applyEnded(ev StreamEnded) {
 	delete(c.slugToID, ev.ChannelSlug)
 }
 
-func (c *Consumer) resolve(slug string) (channelID, streamID string, ok bool) {
+func (c *Consumer) Resolve(slug string) (channelID, streamID string, ok bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -156,13 +168,23 @@ func (c *Consumer) resolve(slug string) (channelID, streamID string, ok bool) {
 	return channelID, streamID, ok
 }
 
-func unwire(data []byte) (schemaID int, body []byte, err error) {
-	if len(data) < 5 || data[0] != 0x0 {
-		return 0, nil, fmt.Errorf("not a confluent wire message")
+func (c *Consumer) Run() {
+	c.log.Info("consumer running, replaying from earliest")
+
+	for {
+		msg, err := c.c.ReadMessage(-1)
+
+		if err != nil {
+			c.log.Error("consumer read failed", "err", err)
+			continue
+		}
+
+		if err := c.decode(msg); err != nil {
+			c.log.Error("decode failed", "err", err, "topic", *msg.TopicPartition.Topic)
+		}
 	}
+}
 
-	schemaID = int(binary.BigEndian.Uint32(data[1:5]))
-	body = data[5:]
-
-	return schemaID, body, nil
+func (c *Consumer) Close() {
+	_ = c.c.Close()
 }

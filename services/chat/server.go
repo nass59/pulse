@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"pulse/chat/internal/consumer"
 	"pulse/chat/internal/producer"
 	"sync"
 	"time"
@@ -24,6 +25,7 @@ type server struct {
 	channels map[string]map[*conn]struct{} // slug -> set of conns
 	log      *slog.Logger
 	prod     *producer.Producer
+	cons     *consumer.Consumer
 }
 
 func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -38,9 +40,15 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 		_ = ws.CloseNow()
 	}()
 
+	channelID, streamID, ok := s.cons.Resolve(slug)
+	if !ok {
+		_ = ws.Close(websocket.StatusPolicyViolation, "channel not live")
+		return
+	}
+
 	s.log.Info("ws connect", "channel", slug, "userId", "u_demo")
 
-	c := &conn{ws: ws, send: make(chan []byte, 16)}
+	c := &conn{ws: ws, send: make(chan []byte, 16), channelID: channelID, streamID: streamID}
 
 	s.register(slug, c)         // add to registry
 	defer s.unregister(slug, c) // clean up on ANY exit
@@ -61,15 +69,6 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// TODO(issue 05): capture the real channelId/streamId from the stream-lifecycle
-	// log (the wristband, read at the liveness gate). Until then these are
-	// UUIDv5(slug) placeholders — deterministic so a channel co-partitions with
-	// itself, but they DO NOT match identity's real channelIds. No consumer may
-	// join chat.messages.v1 on channelId before issue 05 lands, or it joins on ids
-	// identity has never minted.
-	c.channelID = uuid.NewSHA1(uuid.NameSpaceURL, []byte(slug)).String()
-	c.streamID = uuid.NewSHA1(uuid.NameSpaceURL, []byte("stream:"+slug)).String()
-
 	// READ loop -- this goroutine. Never do slow work in here.
 	for {
 		_, data, err := ws.Read(ctx)
@@ -81,8 +80,8 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 		msg := producer.ChatMessageSent{
 			MessageID: id.String(),
-			ChannelID: c.channelID,      // ← the WRISTBAND (placeholder for now)
-			StreamID:  c.streamID,       // ← the WRISTBAND (placeholder for now)
+			ChannelID: c.channelID,      // ← the WRISTBAND
+			StreamID:  c.streamID,       // ← the WRISTBAND
 			UserID:    "u_demo",         // hardcoded MVP
 			Body:      string(data),     // the ONLY client input
 			SentAt:    time.Now().UTC(), // server receipt time

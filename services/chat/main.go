@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"pulse/chat/internal/consumer"
 	"pulse/chat/internal/producer"
 	"syscall"
 	"time"
@@ -43,7 +44,14 @@ func main() {
 	}
 	defer prod.Close()
 
-	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod}
+	cons, err := consumer.New(brokers, groupID, registryURL, logger)
+	if err != nil {
+		logger.Error("consumer init failed", "err", err)
+	}
+	defer cons.Close()
+	go cons.Run()
+
+	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod, cons: cons}
 	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}
