@@ -70,6 +70,17 @@
   --color-yellow-ink: oklch(0.2065 0.0133 107.51);
   --color-yellow-tint: oklch(0.9853 0.0365 103.71);
 
+  /**
+   * Go blue — the per-technology accent (ADR-0020). #00ADD8, Go's own brand
+   * cyan, converted to oklch like every other token (ADR-0009 §1). Used ONLY to
+   * mark Go-the-language surfaces (the /go tier); electric-yellow stays the
+   * Kafka/brand accent everywhere else. `go-ink` is the dark text that reads on a
+   * go-blue fill; `go-tint` is the light wash for hooks/callouts on paper.
+   */
+  --color-go-blue: oklch(0.6945 0.1303 223.9);
+  --color-go-ink: oklch(0.2418 0.0463 232.5);
+  --color-go-tint: oklch(0.972 0.0203 224.1);
+
   --color-carbon-900: oklch(0.1776 0 89.88);
   --color-carbon-850: oklch(0.1986 0.0078 107.09);
   --color-carbon-800: oklch(0.2065 0.0133 107.51);
@@ -95,6 +106,11 @@
   --shadow-glow-sm: 0 0 15px oklch(0.9424 0.2032 108.53 / 0.3);
   --shadow-glow-md: 0 0 15px oklch(0.9424 0.2032 108.53 / 0.5);
   --shadow-glow-lg: 0 0 30px oklch(0.9424 0.2032 108.53 / 0.4);
+
+  /* The Go-blue glow — same depth-as-light, scoped to the /go tier (ADR-0020). */
+  --shadow-glow-go-sm: 0 0 15px oklch(0.6945 0.1303 223.9 / 0.3);
+  --shadow-glow-go-md: 0 0 15px oklch(0.6945 0.1303 223.9 / 0.5);
+  --shadow-glow-go-lg: 0 0 30px oklch(0.6945 0.1303 223.9 / 0.4);
 
   --radius-pill: 9999px;
 }
@@ -199,6 +215,21 @@
   .ds-mark {
     background: var(--color-electric-yellow);
     color: var(--color-yellow-ink);
+    padding: 0 0.12em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /**
+   * The Go-flavoured highlighter swipe — same shape as `.ds-mark`, but the
+   * Go-blue accent (ADR-0020). Scoped to the /go tier so a highlighted word
+   * reads as "this is a Go idea," the way the yellow swipe reads as Kafka. Dark
+   * ink, not white: go-blue is a mid-tone where white sits at ~2.6:1 (fails AA)
+   * but `go-ink` clears 7:1 — the same dark-on-bright choice `.ds-mark` makes.
+   */
+  .ds-mark-go {
+    background: var(--color-go-blue);
+    color: var(--color-go-ink);
     padding: 0 0.12em;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;

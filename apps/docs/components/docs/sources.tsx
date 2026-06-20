@@ -55,6 +55,30 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0014-murmur2-partitioning-across-producers",
     title: "murmur2 partitioning across producers",
   },
+  15: {
+    slug: "0015-single-broker-dev-cluster",
+    title: "Single-broker dev cluster",
+  },
+  16: {
+    slug: "0016-lifecycle-events-carry-channel-slug",
+    title: "Lifecycle events carry channelSlug",
+  },
+  17: {
+    slug: "0017-chat-ephemeral-full-replay-consumer-group",
+    title: "Chat: ephemeral, full-replay consumer group",
+  },
+  18: {
+    slug: "0018-websocket-fanout-best-effort-log-is-durable",
+    title: "WebSocket fan-out is best-effort; the log is durable",
+  },
+  19: {
+    slug: "0019-chat-fails-fast-on-schema-registry-tolerates-broker",
+    title: "Chat fails fast on the registry, tolerates the broker",
+  },
+  20: {
+    slug: "0020-go-language-track-and-per-technology-accent",
+    title: "Go language track and per-technology accent",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");
@@ -95,8 +119,8 @@ export const Sources = ({
     </summary>
     <div className="px-5 pb-5">
       <p className="text-muted-foreground text-xs leading-relaxed">
-        {adrs.length === 0 && issues.length === 0 && refs.length > 0
-          ? "This page teaches Kafka the technology, not Pulse — so its sources point outward, to the canonical write-ups it's distilled from."
+        {adrs.length === 0 && refs.length > 0
+          ? "This page teaches a technology, not Pulse's own decisions — so its sources point outward, to the canonical write-ups it's distilled from. Any local issues below are just where the idea showed up in the build."
           : "This page is a study artifact — it translates decisions recorded elsewhere in the repo. The canonical write-ups live below; when they disagree with this page, they win."}
       </p>
 

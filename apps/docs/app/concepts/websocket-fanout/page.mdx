@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "WebSocket fan-out — Pulse docs",
+  description:
+    "chat's in-memory fan-out is best-effort and single-node; the Kafka log is the durable record. Why splitting live delivery from durability is the right call — and the limit Phase 2 fixes with Redis.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 1"
+  title={<>Best-effort live push, <span className="ds-mark">durable log</span></>}
+/>
+
+<Hook>
+  Two browser tabs on alice's channel see each other's messages instantly. Open
+  a third on a *second* gateway node and it goes quiet — on purpose, for now.
+</Hook>
+
+When a message arrives on a socket, the gateway does **two** things, and keeping them straight is the whole lesson:
+
+<FanoutVsLog />
+
+One arrival, two destinations with two very different promises. Producing to Kafka is the **durable record** — replayable, archived, the source of truth for history and every projection. The in-memory fan-out is a **best-effort live push** to the other sockets connected *to this node* — instant, but disposable. Conflating the two is how people build chat that either loses history or stalls the room; separating them is what makes it robust.
+
+## Why the fan-out is allowed to drop messages
+
+The live push is fire-and-forget. If one viewer's socket is slow or already dead, the gateway doesn't block the whole room waiting on it or retry forever — it just moves on, and that viewer may miss the live copy. That sounds reckless until you remember the message is **already safely on the log**. The viewer recovers it from history (today on reconnect; soon from the Redis ring buffer for mid-stream joins). Durability lives in exactly one place, on purpose, so the hot path can stay fast and never head-of-line block.
+
+<Callout variant="key" title="The log is the contract; the socket is a convenience">
+  Treat the WebSocket broadcast as a courtesy and the log as the promise.
+  Anything that *must* survive — moderation, analytics, replay, the viewer who
+  joined late — reads the durable record, never the live push. The push only ever
+  optimises latency for viewers who happen to be connected right now.
+</Callout>
+
+## The single-node limit (a deliberate stepping stone)
+
+Here's the catch worth feeling before you fix it. The map of "who's connected to which channel" lives **in one process's memory**. So the fan-out only reaches sockets on *that* node:
+
+<SystemTopology />
+
+Run two gateway nodes and viewers on node A won't get node B's live pushes — they'd only catch up via the log. It's a group chat that pings the people in the room but not anyone next door. The chat-mvp epic ships exactly **one node**, and that's not an oversight — it's a teaching device. You build the naive version, feel precisely where it breaks, and *then* earn the solution.
+
+## How Phase 2 closes the gap
+
+Phase 2's `chat-multi-node` epic adds **Redis pub/sub** as the shared megaphone between nodes: every gateway publishes a channel's messages to Redis, every node subscribes, and the live push crosses node boundaries. The same epic adds the Redis **ring buffer** — the per-channel last-N cache that finally answers "what did I miss?" for a viewer who joins mid-stream. The durable log doesn't change at all; Redis just makes the *live* path multi-node. You'll appreciate the fix far more for having watched the single-node version go quiet first.
+
+## Did it stick?
+
+<ConceptQuiz slug="websocket-fanout" />
+
+<PageNav
+  prev={{
+    href: "/concepts/server-authored-events",
+    title: "Server-authored events",
+    blurb: "What the gateway stamps before it ever fans a message out.",
+  }}
+  next={{
+    href: "/journey/chat",
+    title: "Journey · Chat",
+    blurb: "See all of it run — two tabs, kcat, and the close codes.",
+  }}
+/>
+
+<Sources adrs={[18]} issues={["chat-mvp/04-in-memory-fanout"]} />

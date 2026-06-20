@@ -75,7 +75,7 @@ const ComingCard = ({ concept }: { concept: Concept }) => (
 export const ConceptIndex = () => (
   <FullBleed>
     <section className="mx-auto max-w-4xl px-6 py-4">
-      <Eyebrow>Concepts · Phase 0 live</Eyebrow>
+      <Eyebrow>Concepts · Phase 1 live</Eyebrow>
       <h1 className="mt-4 font-bold text-4xl text-foreground tracking-[-0.025em] sm:text-5xl">
         The ideas, <span className="ds-mark">one page</span> each
       </h1>
@@ -85,9 +85,11 @@ export const ConceptIndex = () => (
         a wall of text wherever one earns its place.
       </p>
       <p className="mt-3 max-w-2xl text-balance text-muted-foreground text-sm leading-relaxed">
-        Phase 0 stood up the infrastructure, so these first few are about
-        keeping Kafka and its neighbours alive — not yet pushing events through
-        them. The juicier stuff lands as the services that need it get built.
+        Phase 0 stood up the infrastructure; Phase 1 started pushing real events
+        through it. The first service emits a stream lifecycle, and the chat
+        gateway both produces messages and consumes that lifecycle back — so
+        partitions, ordering, consumer groups, and server-authored events are
+        live now, not theory.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">

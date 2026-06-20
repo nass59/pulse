@@ -9,15 +9,22 @@ import {
   Database,
   FileCode,
   HardDrive,
+  Hash,
   Inbox,
+  KeyRound,
   ListChecks,
   type LucideIcon,
+  MessageSquare,
   Radio,
   ScrollText,
   Send,
   Server,
+  Share2,
+  Stamp,
   Trash2,
   Users,
+  Wifi,
+  WifiOff,
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -64,6 +71,8 @@ const tones = {
   yellow: "border-electric-yellow/50 text-yellow-ink dark:text-electric-yellow",
   green: "border-accent-green/50 text-accent-green",
   orange: "border-accent-orange/50 text-accent-orange",
+  /** Go blue — the per-technology accent (ADR-0020), for /go-tier figures. */
+  blue: "border-go-blue/50 text-go-ink dark:text-go-blue",
 } as const;
 
 type Tone = keyof typeof tones;
@@ -891,6 +900,436 @@ export const QuorumFaultTolerance = () => (
           </div>
         </div>
       ))}
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Server-authored events — client sends a body; the gateway stamps.    */
+/* ------------------------------------------------------------------ */
+
+interface StampedField {
+  detail: string;
+  field: string;
+}
+
+const STAMPED_FIELDS: StampedField[] = [
+  { field: "messageId", detail: "server-minted UUIDv7" },
+  { field: "userId", detail: "the connection's account — never the client's" },
+  { field: "channelId + streamId", detail: "the wristband, captured at join" },
+  { field: "sentAt", detail: "server receipt time — never a client clock" },
+];
+
+/**
+ * The server-authored invariant in one figure. The client's WS frame carries a
+ * single field — `body`. The gateway stamps every other field onto the event
+ * before it ever reaches Kafka, so authorship can't be forged and a message
+ * can't be backdated. `channelId`/`streamId` come from the "wristband" captured
+ * at join time (the connection remembers which channel it joined), not a per-
+ * message lookup.
+ */
+export const ServerAuthoredStamp = () => (
+  <DiagramFrame caption="The client's whole contribution is body. The gateway stamps identity, timing, and the channel/stream the socket joined (its wristband) — so the event is the server's testimony, not the client's claim. Nothing the client sends can forge a userId or backdate a message.">
+    <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
+      <FlowBox mono tone="neutral">
+        <MessageSquare className="size-4" />
+        <span className="leading-snug">
+          client frame
+          <br />
+          {'{ body: "gg" }'}
+        </span>
+      </FlowBox>
+
+      <Connector label="WS frame" />
+
+      <div className="flex flex-1 flex-col gap-2 rounded-xl border border-electric-yellow/40 bg-yellow-tint p-3 dark:border-electric-yellow/25 dark:bg-electric-yellow/[0.06]">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-yellow-ink uppercase tracking-wider dark:text-electric-yellow">
+          <Stamp className="size-3.5" />
+          the gateway stamps
+        </span>
+        <ul className="flex flex-col gap-1">
+          {STAMPED_FIELDS.map((f) => (
+            <li className="flex items-baseline gap-2 text-xs" key={f.field}>
+              <code className="shrink-0 font-mono text-foreground">
+                {f.field}
+              </code>
+              <span className="text-[11px] text-muted-foreground leading-snug">
+                {f.detail}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Connector label="produce" />
+
+      <FlowBox mono tone="green">
+        <Radio className="size-4" />
+        <span className="leading-snug">
+          ChatMessageSent
+          <br />
+          chat.messages.v1
+        </span>
+      </FlowBox>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* The log & offsets — append-only cells, independent reader cursors.    */
+/* ------------------------------------------------------------------ */
+
+interface LogReader {
+  at: number;
+  label: string;
+  tone: "green" | "orange";
+}
+
+const LOG_CELLS = ["m0", "m1", "m2", "m3", "m4", "m5"];
+const LOG_READERS: LogReader[] = [
+  { label: "live tail", at: 5, tone: "green" },
+  { label: "replay from start", at: 1, tone: "orange" },
+];
+
+/**
+ * Why Kafka is a log, not a queue. The producer only ever appends at the tail;
+ * nothing is removed on read. Each reader keeps its *own* offset cursor, so two
+ * consumers sit at different places in the same log — one at the live tail,
+ * another replaying from the start — without disturbing each other. Reading is
+ * just advancing your cursor; "replay" is moving it back.
+ */
+export const LogWithOffsets = () => (
+  <DiagramFrame caption="A queue deletes on read; a log doesn't. The producer appends at the tail, and every reader carries its own offset — so a fresh consumer can replay from offset 0 while a caught-up one sits at the tail, reading the very same records. That independence is exactly what lets chat rebuild its state from the beginning at every boot.">
+    <div className="flex items-center justify-between">
+      <span className="ds-eyebrow text-[10px]">
+        chat.messages.v1 · partition 2
+      </span>
+      <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green">
+        <Send className="size-3.5" />
+        append-only →
+      </span>
+    </div>
+
+    <div className="mt-4 flex gap-1.5">
+      {LOG_CELLS.map((cell, i) => (
+        <div className="flex flex-1 flex-col items-center gap-1" key={cell}>
+          <div className="flex h-10 w-full items-center justify-center rounded-lg border border-border bg-muted/30 font-mono text-foreground text-xs">
+            {cell}
+          </div>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {i}
+          </span>
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-4 flex flex-col gap-2 border-border border-t pt-3">
+      {LOG_READERS.map((r) => (
+        <div className="flex items-center gap-3" key={r.label}>
+          <span
+            className={cn(
+              "flex items-center gap-1.5 rounded-pill border px-2 py-0.5 font-mono text-[10px]",
+              r.tone === "green"
+                ? "border-accent-green/50 text-accent-green"
+                : "border-accent-orange/50 text-accent-orange"
+            )}
+          >
+            <ScrollText className="size-3" />
+            {r.label}
+          </span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            offset = {r.at}
+          </span>
+        </div>
+      ))}
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Partitions & ordering — one key, one partition, co-partitioned types. */
+/* ------------------------------------------------------------------ */
+
+interface KeyedEvent {
+  icon: LucideIcon;
+  label: string;
+  topic: string;
+}
+
+const ALICE_EVENTS: KeyedEvent[] = [
+  { label: "ChatMessageSent", topic: "chat.messages.v1", icon: MessageSquare },
+  { label: "ViewerJoined", topic: "chat.presence.joined.v1", icon: Users },
+  { label: "StreamStarted", topic: "stream.started.v1", icon: Radio },
+];
+
+/**
+ * The partition contract that makes chat work. Every event about alice's channel
+ * — a message, a presence join, a lifecycle change, across *four different
+ * topics* — is keyed by the same `channelId`, so murmur2 routes them all to the
+ * same partition number. That co-partitioning is what gives a channel total
+ * ordering and lets `analytics` join its streams later without a repartition.
+ * A different channel hashes to a different partition; the two never interleave.
+ */
+export const CoPartitionRouting = () => (
+  <DiagramFrame caption="Key by channelId and murmur2 sends every event about one channel — message, presence, lifecycle, across four topics — to the same partition number. Same partition means one ordered queue per channel, and it means analytics can join chat against stream-state later without shuffling data around. bob's channel hashes elsewhere; the two streams never cross.">
+    <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
+      <div className="flex flex-col gap-1.5">
+        <span className="ds-eyebrow text-[10px] text-accent-blue">
+          all keyed by alices-channelId
+        </span>
+        <div className="flex flex-col gap-1.5">
+          {ALICE_EVENTS.map((e) => {
+            const Icon = e.icon;
+            return (
+              <div
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+                key={e.label}
+              >
+                <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="font-medium text-foreground text-xs">
+                  {e.label}
+                </span>
+                <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                  {e.topic}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-row items-center justify-center gap-1 sm:flex-col">
+        <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+          <Hash className="size-3" />
+          murmur2
+        </span>
+        <ArrowRight className="size-5 rotate-90 text-muted-foreground sm:rotate-0" />
+      </div>
+
+      <div className="flex items-center justify-center rounded-xl border border-accent-green/50 bg-accent-green/[0.05] px-5 py-3 text-accent-green">
+        <div className="flex flex-col items-center gap-0.5">
+          <KeyRound className="size-4" />
+          <span className="font-mono text-sm">P2</span>
+          <span className="font-mono text-[9px] text-muted-foreground">
+            one ordered channel
+          </span>
+        </div>
+      </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Consumer groups — replay the lifecycle log into a live-channel map.  */
+/* ------------------------------------------------------------------ */
+
+interface LifecycleFold {
+  channel: string;
+  kind: "started" | "ended";
+}
+
+const LIFECYCLE_LOG: LifecycleFold[] = [
+  { channel: "alice", kind: "started" },
+  { channel: "bob", kind: "started" },
+  { channel: "alice", kind: "ended" },
+  { channel: "carol", kind: "started" },
+];
+
+/**
+ * How chat answers "is this channel live?" without ever asking identity. At
+ * boot, it joins a *fresh, per-process* consumer group and replays
+ * `stream.started.v1` / `stream.ended.v1` from the very beginning, folding each
+ * event into an in-memory live-channel map. start adds, end removes — so after
+ * the replay the map holds exactly the currently-live channels. It learned the
+ * state from the log, not a synchronous call.
+ */
+export const LiveMapFromLog = () => (
+  <DiagramFrame caption="A fresh consumer group each boot, auto.offset.reset=earliest: chat replays the whole lifecycle log and folds it down — StreamStarted adds a channel, StreamEnded removes it. What's left is the set of live channels, learned entirely from the log. No HTTP call to identity, ever — that decoupling is the whole point.">
+    <div className="flex items-center justify-between">
+      <span className="ds-eyebrow text-[10px]">
+        group: chat-gateway-${"{host}"}-${"{boot}"}
+      </span>
+      <span className="font-mono text-[10px] text-muted-foreground">
+        auto.offset.reset=earliest
+      </span>
+    </div>
+
+    <div className="mt-4 flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-1 flex-col gap-1.5">
+        <span className="font-mono text-[10px] text-muted-foreground">
+          replay from offset 0 →
+        </span>
+        <div className="flex flex-col gap-1">
+          {LIFECYCLE_LOG.map((e) => (
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-1.5 font-mono text-[11px]",
+                e.kind === "started"
+                  ? "border-accent-green/40 text-accent-green"
+                  : "border-destructive/40 text-destructive"
+              )}
+              key={`${e.channel}-${e.kind}`}
+            >
+              {e.kind === "started" ? (
+                <Radio className="size-3.5 shrink-0" />
+              ) : (
+                <X className="size-3.5 shrink-0" />
+              )}
+              <span>
+                {e.kind === "started" ? "StreamStarted" : "StreamEnded"}
+              </span>
+              <span className="ml-auto text-muted-foreground">{e.channel}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Connector label="fold" />
+
+      <div className="flex flex-col gap-1.5 rounded-xl border border-accent-green/50 bg-accent-green/[0.05] p-3">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green uppercase tracking-wider">
+          <ListChecks className="size-3.5" />
+          live-channel map
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {["bob", "carol"].map((c) => (
+            <span
+              className="rounded-pill border border-accent-green/50 px-2 py-0.5 font-mono text-[10px] text-accent-green"
+              key={c}
+            >
+              {c} · live
+            </span>
+          ))}
+          <span className="rounded-pill border border-border border-dashed px-2 py-0.5 font-mono text-[10px] text-muted-foreground line-through">
+            alice
+          </span>
+        </div>
+      </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* WebSocket fan-out — best-effort live push, the log is the truth.     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The two destinations of one chat message, and why only one of them is durable.
+ * On receipt the gateway does two things: it produces to Kafka (the canonical,
+ * replayable record every reader can trust) and it fans the message out in
+ * memory to the *other sockets on this node* (an instant live push). The fan-out
+ * is best-effort and single-node: a viewer connected to a different gateway node
+ * won't get the in-memory push — they rely on the log and its projections. The
+ * MVP runs one node on purpose; Phase 2 closes the cross-node gap with Redis.
+ */
+export const FanoutVsLog = () => (
+  <DiagramFrame caption="One message, two fates. Producing to Kafka is the durable record — replayable, every reader's source of truth. The in-memory fan-out is a best-effort live push to other tabs on the same node; a viewer on another node misses it and falls back to the log. Single-node is the deliberate MVP limit Phase 2 fixes with Redis.">
+    <div className="flex justify-center">
+      <FlowBox mono tone="ink">
+        <MessageSquare className="size-4" />
+        message arrives on a socket
+      </FlowBox>
+    </div>
+
+    <div className="my-3 flex justify-center font-mono text-[10px] text-muted-foreground">
+      the gateway does both ↓
+    </div>
+
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="flex flex-col gap-2 rounded-xl border border-accent-green/50 bg-accent-green/[0.05] p-3">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green uppercase tracking-wider">
+          <ScrollText className="size-3.5" />
+          durable · the log
+        </span>
+        <p className="text-foreground/80 text-xs leading-relaxed">
+          Produce to <code className="font-mono">chat.messages.v1</code>. The
+          canonical record — replayable, archived, the source of truth for
+          history and every projection.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-xl border border-accent-orange/50 bg-accent-orange/[0.05] p-3">
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-orange uppercase tracking-wider">
+          <Share2 className="size-3.5" />
+          best-effort · live push
+        </span>
+        <p className="text-foreground/80 text-xs leading-relaxed">
+          Write to the other sockets on <em>this node</em>. Instant, but lost on
+          a slow/dead socket — and invisible to viewers on another node.
+        </p>
+      </div>
+    </div>
+
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="flex items-center gap-2 rounded-lg border border-accent-green/40 px-3 py-2 font-mono text-[11px] text-accent-green">
+        <Wifi className="size-3.5 shrink-0" />
+        same node · gets the live push
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/40 border-dashed px-3 py-2 font-mono text-[11px] text-muted-foreground">
+        <WifiOff className="size-3.5 shrink-0" />
+        another node · reads the log (Phase 2: Redis)
+      </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Go — a goroutine per connection: read loop + write pump + cancel.    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Why Go fits a WebSocket gateway. Each viewer connection gets two goroutines —
+ * a read loop pulling frames off the socket, and a write pump draining an
+ * outbound channel back to it — wired together by a typed channel. A
+ * `context.WithCancel` ties their lifetimes: when the read loop ends (the viewer
+ * leaves), it calls `cancel()`, the write pump's `<-ctx.Done()` fires, and it
+ * exits — no leaked goroutine. This figure is Go-the-language, so it wears the
+ * Go-blue accent (ADR-0020), not Pulse's Kafka yellow.
+ */
+export const GoroutineReadLoop = () => (
+  <DiagramFrame caption="One connection, two goroutines: a read loop and a write pump, joined by a typed channel. A goroutine is cheap enough that one-per-connection is normal. context.WithCancel links their fates — when the read loop ends, cancel() stops the write pump, so a disconnect never leaks a goroutine.">
+    <div className="flex justify-center">
+      <FlowBox mono tone="blue">
+        <MessageSquare className="size-4" />
+        viewer socket
+      </FlowBox>
+    </div>
+
+    <div className="my-3 flex justify-center font-mono text-[10px] text-muted-foreground">
+      go gateway spawns two goroutines ↓
+    </div>
+
+    <div className="grid items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr]">
+      <div className="flex flex-col gap-2 rounded-xl border border-go-blue/40 p-3">
+        <span className="font-mono text-[10px] text-go-ink uppercase tracking-wider dark:text-go-blue">
+          goroutine · read loop
+        </span>
+        <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+          for {"{"} read frame → produce + fan-out {"}"}
+        </p>
+        <span className="font-mono text-[10px] text-accent-orange">
+          on EOF → cancel()
+        </span>
+      </div>
+
+      <div className="flex flex-row items-center justify-center gap-1 sm:flex-col">
+        <span className="rounded-pill border border-border px-2 py-0.5 font-mono text-[9px] text-muted-foreground">
+          chan []byte
+        </span>
+        <ArrowRight className="size-4 rotate-90 text-muted-foreground sm:rotate-0" />
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-xl border border-go-blue/40 p-3">
+        <span className="font-mono text-[10px] text-go-ink uppercase tracking-wider dark:text-go-blue">
+          goroutine · write pump
+        </span>
+        <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+          select {"{"} case b := &lt;-send / case &lt;-ctx.Done() {"}"}
+        </p>
+        <span className="font-mono text-[10px] text-accent-green">
+          ctx cancelled → return (no leak)
+        </span>
+      </div>
     </div>
   </DiagramFrame>
 );

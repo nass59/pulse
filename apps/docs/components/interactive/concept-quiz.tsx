@@ -129,6 +129,26 @@ const VERDICT_TITLE_TONE: Record<Verdict["tone"], string> = {
   red: "text-destructive",
 };
 
+/**
+ * The accent the widget wears (ADR-0020 per-technology accent). `yellow` is the
+ * default Kafka/brand accent used on concept pages; `blue` is Go blue, used by
+ * the `/go` tier so the quiz matches the page it closes.
+ */
+type Accent = "yellow" | "blue";
+
+const ACCENT: Record<Accent, { btn: string; dot: string; icon: string }> = {
+  yellow: {
+    icon: "text-electric-yellow",
+    dot: "bg-electric-yellow",
+    btn: "bg-electric-yellow text-yellow-ink hover:shadow-glow-sm",
+  },
+  blue: {
+    icon: "text-go-blue",
+    dot: "bg-go-blue",
+    btn: "bg-go-blue text-go-ink hover:shadow-glow-go-sm",
+  },
+};
+
 type DotState = "correct" | "wrong" | "current" | "todo";
 
 /** What a single progress dot represents, given where the run stands. */
@@ -148,7 +168,7 @@ const dotStateFor = (
 };
 
 /** Each progress dot reflects what happened on that question. */
-const dotClass = (state: DotState): string => {
+const dotClass = (state: DotState, accent: Accent): string => {
   if (state === "correct") {
     return "bg-accent-green";
   }
@@ -156,7 +176,7 @@ const dotClass = (state: DotState): string => {
     return "bg-destructive";
   }
   if (state === "current") {
-    return "w-5 bg-electric-yellow";
+    return cn("w-5", ACCENT[accent].dot);
   }
   return "bg-border";
 };
@@ -217,6 +237,7 @@ const OptionButton = ({
 };
 
 const QuestionView = ({
+  accent,
   attempt,
   chosen,
   onNext,
@@ -224,6 +245,7 @@ const QuestionView = ({
   question,
   isLast,
 }: {
+  accent: Accent;
   attempt: number;
   chosen: number | null;
   isLast: boolean;
@@ -294,7 +316,10 @@ const QuestionView = ({
 
             <div className="mt-4 flex justify-end">
               <button
-                className="inline-flex items-center gap-1.5 rounded-pill bg-electric-yellow px-4 py-1.5 font-medium font-mono text-[12px] text-yellow-ink transition-all hover:shadow-glow-sm"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-pill px-4 py-1.5 font-medium font-mono text-[12px] transition-all",
+                  ACCENT[accent].btn
+                )}
                 onClick={onNext}
                 type="button"
               >
@@ -374,7 +399,13 @@ const ResultsView = ({
   );
 };
 
-export const ConceptQuiz = ({ slug }: { slug: string }) => {
+export const ConceptQuiz = ({
+  slug,
+  accent = "yellow",
+}: {
+  accent?: Accent;
+  slug: string;
+}) => {
   const reduced = useReducedMotion();
   const quiz = QUIZZES[slug];
   const total = quiz?.questions.length ?? 0;
@@ -420,7 +451,7 @@ export const ConceptQuiz = ({ slug }: { slug: string }) => {
   return (
     <div className="not-prose my-8 rounded-2xl border bg-card p-5 sm:p-6">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Gamepad2 className="size-4 text-electric-yellow" />
+        <Gamepad2 className={cn("size-4", ACCENT[accent].icon)} />
         <span className="ds-eyebrow text-[10px]">Check yourself</span>
       </div>
       <p className="mt-2 text-foreground text-sm leading-relaxed">
@@ -437,7 +468,7 @@ export const ConceptQuiz = ({ slug }: { slug: string }) => {
                 <span
                   className={cn(
                     "h-1.5 w-2 rounded-full transition-all",
-                    dotClass(state)
+                    dotClass(state, accent)
                   )}
                   key={q.id}
                 />
@@ -466,6 +497,7 @@ export const ConceptQuiz = ({ slug }: { slug: string }) => {
             />
           ) : (
             <QuestionView
+              accent={accent}
               attempt={attempt}
               chosen={selections[current]}
               isLast={current === total - 1}

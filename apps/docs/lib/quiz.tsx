@@ -19,6 +19,10 @@ import type { ReactNode } from "react";
  * `<code>` element here, never a markdown backtick.) Explanations are where the
  * teaching lands, so each one leans on a concrete analogy the way the concept
  * pages do.
+ *
+ * The `/go` tier (ADR-0020) reads from this same catalogue, keyed by
+ * `go-<page-slug>` (e.g. `go-goroutines-and-channels`), and renders the widget
+ * with `accent="blue"`. Same data shape, different accent.
  */
 export interface QuizQuestion {
   /** Index into `options` of the correct answer. */
@@ -601,6 +605,673 @@ export const QUIZZES: Record<string, ConceptQuiz> = {
             The instant the handler talks to Kafka, you're back to two systems
             and a gap between them — the exact bug the outbox exists to kill.
             That line never blurs: handlers commit rows, the relay publishes.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "the-log-and-offsets": {
+    tagline: "Kafka doesn't hand out messages — it lets you read the tape.",
+    questions: [
+      {
+        id: "log-not-queue",
+        prompt:
+          "What happens to a record after a consumer reads it from a Kafka topic?",
+        options: [
+          "Nothing — it stays on the log until retention expires; reading doesn't remove it",
+          "It's deleted, like popping off a queue",
+          "It's moved to a “processed” topic",
+          "It's hidden from every other consumer",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            A classic queue is a pile of tickets — take one and it's gone. A
+            Kafka log is a DVR of the match: pressing play doesn't erase the
+            recording, and someone else can watch the same moment later. Reading
+            never consumes; only retention ages records out.
+          </>
+        ),
+      },
+      {
+        id: "log-offset",
+        prompt: "What is an offset?",
+        options: [
+          "A per-consumer cursor — the position in the partition a reader has reached",
+          "A global clock shared by all consumers",
+          "The number of partitions in a topic",
+          "How long a record is kept before deletion",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            An offset is just “which frame am I on.” Each consumer keeps its
+            own, so two readers can sit at totally different points in the same
+            partition — one at the live edge, one still catching up — like two
+            people watching the same Twitch VOD from different timestamps.
+          </>
+        ),
+      },
+      {
+        id: "log-replay",
+        prompt: (
+          <>
+            chat boots with <code>auto.offset.reset=earliest</code> and no
+            committed offset. Where does it start reading?
+          </>
+        ),
+        options: [
+          "From offset 0 — it replays the whole partition from the beginning",
+          "From the latest record only",
+          "From a random offset",
+          "It refuses to start without a committed offset",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            With no offset to resume from, <code>earliest</code> rewinds to the
+            start of the tape. That's not a bug — it's how chat rebuilds its
+            entire live-channel picture from scratch every boot. Replay is just
+            moving the cursor back to zero.
+          </>
+        ),
+      },
+      {
+        id: "log-independence",
+        prompt: "Why can analytics and chat both read the same topic freely?",
+        options: [
+          "Each keeps its own offsets, so one reader's progress never affects another's",
+          "Kafka duplicates the topic per consumer",
+          "Only one of them is actually allowed to read it",
+          "They take turns, one record at a time",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Because the log isn't consumed by reading, any number of independent
+            readers can tap it at their own pace — the same broadcast feed piped
+            to the commentary booth, the stats team, and the highlights editor
+            at once, each scrubbing to wherever they need.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "partitions-and-ordering": {
+    tagline: "One key, one lane — order holds inside a lane, never across.",
+    questions: [
+      {
+        id: "po-ordering-scope",
+        prompt:
+          "Across what scope does Kafka actually guarantee message order?",
+        options: [
+          "Within a single partition — never across partitions of a topic",
+          "Across the whole topic, always",
+          "Across the whole cluster",
+          "Only if there's exactly one consumer",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Order is a per-partition promise, not a topic-wide one. Think of
+            each partition as one checkout lane: people in a lane are strictly
+            in order, but there's no defined order <em>between</em> lanes.
+            That's why what you key by matters so much.
+          </>
+        ),
+      },
+      {
+        id: "po-key-choice",
+        prompt: "Why does chat key its messages by channelId?",
+        options: [
+          "So every event for one channel lands on the same partition and stays totally ordered",
+          "To spread one channel's messages across all partitions for speed",
+          "Because Kafka requires a UUID key",
+          "To make messages smaller on the wire",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Same key → same partition → one ordered lane per channel. Viewers in
+            alice's chat see messages in the order the gateway received them,
+            because they're all queued in a single lane. Key by something random
+            and a channel's own messages would scatter and could arrive jumbled.
+          </>
+        ),
+      },
+      {
+        id: "po-copartition",
+        prompt:
+          "chat keys messages, presence, AND consumes lifecycle all by channelId. What does that buy?",
+        options: [
+          "Co-partitioning — a channel's related events share a partition, so analytics can join them without a repartition",
+          "Nothing — it's just a naming convention",
+          "Smaller topics",
+          "Exactly-once delivery",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            When several topics use the same key, a given channel's records line
+            up on the <em>same</em> partition number across all of them. That's
+            co-partitioning — the precondition for a stream–table join
+            downstream, like keeping one team's fixtures, results, and squad
+            sheet all filed under the same club so you can cross-reference
+            without reshuffling.
+          </>
+        ),
+      },
+      {
+        id: "po-repartition",
+        prompt:
+          "Why is the partition count treated as a contract fixed up front?",
+        options: [
+          "Adding partitions rehashes keys to new partitions, breaking per-key ordering at the seam",
+          "Kafka charges per partition",
+          "Partitions can never be added at all",
+          "Consumers vote on the count at runtime",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            A key maps to a partition by hashing modulo the partition count.
+            Change the count and existing keys hash somewhere new — their old
+            records stay put, their new ones land elsewhere, and the single
+            ordered lane splits. It's re-seeding the bracket at half-time: the
+            games already played don't move.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "consumer-groups": {
+    tagline: "Don't ask who's live — replay the log and find out yourself.",
+    questions: [
+      {
+        id: "cg-what",
+        prompt: "What is a consumer group?",
+        options: [
+          "A set of consumers that share a topic's partitions, each partition read by exactly one member",
+          "A group chat for Kafka operators",
+          "A backup copy of a topic",
+          "The list of producers writing to a topic",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            A consumer group is how you scale reads: partitions are dealt out
+            among the members like marking assignments in defence — each
+            attacker (partition) is picked up by exactly one defender
+            (consumer), so the work is shared and nothing is double-marked.
+          </>
+        ),
+      },
+      {
+        id: "cg-state-from-log",
+        prompt:
+          "How does chat learn which channels are live, instead of calling identity over HTTP?",
+        options: [
+          "It consumes the stream-lifecycle topics and folds the events into an in-memory map",
+          "It queries identity's database directly",
+          "It polls a /live HTTP endpoint every second",
+          "It guesses from the channel slug",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            This is the philosophical shift: not <em>asking</em> “is alice
+            live?” but <em>learning</em> it from the event stream. chat folds{" "}
+            <code>StreamStarted</code>/<code>StreamEnded</code> into a map — the
+            same way you'd reconstruct the score by replaying the match events
+            rather than phoning the stadium.
+          </>
+        ),
+      },
+      {
+        id: "cg-ephemeral",
+        prompt: (
+          <>
+            chat uses a fresh group id each boot (
+            <code>chat-gateway-{"<host>-<boot>"}</code>) with{" "}
+            <code>earliest</code>. Why a new group every time?
+          </>
+        ),
+        options: [
+          "So it always replays the full log and rebuilds complete state, never resuming from a stale committed offset",
+          "To hide from the Kafka admin tools",
+          "Because group ids must be globally unique forever",
+          "To consume each message exactly once across reboots",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            A durable group would resume from its last commit and miss the
+            history it needs to know who's live. A throwaway group with{" "}
+            <code>earliest</code> guarantees a clean, full replay every boot —
+            chat wants the <em>whole</em> story each time it wakes up, not where
+            it left off.
+          </>
+        ),
+      },
+      {
+        id: "cg-eventual",
+        prompt:
+          "The liveness gate is “eventually consistent.” What's the accepted consequence?",
+        options: [
+          "A connect just after a real go-live can be rejected until chat consumes the StreamStarted event",
+          "Messages are permanently lost",
+          "Two channels can be live with the same id",
+          "identity has to block until chat catches up",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            chat lags identity by its own consumer lag, so there's a sliver of
+            time where a channel is genuinely live but chat hasn't heard yet —
+            connect and you get a <code>1008</code>. It's VAR taking a beat to
+            confirm the goal; the client just retries. The alternative — a
+            synchronous call back to identity — is exactly the coupling we're
+            avoiding.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "server-authored-events": {
+    tagline: "The client gets a microphone, not a keyboard for the record.",
+    questions: [
+      {
+        id: "sa-client-supplies",
+        prompt:
+          "When a viewer sends a chat message, what does the client actually supply?",
+        options: [
+          "Only the message body — nothing else",
+          "The full event: id, userId, timestamp, channel, and body",
+          "The userId and timestamp, but not the body",
+          "A signed, tamper-proof event envelope",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            The client's whole contribution is the text. Everything else —{" "}
+            <code>messageId</code>, <code>userId</code>, the channel/stream
+            identity, <code>sentAt</code> — is stamped by the gateway. The
+            viewer speaks into a mic; the gateway is the official scorer who
+            writes what actually goes in the record.
+          </>
+        ),
+      },
+      {
+        id: "sa-why",
+        prompt: "Why let the server author every field but the body?",
+        options: [
+          "Authorship can't be forged and a message can't be backdated",
+          "It makes the payload bigger",
+          "Kafka requires server-side timestamps",
+          "It lets clients pick their own message ids",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            If the client supplied <code>userId</code> or <code>sentAt</code>,
+            anyone could impersonate another viewer or fake the timing. Stamping
+            them server-side makes forgery impossible by construction — like a
+            match official recording the goal time, not the player claiming it.
+          </>
+        ),
+      },
+      {
+        id: "sa-wristband",
+        prompt: (
+          <>
+            The gateway stamps <code>channelId</code>/<code>streamId</code> from
+            the connection's “wristband.” What is that?
+          </>
+        ),
+        options: [
+          "The channel/stream identity captured once at join time and remembered on the connection",
+          "A token the client sends with every message",
+          "A fresh live-map lookup performed per message",
+          "A random id minted for each message",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            When the socket passes the liveness gate at join, the gateway pins
+            that channel and stream onto the connection — a festival wristband
+            you're given at the gate and that's checked all night. Every message
+            reads the wristband, not a per-message lookup, so identity can't
+            drift mid-session.
+          </>
+        ),
+      },
+      {
+        id: "sa-receipt-time",
+        prompt: (
+          <>
+            <code>sentAt</code> is the server's receipt time, never the client's
+            clock. What does that guarantee?
+          </>
+        ),
+        options: [
+          "A channel's messages are totally ordered as the gateway saw them, with no skewed client clocks",
+          "Messages arrive faster",
+          "Clients in other timezones are rejected",
+          "The timestamp can be anything the client wants",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Client clocks lie — they're wrong, skewed, or spoofed. Anchoring{" "}
+            <code>sentAt</code> to the gateway's own clock means one authority
+            times every message in a channel, so the order is the order the
+            server witnessed. Same reason the finish line, not each runner's
+            watch, records the race.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "websocket-fanout": {
+    tagline: "The live push is a courtesy; the log is the promise.",
+    questions: [
+      {
+        id: "wf-two-things",
+        prompt:
+          "When a message arrives, the gateway does two things. What are they?",
+        options: [
+          "Produce it to Kafka (durable), and fan it out in memory to other sockets on the same node (live push)",
+          "Write it to Postgres, then email subscribers",
+          "Only broadcast it to other tabs — Kafka is optional",
+          "Only produce to Kafka — there is no live push",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            One arrival, two destinations: the durable log everyone can trust,
+            and an instant in-memory broadcast to viewers already connected
+            here. The log is the official record; the fan-out is the stadium
+            big-screen replay — nice to have live, but not where the result is
+            kept.
+          </>
+        ),
+      },
+      {
+        id: "wf-best-effort",
+        prompt: "Why is the in-memory fan-out called “best-effort”?",
+        options: [
+          "If a socket is slow or dead the live push can be dropped — the durable record still lives in the log",
+          "It retries forever until every viewer acks",
+          "It's the only delivery path, so it must never fail",
+          "It writes to disk before sending",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            The push is fire-and-forget: a wedged connection doesn't get to hold
+            up the room, so its live copy may be missed. That's fine precisely
+            because the message is already safely on the log — the viewer can
+            recover it from history. Durability lives in one place, on purpose.
+          </>
+        ),
+      },
+      {
+        id: "wf-single-node",
+        prompt:
+          "Two viewers on the same channel but connected to different gateway nodes. Does the in-memory fan-out reach both?",
+        options: [
+          "No — fan-out is single-node, so a viewer on another node misses the live push",
+          "Yes, the fan-out is cluster-wide",
+          "Yes, Kafka relays it between nodes automatically",
+          "Only if they share a browser",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            The map of connections lives in one process, so the broadcast only
+            reaches sockets on <em>that</em> node. It's a group chat that only
+            pings people in the same room — anyone in another room finds out by
+            checking the log. The MVP runs one node on purpose to make this
+            limit visible.
+          </>
+        ),
+      },
+      {
+        id: "wf-phase2",
+        prompt: "How does Phase 2 close the cross-node gap?",
+        options: [
+          "A Redis pub/sub layer (and ring buffer) so nodes relay live messages to each other",
+          "By forcing all viewers onto one node forever",
+          "By making Kafka push directly to browsers",
+          "By deleting the in-memory fan-out entirely",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Redis becomes the shared megaphone between nodes: each gateway
+            publishes to a channel, every node subscribes, and the live push
+            crosses node boundaries. You feel the single-node limit first,{" "}
+            <em>then</em> earn the fix — which is the whole point of shipping
+            the stepping stone before the solution.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "go-the-shape-of-a-service": {
+    tagline: "Same instincts as TypeScript, three habits unlearned.",
+    questions: [
+      {
+        id: "go-errors",
+        prompt: "How does idiomatic Go report that something went wrong?",
+        options: [
+          "It returns an error value alongside the result, and the caller checks it",
+          "It throws an exception you catch with try/catch",
+          "It sets a global errno you read after the call",
+          "It logs and silently continues",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            There's no <code>try/catch</code>. A function returns{" "}
+            <code>(value, error)</code> and you handle the error right there
+            with <code>if err != nil</code>. The error is part of the signature,
+            in plain sight — like a striker who has to acknowledge every offside
+            flag before play continues, not one raised in a separate booth.
+          </>
+        ),
+      },
+      {
+        id: "go-no-classes",
+        prompt:
+          "Go has no classes. What models “a thing with data and behaviour”?",
+        options: [
+          "A struct, with methods defined on it and interfaces it satisfies implicitly",
+          "A class, just spelled differently",
+          "Only free functions — Go has no methods",
+          "A prototype chain like JavaScript",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            You declare a <code>struct</code> for the data and hang methods off
+            it. Interfaces are satisfied <em>implicitly</em> — if a type has the
+            right methods it fits the interface, no <code>implements</code>{" "}
+            keyword. It's being picked for the five-a-side because you can play
+            the position, not because you signed a form saying you would.
+          </>
+        ),
+      },
+      {
+        id: "go-stdlib",
+        prompt:
+          "What does Pulse's chat service use to run its HTTP/WebSocket server and structured logs?",
+        options: [
+          "The standard library — net/http and log/slog, no framework",
+          "Express, ported to Go",
+          "A heavyweight web framework with a CLI",
+          "A third-party logger and router it had to vendor",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Go's stdlib is unusually capable: <code>net/http</code> is a real
+            production server and <code>log/slog</code> does structured JSON
+            logs — so the service stays tiny with almost no dependencies. Coming
+            from npm, the surprise is how much ships in the box.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "go-goroutines-and-channels": {
+    tagline: "A thread so cheap you spawn one per fan, and a pipe to talk.",
+    questions: [
+      {
+        id: "go-goroutine",
+        prompt: "What is a goroutine?",
+        options: [
+          "A function running concurrently, scheduled by Go onto OS threads — cheap enough to have thousands",
+          "A heavyweight OS thread, one per CPU core",
+          "A separate process Go forks",
+          "A callback queued on an event loop, like in Node",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Start one with <code>go f()</code>. They're so light that one per
+            WebSocket connection is normal — chat holds thousands at once. Think
+            of every fan in the stadium following the match on their own, all at
+            the same time, without the venue hiring a staffer per seat.
+          </>
+        ),
+      },
+      {
+        id: "go-channel",
+        prompt: "How do goroutines safely pass data to each other in Go?",
+        options: [
+          "Over channels — typed pipes that synchronise sender and receiver",
+          "By sharing a global variable and hoping for the best",
+          "Through localStorage",
+          "They can't communicate at all",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            “Don't communicate by sharing memory; share memory by
+            communicating.” A channel is a typed pipe: one goroutine sends, the
+            other receives, and Go handles the handoff. chat's write pump ranges
+            over a channel of outbound bytes — a conveyor belt feeding one
+            worker, no shared-state scramble.
+          </>
+        ),
+      },
+      {
+        id: "go-context",
+        prompt: (
+          <>
+            Why does chat wrap each connection's write pump in a{" "}
+            <code>context.WithCancel</code>?
+          </>
+        ),
+        options: [
+          "So when the connection ends, cancel() stops the write pump and the goroutine doesn't leak",
+          "To make the writes faster",
+          "Because channels require a context",
+          "To retry failed writes forever",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            A goroutine that never returns is a leak — memory that piles up per
+            dead connection. The read loop calls <code>cancel()</code> on
+            disconnect; the write pump's <code>{"<-ctx.Done()"}</code> fires and
+            it exits cleanly. It's the manager pulling a player the moment the
+            whistle goes, so nobody's left jogging an empty pitch.
+          </>
+        ),
+      },
+    ],
+  },
+
+  "go-the-cgo-kafka-client": {
+    tagline: "Go calling C calling Kafka — power, and a tax at the door.",
+    questions: [
+      {
+        id: "go-cgo",
+        prompt: (
+          <>
+            <code>confluent-kafka-go</code> wraps librdkafka, a C library. What
+            does that imply for the build?
+          </>
+        ),
+        options: [
+          "It uses cgo, so building needs a C toolchain on the machine",
+          "Nothing — it's pure Go under the hood",
+          "It only runs inside Docker",
+          "It downloads a prebuilt binary at runtime",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            cgo lets Go call into C, which buys the fastest, most complete Kafka
+            client there is — at the cost of a C compiler in the build and
+            slower first compiles (the “cgo tax”). It's fielding a world-class
+            import who needs a work visa sorted before kickoff.
+          </>
+        ),
+      },
+      {
+        id: "go-delivery",
+        prompt:
+          "How does the producer learn whether a message actually reached Kafka?",
+        options: [
+          "Asynchronously — a delivery report arrives later on a channel, not as a return value",
+          "Synchronously — produce blocks until the broker acks",
+          "It never finds out",
+          "By polling the topic for its own message",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            <code>Produce</code> just enqueues; the confirmation comes back
+            later on a delivery channel you drain in a goroutine — the exact
+            goroutine-plus-channel pattern again. You hand your parcel to the
+            courier and get the “delivered” notification afterwards, rather than
+            standing at the door until it arrives.
+          </>
+        ),
+      },
+      {
+        id: "go-tag-casing",
+        prompt: (
+          <>
+            The Avro schema field is <code>messageId</code> but the wire output
+            came out wrong until a struct tag was fixed. What bit?
+          </>
+        ),
+        options: [
+          "The avro struct tag's casing must match the schema exactly",
+          "Go can't encode UUIDs at all",
+          "Avro field names must be uppercase",
+          "The struct field must be unexported",
+        ],
+        answer: 0,
+        explanation: (
+          <>
+            Go's exported field is <code>MessageID</code> (Go's initialism
+            convention), but the Avro wire name is <code>messageId</code> — and
+            the <code>avro</code> struct tag is what bridges the two. Get the
+            casing wrong and the field silently serialises under the wrong name.
+            It's spelling a teammate's name wrong on the team sheet: looks fine
+            to you, but the system can't match it.
           </>
         ),
       },

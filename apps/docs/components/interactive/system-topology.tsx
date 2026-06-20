@@ -43,13 +43,15 @@ import "@xyflow/react/dist/style.css";
  * that names the exact events it owns. Kafka is drawn as the central backbone the
  * glossary calls it, with each service's local store beside its owner.
  *
- * Build state is encoded honestly (AGENTS.md): the four infra pieces and
- * `identity` run today (`live`); `chat` and `analytics` are designed-not-built
- * (`planned`), and every edge that needs them stays dashed. The panel's event
- * lists come straight from `EVENT_TOPICS` in `@pulse/schemas/topics` — the same
- * map producers and the registry publisher import — so the diagram can never
- * claim a contract the codebase doesn't actually define. Five topics exist
- * today; new schemas appear here automatically when they land.
+ * Build state is encoded honestly (AGENTS.md): the four infra pieces,
+ * `identity`, and now `chat` run today (`live`) — `chat` produces messages and
+ * presence AND consumes `identity`'s stream lifecycle from the log; only
+ * `analytics` is still designed-not-built (`planned`), and every edge that needs
+ * it stays dashed. `chat`'s own `chat → Redis` ring buffer is also still dashed:
+ * the service ships, but its read projection is a Phase 2 epic. The panel's
+ * event lists come straight from `EVENT_TOPICS` in `@pulse/schemas/topics` — the
+ * same map producers and the registry publisher import — so the diagram can
+ * never claim a contract the codebase doesn't actually define.
  */
 type BuildState = "live" | "planned";
 
@@ -86,9 +88,9 @@ const STREAM_FLOWS: TopicFlow[] = [
   flow("StreamEnded", "live"),
 ];
 const CHAT_FLOWS: TopicFlow[] = [
-  flow("ChatMessageSent", "planned"),
-  flow("ViewerJoined", "planned"),
-  flow("ViewerLeft", "planned"),
+  flow("ChatMessageSent", "live"),
+  flow("ViewerJoined", "live"),
+  flow("ViewerLeft", "live"),
 ];
 const ALL_FLOWS: TopicFlow[] = [...STREAM_FLOWS, ...CHAT_FLOWS];
 
@@ -176,17 +178,21 @@ const NODE_SPECS: NodeSpec[] = [
   {
     id: "chat",
     label: "chat",
-    meta: "service · Go · planned",
-    state: "planned",
+    meta: "service · Go · live",
+    state: "live",
     icon: MessagesSquare,
     position: { x: 210, y: 300 },
     handles: [
+      { type: "target", position: Position.Top, id: "t" },
       { type: "source", position: Position.Left, id: "l" },
       { type: "source", position: Position.Right, id: "r" },
     ],
     role: "WebSocket gateway and chat ingestion. Thousands of connections per node.",
     sot: "Kafka is the source of truth — reads are served from projections.",
-    flows: [{ label: "Produces", items: CHAT_FLOWS }],
+    flows: [
+      { label: "Produces", items: CHAT_FLOWS },
+      { label: "Consumes", items: STREAM_FLOWS },
+    ],
   },
   {
     id: "kafka",
@@ -199,6 +205,7 @@ const NODE_SPECS: NodeSpec[] = [
     handles: [
       { type: "target", position: Position.Left, id: "l" },
       { type: "source", position: Position.Right, id: "r" },
+      { type: "source", position: Position.Bottom, id: "b" },
     ],
     role: "The control-plane backbone — every event crosses it.",
     notes: [
@@ -286,7 +293,16 @@ const EDGE_DEFS: EdgeDef[] = [
     target: "kafka",
     targetHandle: "l",
     label: "chat + presence",
-    tone: "planned",
+    tone: "live",
+  },
+  {
+    id: "kafka-chat",
+    source: "kafka",
+    sourceHandle: "b",
+    target: "chat",
+    targetHandle: "t",
+    label: "consume lifecycle",
+    tone: "live",
   },
   {
     id: "kafka-analytics",

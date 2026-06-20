@@ -1,0 +1,122 @@
+export const metadata = {
+  title: "Go · The shape of a service — Pulse docs",
+  description:
+    "Go for a TypeScript brain: errors as returned values instead of exceptions, structs and implicit interfaces instead of classes, and a service built almost entirely on the standard library.",
+};
+
+<PageHeader
+  eyebrow="Go · 01"
+  title={
+    <>
+      Go, from a <span className="ds-mark-go">TypeScript</span> brain
+    </>
+  }
+/>
+
+<Hook tone="go">
+  You already know how to build a service. Go changes three habits — how errors
+  flow, how you model a "thing," and how little you reach for `npm`.
+</Hook>
+
+Go is a small language; a TypeScript engineer can be productive in days. The friction isn't size, it's a few reflexes you have to unlearn. Here's the mental-model bridge — read it, then we'll walk the three that actually bite.
+
+| Coming from TypeScript | In Go | The shift |
+|---|---|---|
+| `throw` / `try`/`catch` | `return ..., err` then `if err != nil` | Errors are values, not control flow |
+| `class` | `struct` + methods | Data and behaviour, no inheritance |
+| `implements SomeInterface` | implicit — have the methods, fit the interface | Structural, not nominal |
+| `npm install express` | `net/http` from the stdlib | The batteries are included |
+| `null` / `undefined` | zero values (`0`, `""`, `nil`) | Every type has a defined empty |
+| `async`/`await` | goroutines + channels | Concurrency is a language primitive ([next page](/go/goroutines-and-channels)) |
+
+## 1 · Errors are values you handle, not exceptions you throw
+
+This is the biggest adjustment. Go has no `try`/`catch`. A function that can fail returns its result *and* an error, and the caller checks it immediately:
+
+```go
+schema, err := registry.Fetch(ctx, subject)
+if err != nil {
+    return fmt.Errorf("fetch schema %s: %w", subject, err)
+}
+// schema is safe to use here
+```
+
+It feels verbose at first — until you notice the error is right there in the signature, impossible to ignore, with no invisible stack-unwinding to reason about. It's a striker who has to acknowledge every offside flag before play continues, rather than one raised in a booth you might not be watching. The TS equivalent you'd *wish* you had everywhere:
+
+```ts
+const [schema, err] = await tryFetch(subject); // you have to opt in
+if (err) return wrap(err);
+```
+
+In Go it's not a pattern you adopt — it's the only way functions report failure.
+
+## 2 · Structs and implicit interfaces, not classes
+
+There are no classes. You declare a `struct` for data and define methods on it:
+
+```go
+type Producer struct {
+    client *kafka.Producer
+    schema avro.Schema
+}
+
+func (p *Producer) Produce(channelID string, msg ChatMessageSent) error {
+    // ...
+}
+```
+
+Interfaces are satisfied **implicitly** — if a type has the right methods, it fits, no `implements` keyword. That's structural typing, which will feel familiar from TypeScript's duck-typed interfaces, except Go applies it to methods too. You're picked for the five-a-side because you can play the position, not because you signed a form saying you would.
+
+<Callout variant="lesson" title="Zero values replace null">
+  Go has no `undefined`. Every type has a **zero value**: `0` for numbers, `""`
+  for strings, `nil` for pointers, slices, and maps. A freshly declared `struct`
+  is fully formed with every field at its zero — so "uninitialised" bugs look
+  different here, and a `nil` map read is fine (it's empty) while a `nil` map
+  *write* panics. Worth knowing on day one.
+</Callout>
+
+## 3 · The standard library does the heavy lifting
+
+chat's entire HTTP and WebSocket surface runs on `net/http` — a genuinely production-grade server in the stdlib — and its logs go through `log/slog`, structured JSON, also stdlib. No framework, almost no dependencies:
+
+```go
+mux := http.NewServeMux()
+mux.HandleFunc("/health", handleHealth)
+mux.HandleFunc("/ws/", handleWS)
+
+slog.Info("listening", "port", port)
+http.ListenAndServe(":"+port, mux)
+```
+
+Coming from the npm world, the surprise is how much ships in the box. The two dependencies chat *does* pull in are deliberate and earn their place: a WebSocket library, and the Kafka client — which is its own adventure, because it isn't even Go underneath ([page 03](/go/the-cgo-kafka-client)).
+
+The other thing the stdlib hands you for free is the reason Go was chosen for this service at all: **concurrency**. That's the next page.
+
+## Did it stick?
+
+<ConceptQuiz accent="blue" slug="go-the-shape-of-a-service" />
+
+<PageNav
+  prev={{
+    href: "/go",
+    title: "Go for TS devs",
+    blurb: "Back to the track index.",
+  }}
+  next={{
+    href: "/go/goroutines-and-channels",
+    title: "Goroutines & channels",
+    blurb: "Why Go fits a gateway holding thousands of live connections.",
+  }}
+/>
+
+<Sources
+  issues={["chat-mvp/01-go-bootstrap"]}
+  refs={[
+    { label: "A Tour of Go", href: "https://go.dev/tour/" },
+    {
+      label: "Effective Go — errors",
+      href: "https://go.dev/doc/effective_go#errors",
+    },
+    { label: "net/http package docs", href: "https://pkg.go.dev/net/http" },
+  ]}
+/>

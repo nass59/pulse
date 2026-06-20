@@ -7,8 +7,10 @@ import {
   Mailbox,
   Network,
   ScrollText,
+  Share2,
   ShieldCheck,
   SlidersHorizontal,
+  Stamp,
   UsersRound,
   Wand2,
 } from "lucide-react";
@@ -78,24 +80,39 @@ export const LIVE_CONCEPTS: Concept[] = [
     icon: Mailbox,
     interactive: true,
   },
-];
-
-export const COMING_CONCEPTS: Concept[] = [
   {
     title: "Partitions & ordering",
     blurb: "The unit of parallelism — and its ordering price.",
+    href: "/concepts/partitions-and-ordering",
     icon: Columns3,
   },
   {
     title: "Consumer groups",
-    blurb: "Many readers, each message once. Mostly.",
+    blurb: "Many readers, each message once — and state rebuilt from the log.",
+    href: "/concepts/consumer-groups",
     icon: UsersRound,
   },
   {
     title: "The log & offsets",
-    blurb: "Why Kafka is a log, not a queue.",
+    blurb: "Why Kafka is a log, not a queue — and replay from the start.",
+    href: "/concepts/the-log-and-offsets",
     icon: ScrollText,
   },
+  {
+    title: "Server-authored events",
+    blurb: "The client supplies a body; the gateway stamps the truth.",
+    href: "/concepts/server-authored-events",
+    icon: Stamp,
+  },
+  {
+    title: "WebSocket fan-out",
+    blurb: "Best-effort delivery to live tabs; the log is the durable record.",
+    href: "/concepts/websocket-fanout",
+    icon: Share2,
+  },
+];
+
+export const COMING_CONCEPTS: Concept[] = [
   {
     title: "Stream–table joins",
     blurb: "Enriching a stream from changing state.",

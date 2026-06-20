@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "Consumer groups — Pulse docs",
+  description:
+    "Consumer groups scale reads by splitting partitions across members. How chat uses an ephemeral, full-replay group to learn liveness from the log instead of asking identity.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 1"
+  title={<>Don't ask. <span className="ds-mark">Replay the log.</span></>}
+/>
+
+<Hook>
+  chat never calls identity to ask "is alice live?" It *learns* the answer by
+  consuming her stream-lifecycle events — and that one choice decouples the two
+  services entirely.
+</Hook>
+
+A **consumer group** is how Kafka scales reading. Several consumers join a group, and Kafka deals the topic's partitions out among them — each partition read by **exactly one** member of the group. Add a member and partitions are reassigned (a **rebalance**); the work redistributes. It's marking in defence: each attacker (partition) is picked up by one defender (consumer), so nothing is double-marked and the load is shared.
+
+That's the textbook job. The *interesting* thing chat does with consumer groups is more philosophical: it uses one to **learn state from the log** rather than asking another service for it.
+
+## Learning, not asking
+
+chat has to reject connections to channels that aren't live. The obvious design is a synchronous call: viewer connects, chat asks identity "is this channel live?", identity checks Postgres, replies. That works — and it chains chat's availability to identity's. If identity is slow or down, chat is too.
+
+Pulse refuses that coupling. Instead, chat **subscribes** to identity's `stream.started.v1` / `stream.ended.v1` topics and folds them into an in-memory live-channel map: a `StreamStarted` adds a channel, a `StreamEnded` removes it.
+
+<LiveMapFromLog />
+
+Nobody is asked anything. chat reconstructs liveness the way you'd rebuild a match score by replaying the goal events rather than phoning the stadium. identity produces facts to the log and moves on; chat consumes them on its own schedule. The two services share a *contract* (the event shape), not a *call*.
+
+<Callout variant="key" title="The slug rides inside the event">
+  chat accepts connections by slug (`/ws/alices-channel`) but tracks liveness by
+  `channelId`. So it needs a `slug → channelId` mapping — and it builds that from
+  the log too, because identity stamps the `channelSlug` *into* each lifecycle
+  event. Denormalised reference data riding along with the fact, shaped by the
+  consumer's needs. No lookup table to keep in sync.
+</Callout>
+
+## Why a fresh group every boot
+
+chat's group id is deliberately throwaway — `chat-gateway-${HOSTNAME}-${bootId}`, a new id each time the process starts — with auto-commit **off** and `auto.offset.reset=earliest`. That combination looks odd until you see what it's for.
+
+A normal, durable consumer group *resumes* from its last committed offset — exactly what you want for a worker that mustn't reprocess jobs. But chat doesn't want to resume; it wants the **whole history** every boot, so it can rebuild the complete live-channel map from scratch. A fresh group has no committed offset, so `earliest` rewinds it to the start of the [log](/concepts/the-log-and-offsets) and replays everything. Each gateway process is its own independent reader of the full story — not a shard of shared work.
+
+## The honest cost: eventual consistency
+
+Learning from the log instead of asking has a price, and Pulse takes it on purpose. chat lags identity by its own **consumer lag** — the time between identity producing an event and chat consuming it. So two small windows exist:
+
+| Window | What happens | Self-heals? |
+|---|---|---|
+| Connect just after a real go-live | Channel is live, but chat hasn't consumed `StreamStarted` yet → reject with close `1008` | Yes — client retries the upgrade |
+| Message on a socket just after `StreamEnded` | Produced against an already-ended `streamId` before chat consumes the end | Yes — windowing downstream tolerates it |
+
+It's VAR taking a beat to confirm the goal: correct, just not instant. On `StreamEnded`, chat force-closes that channel's open sockets with close code `1001` ("going away"). The alternative — a synchronous liveness check against identity on every connect — is precisely the coupling this whole design exists to avoid.
+
+## Did it stick?
+
+<ConceptQuiz slug="consumer-groups" />
+
+<PageNav
+  prev={{
+    href: "/concepts/partitions-and-ordering",
+    title: "Partitions & ordering",
+    blurb: "The partitions a group divides up — and why order is per-channel.",
+  }}
+  next={{
+    href: "/concepts/server-authored-events",
+    title: "Server-authored events",
+    blurb: "Now the produce side: why the gateway, not the client, writes truth.",
+  }}
+/>
+
+<Sources
+  adrs={[16, 17]}
+  issues={["chat-mvp/05-consume-stream-lifecycle"]}
+/>
