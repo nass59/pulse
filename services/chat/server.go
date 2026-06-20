@@ -51,6 +51,8 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 	c := &conn{ws: ws, send: make(chan []byte, 16), channelID: channelID, streamID: streamID}
 
 	s.register(slug, c)         // add to registry
+	s.emitViewerJoined(c)       // +1 turnstile click — gate already passed
+	defer s.emitViewerLeft(c)   // −1, on ANY return below
 	defer s.unregister(slug, c) // clean up on ANY exit
 	defer s.log.Info("ws disconnect", "channel", slug, "userId", "u_demo")
 
@@ -87,7 +89,7 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 			SentAt:    time.Now().UTC(), // server receipt time
 		}
 
-		if err := s.prod.Produce(ctx, c.channelID, msg); err != nil {
+		if err := s.prod.ProduceMessage(c.channelID, msg); err != nil {
 			s.log.Error("produce failed", "err", err)
 		}
 
@@ -108,6 +110,32 @@ func (s *server) broadcast(slug string, sender *conn, msg []byte) {
 		case c.send <- msg: // queue in their send buffer
 		default: // send buffer FULL = slow client -> drop (ADR-0018)
 		}
+	}
+}
+
+func (s *server) emitViewerJoined(c *conn) {
+	ev := producer.ViewerJoined{
+		ChannelID: c.channelID,
+		StreamID:  c.streamID,
+		UserID:    "u_demo",
+		JoinedAt:  time.Now().UTC(),
+	}
+
+	if err := s.prod.ProduceViewerJoined(c.channelID, ev); err != nil {
+		s.log.Error("produce ViewerJoined failed", "err", err)
+	}
+}
+
+func (s *server) emitViewerLeft(c *conn) {
+	ev := producer.ViewerLeft{
+		ChannelID: c.channelID,
+		StreamID:  c.streamID,
+		UserID:    "u_demo",
+		LeftAt:    time.Now().UTC(),
+	}
+
+	if err := s.prod.ProduceViewerLeft(c.channelID, ev); err != nil {
+		s.log.Error("produce ViewerLeft failed", "err", err)
 	}
 }
 

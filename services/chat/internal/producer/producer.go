@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -13,17 +12,23 @@ import (
 	"github.com/hamba/avro/v2"
 )
 
-type Producer struct {
-	p        *kafka.Producer
-	log      *slog.Logger
-	schema   avro.Schema
-	schemaID int
-	topic    string
-}
-
 type registryResponse struct {
 	ID     int    `json:"id"`
 	Schema string `json:"schema"`
+}
+
+type eventTopic struct {
+	topic    string
+	schema   avro.Schema
+	schemaID int
+}
+
+type Producer struct {
+	p        *kafka.Producer
+	log      *slog.Logger
+	messages eventTopic
+	joined   eventTopic
+	left     eventTopic
 }
 
 type ChatMessageSent struct {
@@ -35,10 +40,32 @@ type ChatMessageSent struct {
 	SentAt    time.Time `avro:"sentAt"`
 }
 
-func New(brokers string, registryURL string, log *slog.Logger) (*Producer, error) {
-	const topic = "chat.messages.v1"
+type ViewerJoined struct {
+	ChannelID string    `avro:"channelId"`
+	StreamID  string    `avro:"streamId"`
+	UserID    string    `avro:"userId"`
+	JoinedAt  time.Time `avro:"joinedAt"`
+}
 
-	schema, schemaID, err := fetchSchema(registryURL, topic+"-value")
+type ViewerLeft struct {
+	ChannelID string    `avro:"channelId"`
+	StreamID  string    `avro:"streamId"`
+	UserID    string    `avro:"userId"`
+	LeftAt    time.Time `avro:"leftAt"`
+}
+
+func New(brokers string, registryURL string, log *slog.Logger) (*Producer, error) {
+	messages, err := newEventTopic(registryURL, "chat.messages.v1")
+	if err != nil {
+		return nil, fmt.Errorf("schema init: %w", err)
+	}
+
+	joined, err := newEventTopic(registryURL, "chat.presence.joined.v1")
+	if err != nil {
+		return nil, fmt.Errorf("schema init: %w", err)
+	}
+
+	left, err := newEventTopic(registryURL, "chat.presence.left.v1")
 	if err != nil {
 		return nil, fmt.Errorf("schema init: %w", err)
 	}
@@ -56,7 +83,7 @@ func New(brokers string, registryURL string, log *slog.Logger) (*Producer, error
 		return nil, fmt.Errorf("create producer: %w", err)
 	}
 
-	prod := &Producer{p: p, log: log, schema: schema, schemaID: schemaID, topic: topic}
+	prod := &Producer{p: p, log: log, messages: messages, joined: joined, left: left}
 	go prod.deliveryReports()
 
 	return prod, nil
@@ -77,17 +104,29 @@ func (p *Producer) deliveryReports() {
 	}
 }
 
-func (p *Producer) Produce(ctx context.Context, channelID string, msg ChatMessageSent) error {
-	body, err := avro.Marshal(p.schema, msg)
+func (p *Producer) emit(et *eventTopic, key string, v any) error {
+	body, err := avro.Marshal(et.schema, v)
 	if err != nil {
 		return fmt.Errorf("marshal avro: %w", err)
 	}
 
 	return p.p.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &p.topic, Partition: kafka.PartitionAny},
-		Key:            []byte(channelID),
-		Value:          wire(p.schemaID, body),
+		TopicPartition: kafka.TopicPartition{Topic: &et.topic, Partition: kafka.PartitionAny},
+		Key:            []byte(key),
+		Value:          wire(et.schemaID, body),
 	}, nil)
+}
+
+func (p *Producer) ProduceMessage(key string, m ChatMessageSent) error {
+	return p.emit(&p.messages, key, m)
+}
+
+func (p *Producer) ProduceViewerJoined(key string, v ViewerJoined) error {
+	return p.emit(&p.joined, key, v)
+}
+
+func (p *Producer) ProduceViewerLeft(key string, v ViewerLeft) error {
+	return p.emit(&p.left, key, v)
 }
 
 func (p *Producer) Close() {
@@ -130,4 +169,13 @@ func wire(schemaID int, body []byte) []byte {
 	buf = binary.BigEndian.AppendUint32(buf, uint32(schemaID)) // bytes 1–4: schema id, big-endian
 
 	return append(buf, body...) // bytes 5…: the avro
+}
+
+func newEventTopic(registryURL, topic string) (eventTopic, error) {
+	schema, id, err := fetchSchema(registryURL, topic+"-value")
+	if err != nil {
+		return eventTopic{}, fmt.Errorf("%s: %w", topic, err)
+	}
+
+	return eventTopic{topic: topic, schema: schema, schemaID: id}, nil
 }
