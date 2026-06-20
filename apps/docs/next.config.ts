@@ -25,11 +25,17 @@ const nextConfig: NextConfig = {
  * - `@shikijs/rehype` highlights fenced code at build time (zero client JS,
  *   accurate TextMate grammars). One dark theme — the code surface is always
  *   carbon — whose token colours show through; `CodeBlock` owns the chrome.
+ *   `addLanguageClass` stamps `language-<lang>` onto the emitted `<code>` (a
+ *   serialisable boolean, so it survives the Turbopack JS↔Rust boundary unlike a
+ *   transformer function); `CodeBlock` reads it to label the window chrome with
+ *   the fence's language.
  */
 const withMDX = createMDX({
   options: {
     remarkPlugins: ["remark-gfm"],
-    rehypePlugins: [["@shikijs/rehype", { theme: "vesper" }]],
+    rehypePlugins: [
+      ["@shikijs/rehype", { theme: "vesper", addLanguageClass: true }],
+    ],
   },
 });
 

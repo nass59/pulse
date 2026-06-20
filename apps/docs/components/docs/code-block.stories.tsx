@@ -13,11 +13,30 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * In a real doc, Shiki stamps `language-<lang>` onto the `<code>` (via
+ * `addLanguageClass`), which the window chrome reads for its label. The stories
+ * set that class by hand to mirror the rendered output.
+ */
 export const Yaml: Story = {
   render: () => (
     <CodeBlock>
-      <code>{`KAFKA_PROCESS_ROLES: broker,controller
+      <code className="language-yaml">{`KAFKA_PROCESS_ROLES: broker,controller
 KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094`}</code>
+    </CodeBlock>
+  ),
+};
+
+export const TypeScript: Story = {
+  render: () => (
+    <CodeBlock>
+      <code className="language-ts">{`import { useSpring } from '@react-spring/web'
+
+export default function Spring() {
+  const [props, api] = useSpring(() => ({
+    config: { tension: 170, friction: 26 } // no duration
+  }))
+}`}</code>
     </CodeBlock>
   ),
 };
@@ -25,7 +44,7 @@ KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094`}</code>
 export const Copy: Story = {
   render: () => (
     <CodeBlock>
-      <code>bun --filter docs dev</code>
+      <code className="language-bash">bun --filter docs dev</code>
     </CodeBlock>
   ),
   play: async ({ canvas }) => {
