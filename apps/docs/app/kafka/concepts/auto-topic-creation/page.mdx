@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Auto topic creation — Pulse docs",
+  description:
+    "Why your first kcat produce just works locally, and why that same convenience is a footgun in production.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Auto topic creation — the <span className="ds-mark">silent</span> conjurer</>}
+/>
+
+<Hook>
+  your first `kcat` produce works against a topic you never created — which feels
+  magical until the same magic eats a typo in production.
+</Hook>
+
+It's the autocorrect of Kafka. Type a topic name that doesn't exist and the broker helpfully conjures one for you — wonderful when you mean it, quietly destructive when you don't. The very first smoke test against Pulse's Kafka produced a message to a topic that did not exist:
+
+```bash
+echo "hello pulse" | kcat -P -b localhost:9092 -t pulse.smoke.test
+```
+
+No "create topic" step ran first — and yet the consume side read it straight back. That works because the broker default `auto.create.topics.enable=true` makes a produce (or a metadata request) to an unknown topic **silently create it** with the cluster's default partition count and replication factor.
+
+Locally this is exactly what you want: one fewer ceremony between you and a working pipeline. You are exploring, and the broker gets out of your way.
+
+<AutoTopicFlow />
+
+<Callout variant="footgun">
+  In production, the same convenience is a liability. A typo in a topic name —
+  `chat.mesages.v1` instead of `chat.messages.v1` — does not error. It quietly
+  spawns a brand-new topic with default settings, and your producer writes
+  happily into a void no consumer is reading. The failure surfaces hours later
+  as "missing data," far from its cause. Production clusters typically set
+  `auto.create.topics.enable=false` and provision topics explicitly, so that a
+  wrong name fails loudly and immediately.
+</Callout>
+
+## Two things the smoke test quietly revealed
+
+**The dotted name is convention, not syntax.** Kafka sees `pulse.smoke.test` as one flat string with no hierarchy. The `<domain>.<entity>.<event>` style is purely for human organisation and collision-avoidance — the broker neither parses nor enforces it.
+
+**A topic auto-created this way gets _default_ everything.** Default partition count, default replication. Fine for a smoke test; rarely what you want for a real event stream, where partition count is a deliberate throughput-and-ordering decision per topic. That deliberate-per-topic design is exactly what auto-creation robs you of — another reason production turns it off.
+
+## Did it stick?
+
+<ConceptQuiz slug="auto-topic-creation" />
+
+<PageNav
+  next={{
+    href: "/kafka/concepts/explicit-topic-provisioning",
+    title: "Explicit topic provisioning",
+    blurb: "Partition count is a contract — and a 1-partition default lies.",
+  }}
+  prev={{
+    href: "/build/architecture/healthchecks",
+    title: "Healthchecks",
+    blurb: "“Started” vs “ready,” and the grace window between them.",
+  }}
+/>
+
+<Sources adrs={[]} issues={["foundations/03-kcat-smoke-test"]} />

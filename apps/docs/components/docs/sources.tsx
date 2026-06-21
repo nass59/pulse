@@ -79,6 +79,10 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0020-go-language-track-and-per-technology-accent",
     title: "Go language track and per-technology accent",
   },
+  21: {
+    slug: "0021-docs-site-technology-pillars",
+    title: "Docs site reorganized into technology pillars",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");

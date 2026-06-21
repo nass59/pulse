@@ -1,0 +1,88 @@
+export const metadata = {
+  title: "Explicit topic provisioning — Pulse docs",
+  description:
+    "Why a keyed topic's partition count is part of its contract, why a 1-partition default looks ordered but lies, and why provisioning explicitly turns a missing topic into a loud failure.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Explicit topic provisioning — partition count is a <span className="ds-mark">contract</span></>}
+/>
+
+<Hook>
+  at one partition every channel's events look perfectly ordered — right up
+  until you grow to the six the design calls for and discover the ordering was
+  an accident of having nowhere else to go.
+</Hook>
+
+Picture a Twitch channel through one evening: it goes live, the streamer renames the broadcast twice, then goes offline. Each of those events carries the channel as its **key**, and Kafka makes exactly one ordering promise about them — they replay in the order they happened *only if they all land in the same partition*. Partitions are the lanes in a pool: the same swimmer always gets the same lane, so their laps stay in sequence, while different swimmers spread across lanes so the pool isn't one single-file queue.
+
+Now recall what [auto topic creation](/kafka/concepts/auto-topic-creation) hands you: produce to a name that doesn't exist and the broker conjures the topic with its **default** partition count — which is **one**. With a single lane, ordering is trivially perfect. There's nowhere for anything to get out of order. So in dev everything looks right. That's the mirage: you aren't watching Kafka keep its ordering promise, you're watching a topic too small to break it.
+
+<PartitionContractTrap />
+
+The bill comes due the day you provision the *real* topic. Pulse sizes every `channelId`-keyed topic at **six partitions** and routes keys with [murmur2](/kafka/concepts/auto-topic-creation) — the same hash across every producer, so a given key always lands in the same place. Grow from one partition to six and `alices-channel` no longer hashes to P0; it rehashes to a different partition. But everything already written to P0 *stays* in P0. Per-channel ordering breaks, and so does the co-partitioning the `analytics` service will lean on. None of it errors. It just quietly stops being true.
+
+<Callout variant="key">
+  Partition count is part of a keyed topic's **contract**, not a runtime knob.
+  A topic born at the wrong count isn't misconfigured — it's the *wrong topic*.
+  Fixing it means delete, recreate, and republish, because changing the count
+  rehashes every key. That's a **migration**: cheap while the topics are empty,
+  a data-moving project once they aren't.
+</Callout>
+
+## Why six, and why shared
+
+The number isn't arbitrary, and neither is the fact that every keyed topic uses the *same* one. Six is sized for chat throughput — the busiest stream on the platform. Sharing it across topics is what lets `analytics` do **co-partitioned joins**: line up `stream.started.v1` against `chat.messages.v1` on the channel key with no expensive repartition step, because the same key sits in the same partition number in both topics. Pick mismatched counts and that free join turns into a reshuffle across the network.
+
+Provisioning also pins each topic's **retention** explicitly instead of inheriting a broker default: a 7-day `delete` window for the stream lifecycle and chat messages, a tighter 1-day window for the high-churn presence join/leave events. (Compaction — keeping only the latest value per key — is the contrast that arrives later, when moderation redactions land; it isn't built yet, so no topic runs compacted today.)
+
+## Making it explicit
+
+The contract lives next to the topic names themselves, so the two can't drift — one map of names, one map of configs, both checked by the compiler:
+
+```ts
+export const TOPIC_CONFIGS = {
+  "stream.started.v1": { partitions: 6, cleanupPolicy: "delete", retentionMs: 7 * DAY_MS },
+  "chat.messages.v1": { partitions: 6, cleanupPolicy: "delete", retentionMs: 7 * DAY_MS },
+  "chat.presence.joined.v1": { partitions: 6, cleanupPolicy: "delete", retentionMs: DAY_MS },
+  // …one entry per topic — `satisfies Record<Topic, TopicConfig>` rejects any gap
+} as const;
+```
+
+A provisioning script reads that map and creates each topic at its contracted count and retention. Re-running it is a no-op for topics already at the right count — but a topic found at the *wrong* count is reported loudly and the script refuses to touch it, because that's a migration, not something to silently "fix". One `just` recipe runs it, slotted into the runbook right after the stack comes up:
+
+```bash
+just infra-up        # Kafka, Apicurio, Postgres, Redis
+just infra-topics    # create every topic at 6 partitions + its retention
+just identity-dev    # now safe to produce — the topics exist
+```
+
+The second half of the move is the part that makes the first half matter: flip `auto.create.topics.enable` to `false`. These two are a **locked pair** — turn auto-create off *before* the script exists and producers break against missing topics; ship the script but leave auto-create on and a typo still conjures a 1-partition phantom. Done together, a missing or misspelled topic now fails immediately and loudly instead of being silently born wrong.
+
+<Callout variant="lesson" title="The loud failure is the feature">
+  With auto-create off, producing to <code>chat.mesages.v1</code> (note the
+  typo) raises an error at the first send, in dev, next to the code that caused
+  it — instead of writing happily into a phantom topic no consumer reads, to be
+  discovered hours later as "missing data". Trading a silent convenience for a
+  loud failure is the whole point.
+</Callout>
+
+## Did it stick?
+
+<ConceptQuiz slug="explicit-topic-provisioning" />
+
+<PageNav
+  next={{
+    href: "/build/architecture/named-volumes",
+    title: "Named volumes",
+    blurb: "How Postgres data outlives a container teardown.",
+  }}
+  prev={{
+    href: "/kafka/concepts/auto-topic-creation",
+    title: "Auto topic creation",
+    blurb: "The convenience that quietly eats a typo in production.",
+  }}
+/>
+
+<Sources adrs={[12, 14]} issues={["foundations/04-topic-provisioning"]} />

@@ -1,11 +1,12 @@
 import { BookOpen, type LucideIcon, Rocket, Workflow } from "lucide-react";
 
 /**
- * The `Learn` track spine (ADR-0011): a short, linear "Kafka from zero" path for
- * a senior engineer with no Kafka background. Unlike `lib/concepts.ts`, this is
- * NOT build-state-gated — it teaches Kafka the technology generically, so every
- * step is `live` from day one. The index (`components/learn/learn-path.tsx`)
- * renders this as a numbered path; each page links to the next via `<PageNav>`.
+ * The Kafka pillar's path spine (ADR-0011, reorganized by ADR-0021): a short,
+ * linear "Kafka from zero" track at `/kafka/path/*`. Unlike the concept shelves,
+ * this is NOT build-state-gated — it teaches Kafka the technology generically, so
+ * every step is `live` from day one. The pillar overview
+ * (`components/docs/pillar-overview.tsx`) renders this as a numbered path, and the
+ * sticky `<PathRail>` tracks position within it; each page links on via `<PageNav>`.
  */
 export interface LearnStep {
   /** One-line, plain-language promise of the page. */
@@ -22,7 +23,7 @@ export const LEARN_STEPS: LearnStep[] = [
     title: "What is Kafka?",
     blurb:
       "The problem it solves: every service wants to know when something happened, and wiring them point-to-point doesn't scale.",
-    href: "/learn/what-is-kafka",
+    href: "/kafka/path/what-is-kafka",
     icon: BookOpen,
     takeaways: [
       "Why N×M point-to-point integrations collapse",
@@ -34,7 +35,7 @@ export const LEARN_STEPS: LearnStep[] = [
     title: "How it works",
     blurb:
       "The mechanism, four ideas deep: the append-only log, partitions, offsets, and consumer groups — with a live diagram for each.",
-    href: "/learn/how-it-works",
+    href: "/kafka/path/how-it-works",
     icon: Workflow,
     takeaways: [
       "The log: append-only, replay-friendly, not a queue",
@@ -46,7 +47,7 @@ export const LEARN_STEPS: LearnStep[] = [
     title: "Get started",
     blurb:
       "Hands-on: bring a real broker up with Docker and round-trip your first message with kcat — the exact Pulse Phase 0 setup.",
-    href: "/learn/getting-started",
+    href: "/kafka/path/getting-started",
     icon: Rocket,
     takeaways: [
       "docker compose up → a healthy single-node broker",

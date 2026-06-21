@@ -1,0 +1,73 @@
+import { IntegrationSpaghetti } from "@/components/kafka/figures";
+
+export const metadata = {
+  title: "What is Kafka? — Pulse docs",
+  description:
+    "The problem Kafka solves: every service wants to know when something happened, and wiring them point-to-point doesn't scale. Kafka is the shared log they all tap.",
+};
+
+<PageHeader
+  eyebrow="Kafka · 01"
+  title={<>What is <span className="ds-mark">Kafka</span>, really?</>}
+/>
+
+Open Instagram and tap ❤️ on a photo. In the half-second that follows, a *lot* of things need to know it happened: the poster's notifications, your activity feed, the ranking model, the analytics pipeline, the "you might also like" recommender, anti-spam. One tiny action, a crowd of interested parties.
+
+The naive way to wire that is **point-to-point**: the likes service calls notifications, then calls analytics, then calls ranking… Each new feature adds another call, and every service has to know about every other one. With four producers and four consumers that's sixteen brittle connections — and it only ever gets worse.
+
+<IntegrationSpaghetti />
+
+## The idea: publish once, let everyone read
+
+Kafka flips it around. Instead of services calling each other, a producer **publishes an event to a log** — "this like happened" — and any number of consumers read from that log, each at its own pace. Add a new feature next quarter? It just starts reading the log. Nobody who already publishes has to change a line.
+
+<Callout variant="key" title="Almost everything is an event">
+  An *event* is just a fact that already happened, written down: `PhotoLiked`,
+  `StreamStarted`, `PaymentCaptured`. Once you start seeing your system as a
+  river of events rather than a web of function calls, Kafka stops looking like
+  a queue and starts looking like the obvious place to put the river.
+</Callout>
+
+So what *is* Kafka? Three things, together:
+
+- **A log** — an append-only, ordered, durable record of events. Writes go on the end; nothing gets edited in place.
+- **A broker** (usually several) — the servers that store the log and hand pieces of it to whoever asks.
+- **Clients** — *producers* that append events and *consumers* that read them. They never talk to each other, only to the log.
+
+That's the whole shape. A producer drops a fact on the end of the log; consumers read it whenever they're ready; the log keeps it around long after it's been read, so a brand-new consumer can show up tomorrow and replay everything from the beginning.
+
+## Why a log, and not a queue?
+
+A traditional message queue *delivers and forgets* — once a worker takes a message, it's gone. That's fine until a second team wants the same messages, or you need to reprocess last week's data after a bug fix. A log keeps every event for a configured window, and every consumer tracks *its own* position. One team's reading never consumes another team's copy. That single property — **retain, don't delete on read** — is what makes Kafka the backbone for analytics, search indexes, caches, and audit trails all reading the same stream at once.
+
+The next page takes the lid off and shows the moving parts — the log, partitions, offsets, and consumer groups — with something you can poke for each.
+
+<PageNav
+  next={{
+    href: "/kafka/path/how-it-works",
+    title: "How Kafka works",
+    blurb: "The log, partitions, offsets and consumer groups — one live diagram each.",
+  }}
+  prev={{
+    href: "/kafka",
+    title: "The Learn track",
+    blurb: "The full Kafka-from-zero path.",
+  }}
+/>
+
+<Sources
+  refs={[
+    {
+      label: "Apache Kafka — Introduction",
+      href: "https://kafka.apache.org/43/getting-started/introduction/",
+    },
+    {
+      label: "AWS — What is Apache Kafka?",
+      href: "https://aws.amazon.com/what-is/apache-kafka/",
+    },
+    {
+      label: "Hello Interview — Kafka deep dive",
+      href: "https://www.hellointerview.com/learn/system-design/deep-dives/kafka",
+    },
+  ]}
+/>

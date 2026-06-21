@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "The log & offsets — Pulse docs",
+  description:
+    "Why Kafka is a log, not a queue: append-only records, per-consumer offsets, and the replay-from-the-start that lets chat rebuild its whole state at every boot.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 1"
+  title={<>Kafka is a <span className="ds-mark">log</span>, not a queue</>}
+/>
+
+<Hook>
+  chat boots, reads `stream.started.v1` from the *very beginning*, and only then
+  knows who's live. A queue couldn't do that — the messages would be long gone.
+</Hook>
+
+The single idea that unlocks everything else about Kafka: a topic is an **append-only log**, not a queue. The difference sounds academic until you feel it. A queue is a pile of tickets at a deli counter — you take one, it's gone, the next person gets the next one. A Kafka log is a DVR recording of the match: pressing play doesn't erase the tape, and your friend can start watching the same moment an hour later from their own seat.
+
+That one property — *reading doesn't consume* — is why chat can do something a queue makes impossible: wake up cold and reconstruct its entire picture of the world by replaying history.
+
+## Append at the tail, read with a cursor
+
+A producer only ever does one thing to a partition: append a record at the end. Every record gets a monotonically increasing **offset** — `0, 1, 2, …` — its permanent address in that partition. Records are never edited or removed on read; they age out only when **retention** expires (chat keeps messages 7 days).
+
+Each consumer tracks its own **offset**: "I've read up to here." That cursor is per-consumer, so two readers sit at completely different points in the *same* log without disturbing each other.
+
+<LogWithOffsets />
+
+This is the part that trips people coming from queues: the live consumer at the tail and the one replaying from offset 0 are reading the **exact same records**. Nobody is stealing anybody's messages, because reading is just advancing your own bookmark.
+
+## "Replay" is just moving the cursor back
+
+Because the records are still there, going back in time is trivial — you set your offset lower. chat leans on this hard. When a gateway process starts, it has no memory of which channels are live. So it rewinds the lifecycle log to the start:
+
+```text
+auto.offset.reset = earliest
+```
+
+and reads every `StreamStarted` / `StreamEnded` from the dawn of the topic, folding them into an in-memory map. By the time it reaches the tail, it knows exactly who's live — rebuilt from the log alone, no database query, no asking another service. A queue would have handed those events to *someone* once and deleted them; the log lets chat re-derive state any time it likes.
+
+<Callout variant="key" title="Source of truth vs. notification">
+  The log being durable and replayable is what lets Pulse treat Kafka as the
+  source of truth for chat. History isn't a side effect you hope survives — it
+  *is* the record. Projections (the Redis ring buffer, S3 archives) are just
+  faster-to-read views rebuilt from this tape.
+</Callout>
+
+## Why independent offsets matter for Pulse
+
+`chat` and (soon) `analytics` both read chat's topics. Because each keeps its own offsets, they never contend: analytics can fall an hour behind crunching aggregates while chat reads the live edge, and neither blocks the other. It's one broadcast feed piped to the commentary booth, the stats desk, and the highlights editor at once — each scrubbing to wherever they need, none of them consuming the others' copy.
+
+The cost of all this power is that the log is **not** a work queue. "Exactly one worker handles each job" isn't something a single consumer gives you — that's what [consumer groups](/kafka/concepts/consumer-groups) are for, and they're the next idea up.
+
+## Did it stick?
+
+<ConceptQuiz slug="the-log-and-offsets" />
+
+<PageNav
+  prev={{
+    href: "/kafka",
+    title: "All concepts",
+    blurb: "The full catalogue — what's live and what's coming.",
+  }}
+  next={{
+    href: "/kafka/concepts/partitions-and-ordering",
+    title: "Partitions & ordering",
+    blurb: "The log split into parallel lanes — and the ordering price.",
+  }}
+/>
+
+<Sources
+  adrs={[12, 17]}
+  issues={["chat-mvp/05-consume-stream-lifecycle"]}
+/>

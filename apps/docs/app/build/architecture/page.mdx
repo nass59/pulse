@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Architecture — Pulse docs",
+  description:
+    "The Pulse control-plane topology and infrastructure substrate — what runs, what talks to what, and what is still planned.",
+};
+
+<PageHeader
+  eyebrow="Architecture · Phase 1"
+  title={<>What runs, what's <span className="ds-mark">still planned</span></>}
+/>
+
+Here's the whole system in one breath: Pulse is a **control-plane** — everything that happens _around_ a stream (accounts, follows, chat, presence, analytics) is event-driven, with Kafka as the backbone. The actual video and audio? Those bytes take a different road entirely — the **media plane** — and never touch Kafka. That's why you won't see them in the diagram below.
+
+## System topology
+
+Three services, deliberately written in three different languages so the contracts between them have to be _real_, sit on top of four infrastructure pieces. The diagram is honest about **build state**: the infrastructure runs today, and as of Phase 1 _two_ services run with it — `identity` (TS) and now `chat` (Go); only `analytics` (Kotlin) is still designed but not yet built.
+
+<SystemTopology />
+
+Hover any node to trace its flows; click one to pin the exact contracts it owns. What the diagram is telling you, read carefully:
+
+- **The four infra nodes are solid — they run today.** `docker compose up` brings Kafka (KRaft), Apicurio, Postgres, and Redis to a healthy state. That was the whole of Phase 0.
+- **`identity` and `chat` are both solid now.** Phase 1's identity-mvp shipped a Fastify app on Bun that owns accounts, channels, and streams in Postgres and emits stream-lifecycle events through a transactional outbox. chat-mvp then shipped the first Go service: a WebSocket gateway that fans messages out to viewers, produces every message and presence event to Kafka, and — the part worth slowing down on — **consumes `identity`'s lifecycle events to learn which channels are live**, rather than asking over HTTP. Only `analytics` (Kotlin) is still designed-not-built: its language is fixed and its events are named in `CONTEXT.md`, but no code produces or consumes yet.
+- **The live edges now form a loop; only analytics' stay dashed.** This is the honest part most architecture diagrams hide. `identity` drives three flows (Postgres, Kafka, Apicurio), and `chat` drives two more — it **produces** chat + presence to Kafka and **consumes** the stream lifecycle back out of it. That `Kafka → chat` edge is the first time one Pulse service learns state purely from another's event stream. Every edge that needs `analytics` is still dashed, and so is `chat → Redis` — the service exists, but its read projection is a Phase 2 epic.
+
+## The contracts the edges imply
+
+Each edge is a decision already made — click a node above to read its contracts in full. `identity → Postgres` together with `identity → Kafka` is the **transactional outbox** — Postgres holds the truth, and events leave as a notification stream rather than the source of record ([read the concept →](/kafka/concepts/transactional-outbox)). `Apicurio → identity` (and `Apicurio → chat`) is **Avro schema resolution**, the registry keeping every language agreeing on the shape of each event. `chat → Kafka` carries [server-authored](/kafka/concepts/server-authored-events) messages and presence, keyed by `channelId` so a channel's events stay [ordered on one partition](/kafka/concepts/partitions-and-ordering); the reverse `Kafka → chat` edge is `chat` rebuilding its live-channel map by [consuming the log from the start](/kafka/concepts/consumer-groups). The dashed `chat → Redis` is a **read projection** off the chat log — a fast cache for mid-stream joins, never the source of truth — still waiting on the Phase 2 ring-buffer epic.
+
+<PageNav
+  next={{
+    href: "/build/architecture/infrastructure",
+    title: "Infrastructure",
+    blurb:
+      "The four-piece Compose stack in detail — images, ports, the listener topology, and the reproducibility lessons from standing it up.",
+  }}
+/>
+
+<Sources
+  adrs={[1, 2, 3, 4, 5, 12, 13, 16, 17, 18, 19]}
+  issues={[
+    "foundations/02-docker-compose",
+    "identity-mvp/05-go-live-endpoint",
+    "chat-mvp/03-kafka-producer",
+    "chat-mvp/05-consume-stream-lifecycle",
+  ]}
+/>

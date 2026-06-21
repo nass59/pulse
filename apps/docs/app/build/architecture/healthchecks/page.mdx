@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "Healthchecks — Pulse docs",
+  description:
+    "What 'healthy' means in Docker Compose, and the start_period that stops a slow-booting service from flapping.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 0"
+  title={<>Healthchecks — “started” isn't <span className="ds-mark">“ready”</span></>}
+/>
+
+<Hook>
+  a service that's "started" isn't always "ready." Tell the next service to wait
+  for the wrong one and your stack races itself on boot.
+</Hook>
+
+Think of opening a restaurant. The lights are on and the door's unlocked (*the process is running*) — but the ovens are still cold and nobody's prepped. You don't want diners walking in yet. A Docker **healthcheck** is the chef sticking their head out to say "actually ready now."
+
+It's a command the container runs on a schedule to answer one question: *can this service actually do its job right now?* Not "is the process up" — Docker already knows that — but "can it serve." All four pieces of Pulse's infrastructure declare one:
+
+| Service | Probe | What it proves |
+|---|---|---|
+| kafka | `kafka-topics.sh --list` | the broker answers metadata requests |
+| postgres | `pg_isready -U postgres -d pulse` | the database accepts connections |
+| redis | `redis-cli ping` | the server responds to commands |
+| apicurio | `curl /health/ready` | the registry is ready to serve schemas |
+
+The distinction matters because a process can be *up* long before it is *useful*. Postgres has to finish recovery; Kafka has to elect a controller. A healthcheck is the difference between "started" and "ready" — and it's exactly what stops the boot-time race the Hook warned about. A service that waits on `service_started` is let loose the moment the broker process exists, *before* it can serve; one that waits on `service_healthy` blocks until the probe goes green:
+
+<DependsOnRace />
+
+Pulse doesn't wire a dependency like this yet — the foundations stack dropped its one artificial edge on purpose. But the moment a real consumer joins, `depends_on: { condition: service_healthy }` is how it avoids hammering a half-booted broker on startup.
+
+## The `start_period` gotcha
+
+Here is the subtlety that bites everyone once. A healthcheck has an `interval`, a `timeout`, and a `retries` count — fail `retries` times in a row and the container is marked `unhealthy`. But a slow-booting service will *legitimately* fail its first few probes while it is still coming up. Without protection, a normal boot looks like a failure.
+
+`start_period` is that protection. It defines a grace window after start during which **failing probes do not count toward `retries`**. The probe still runs; a failure just doesn't accrue. Once the service passes once, or the window expires, normal counting begins.
+
+<HealthcheckTimeline />
+
+```yaml
+healthcheck:
+  test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 20s
+```
+
+Kafka's window is `20s` because single-node KRaft needs a handful of seconds to elect itself controller before `--list` can succeed. You can watch exactly that sequence — the failing probes inside the window, then the flip to green — on the **[KRaft mode](/kafka/concepts/kraft-mode)** page.
+
+<Callout variant="lesson">
+  `start_period` was added to Compose healthchecks precisely for services with a
+  meaningful warm-up. If you find yourself bumping `retries` to paper over boot
+  time, you almost certainly want `start_period` instead — it keeps the
+  steady-state failure threshold honest.
+</Callout>
+
+## Did it stick?
+
+<ConceptQuiz slug="healthchecks" />
+
+<PageNav
+  next={{
+    href: "/kafka/concepts/auto-topic-creation",
+    title: "Auto topic creation",
+    blurb: "The convenience that quietly eats a typo in production.",
+  }}
+  prev={{
+    href: "/kafka/concepts/kraft-mode",
+    title: "KRaft mode",
+    blurb: "The boot delay this probe is waiting out, up close.",
+  }}
+/>
+
+<Sources adrs={[]} issues={["foundations/02-docker-compose"]} />

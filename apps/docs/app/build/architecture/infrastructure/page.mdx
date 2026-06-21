@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Infrastructure — Pulse docs",
+  description:
+    "The four-piece Docker Compose stack behind Pulse: images, ports, the listener topology, and image-pinning lessons.",
+};
+
+<PageHeader
+  eyebrow="Architecture · Infrastructure"
+  title={<>The <span className="ds-mark">four-piece</span> substrate</>}
+/>
+
+Phase 0 produced one artifact: `infra/docker-compose.yaml`. One `docker compose up` brings four services to a healthy state, and that stack is the substrate every future service stands on.
+
+| Service      | Image                                         | Port   | Role                                 |
+| ------------ | --------------------------------------------- | ------ | ------------------------------------ |
+| **kafka**    | `apache/kafka:4.3.0`                          | `9092` | event backbone (KRaft, no ZooKeeper) |
+| **apicurio** | `apicurio/apicurio-registry-mem:2.6.13.Final` | `8080` | Avro schema registry                 |
+| **postgres** | `postgres:16`                                 | `5432` | canonical store for `identity`       |
+| **redis**    | `redis:8.8.0`                                 | `6379` | chat read-projection cache           |
+
+Each is exposed on `localhost`, each declares a [healthcheck](/build/architecture/healthchecks), and Postgres backs its data with a [named volume](/build/architecture/named-volumes) so a `docker compose down` doesn't wipe it.
+
+## The listener topology is the one to study
+
+Kafka's networking config is the part worth reading closely, because it encodes a classic footgun. Pulse uses **three explicit listeners** rather than the compact two-listener form:
+
+```yaml
+KAFKA_LISTENERS: CONTROLLER://:9094,INTERNAL://:9093,EXTERNAL://:9092
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9093,EXTERNAL://localhost:9092
+```
+
+- **`CONTROLLER` (:9094)** — the KRaft quorum's internal channel; only the controller role uses it.
+- **`INTERNAL` (:9093)** — broker-to-broker and in-cluster clients, advertised as `kafka:9093` (the Docker network hostname).
+- **`EXTERNAL` (:9092)** — host clients like `kcat`, advertised as `localhost:9092`.
+
+The split exists because of how Kafka bootstraps: a client connects to one address, the broker replies with its **advertised** address, and the client reconnects there. Advertise the internal name `kafka:9093` to a host client and step one succeeds while step three hangs — the host cannot resolve `kafka`. The verbose three-listener form makes the host/container boundary impossible to get wrong by accident.
+
+## Decisions baked into this file
+
+A few non-obvious choices, each recorded rather than guessed:
+
+- **KRaft over ZooKeeper.** `KAFKA_PROCESS_ROLES: broker,controller` runs both roles in one process — see [KRaft mode](/kafka/concepts/kraft-mode).
+- **Apicurio `-mem`, pinned to `2.6.x`.** The in-memory registry is right for local dev; the version pin is load-bearing for a reason covered in the [foundations journey](/build/journey/foundations).
+- **Apache's Kafka image, not a vendor distro.** Also a story with a sharp edge — see the journey page.
+- **`just` as the entry point.** `just infra-up` wraps the Compose command; the root `justfile` is the documented front door for cross-service workflows.
+
+<PageNav
+  next={{
+    href: "/build/journey/foundations",
+    title: "The foundations journey",
+    blurb: "How this stack came together in Phase 0 — and the war stories.",
+  }}
+  prev={{
+    href: "/build/architecture",
+    title: "Architecture",
+    blurb: "The whole control-plane topology, and what's still planned.",
+  }}
+/>
+
+<Sources
+  adrs={[5]}
+  issues={["foundations/02-docker-compose", "foundations/03-kcat-smoke-test"]}
+/>

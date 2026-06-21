@@ -34,16 +34,16 @@ export const Hero = () => (
       <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
         <Link
           className={cn(buttonVariants({ size: "lg" }), "group/cta")}
-          href="/concepts"
+          href="/kafka"
         >
-          Start with the concepts
+          Start with Kafka
           <ArrowRight className="transition-transform group-hover/cta:translate-x-0.5" />
         </Link>
         <Link
           className={buttonVariants({ variant: "outline", size: "lg" })}
-          href="/architecture"
+          href="/build"
         >
-          See the architecture
+          See the build
         </Link>
       </div>
 

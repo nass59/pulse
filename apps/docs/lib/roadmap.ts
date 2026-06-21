@@ -54,22 +54,30 @@ export const PHASES: Phase[] = [
     shipsWhen:
       "docker compose up brings up Kafka + Apicurio + Postgres + Redis, a kcat message round-trips, and TypeScript codegen builds from the five registered schemas.",
     items: [
-      { label: "KRaft mode", href: "/concepts/kraft-mode", done: true },
-      { label: "Healthchecks", href: "/concepts/healthchecks", done: true },
+      { label: "KRaft mode", href: "/kafka/concepts/kraft-mode", done: true },
+      {
+        label: "Healthchecks",
+        href: "/build/architecture/healthchecks",
+        done: true,
+      },
       {
         label: "Auto topic creation",
-        href: "/concepts/auto-topic-creation",
+        href: "/kafka/concepts/auto-topic-creation",
         done: true,
       },
       {
         label: "Explicit topic provisioning",
-        href: "/concepts/explicit-topic-provisioning",
+        href: "/kafka/concepts/explicit-topic-provisioning",
         done: true,
       },
-      { label: "Named volumes", href: "/concepts/named-volumes", done: true },
+      {
+        label: "Named volumes",
+        href: "/build/architecture/named-volumes",
+        done: true,
+      },
       {
         label: "Schema compatibility",
-        href: "/concepts/schema-compatibility",
+        href: "/kafka/concepts/schema-compatibility",
         done: true,
       },
     ],
@@ -86,32 +94,32 @@ export const PHASES: Phase[] = [
     items: [
       {
         label: "Transactional outbox",
-        href: "/concepts/transactional-outbox",
+        href: "/kafka/concepts/transactional-outbox",
         done: true,
       },
       {
         label: "The log & offsets",
-        href: "/concepts/the-log-and-offsets",
+        href: "/kafka/concepts/the-log-and-offsets",
         done: true,
       },
       {
         label: "Partitions & ordering",
-        href: "/concepts/partitions-and-ordering",
+        href: "/kafka/concepts/partitions-and-ordering",
         done: true,
       },
       {
         label: "Consumer groups",
-        href: "/concepts/consumer-groups",
+        href: "/kafka/concepts/consumer-groups",
         done: true,
       },
       {
         label: "Server-authored events",
-        href: "/concepts/server-authored-events",
+        href: "/kafka/concepts/server-authored-events",
         done: true,
       },
       {
         label: "WebSocket fan-out",
-        href: "/concepts/websocket-fanout",
+        href: "/go/concepts/websocket-fanout",
         done: true,
       },
       { label: "Stream–table joins", done: false },

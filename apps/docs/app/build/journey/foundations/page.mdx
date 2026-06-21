@@ -1,0 +1,107 @@
+export const metadata = {
+  title: "Journey · Foundations — Pulse docs",
+  description:
+    "Phase 0 recap: the infrastructure substrate, the five registered event schemas, the lessons unlocked, and the image-hygiene war stories worth remembering.",
+};
+
+<PageHeader
+  eyebrow="Journey · Phase 0"
+  title={<>Laying the <span className="ds-mark">foundations</span></>}
+/>
+
+**Goal:** get the empty repo to the point where `docker compose up` brings the whole infrastructure stack online, you can verify it with `kcat`, and the five starter event schemas are registered and generating types.
+
+Phase 0 shipped no service code on purpose. It built the *substrate* — the runnable, reproducible local environment **and the event contracts** every polyglot service will stand on. Get this wrong and nothing above it is trustworthy.
+
+## What was built
+
+- A monorepo skeleton: `services/{identity,chat,analytics}/`, `packages/schemas/`, `infra/`.
+- `infra/docker-compose.yaml` — Kafka (KRaft), Apicurio, Postgres, Redis, all healthchecked. See **[Infrastructure](/build/architecture/infrastructure)**.
+- A `kcat` smoke test proving a produced message is readable back.
+- Explicit topic provisioning — every `channelId`-keyed topic created at its contracted **6 partitions** with `auto.create.topics.enable` turned **off**, so a missing or misspelled topic fails loudly instead of being born at the 1-partition default. See **[Explicit topic provisioning](/kafka/concepts/explicit-topic-provisioning)**.
+- The five starter event schemas — `StreamStarted`, `StreamEnded`, `ChatMessageSent`, `ViewerJoined`, `ViewerLeft` — in Avro, registered in Apicurio under `TopicNameStrategy` subjects pinned to `BACKWARD`, with TypeScript codegen emitting typed payloads. See **[Schema compatibility](/kafka/concepts/schema-compatibility)**.
+
+## Lessons unlocked
+
+| Concept | What it teaches |
+|---|---|
+| **[KRaft mode](/kafka/concepts/kraft-mode)** | Kafka without ZooKeeper; a single broker electing itself controller |
+| **[Healthchecks](/build/architecture/healthchecks)** | "started" vs "ready," and the `start_period` grace window |
+| **[Auto topic creation](/kafka/concepts/auto-topic-creation)** | convenient locally, a footgun in production |
+| **[Explicit topic provisioning](/kafka/concepts/explicit-topic-provisioning)** | partition count is a contract; a 1-partition default lies |
+| **[Named volumes](/build/architecture/named-volumes)** | how Postgres survives `docker compose down` |
+| **[Schema compatibility](/kafka/concepts/schema-compatibility)** | evolving an event without breaking the services that read it |
+
+Plus the `kcat` vocabulary itself — `-P`/`-C`/`-b`/`-t` — the universal Kafka REPL that survives whatever language a service is written in.
+
+## War stories
+
+Two of the most valuable lessons in Phase 0 weren't planned — they were forced by the supply chain shifting under the stack. Both failed *silently*: `docker pull` happily fetched something, and the breakage only surfaced at runtime. They are the reason the Compose file is treated as a reproducibility contract.
+
+<Callout variant="lesson" title="Bitnami vanished — swapped to apache/kafka">
+  The stack originally used `bitnami/kafka`. In August 2025 Broadcom moved
+  Bitnami's free images behind paid "Bitnami Secure Images," so the pull broke.
+  The fix was to move to Apache's own official `apache/kafka:4.3.0` — which also
+  aligns better with the project's "learn Kafka, not a vendor distro" framing.
+  The env-var naming differs: Apache drops the `_CFG_` infix Bitnami used for
+  templating (`KAFKA_NODE_ID`, not `KAFKA_CFG_NODE_ID`).
+</Callout>
+
+<Callout variant="lesson" title="Apicurio -mem deleted in v3 — pinned to v2.6.x">
+  Apicurio 3.x removed the in-memory storage backend entirely. The clean-looking
+  "upgrade" boots into a broken half-state: `APICURIO_STORAGE_KIND=mem` is no
+  longer a valid value. The `-mem` image is a v2-only thing, so the version is
+  pinned to `2.6.13.Final`. A future epic will move to the SQL-backed variant,
+  wired to Postgres, once schema persistence across restarts becomes useful.
+</Callout>
+
+The shared defence is the same in both cases: **pin tags exactly, smoke-test on a fresh pull, and treat the Compose file as a reproducibility contract.** If "image hygiene" recurs as a theme, it earns its own concept page; for now it lives here as lived experience.
+
+## Issues closed
+
+From the local-only tracker — two sub-epics make up Phase 0.
+
+`.scratch/foundations/`:
+
+- `foundations/01-init-repo` — git init + monorepo skeleton + README
+- `foundations/02-docker-compose` — the four-service infra stack
+- `foundations/03-kcat-smoke-test` — produce + consume a message via `kcat`
+- `foundations/04-topic-provisioning` — provision every topic at 6 partitions, auto-create off
+
+`04-topic-provisioning` landed *after* Phase 0 was otherwise closed — it was a drift caught while building Phase 1's outbox (`stream.started.v1` had been auto-created at 1 partition). But it belongs to the substrate, not to a service, so it's recorded here with the rest of the foundation.
+
+`.scratch/first-schemas/`:
+
+- `first-schemas/01-define-schemas` — the five starter `.avsc` files
+- `first-schemas/02-publish-to-apicurio` — publish each schema, pin every subject to `BACKWARD`
+- `first-schemas/03-ts-codegen` — `.avsc` → TypeScript types, committed for reviewable contract diffs
+
+## Next
+
+Phase 1 brought the first service to life — `identity` — and flipped its node in the architecture topology from **planned** to **live**. You can run the whole thing end to end now: **[Identity — prove it works](/build/journey/identity)** walks six commands that send a real event through the outbox, the relay, and back out of Kafka decoded.
+
+<PageNav
+  next={{
+    href: "/build/journey/identity",
+    title: "Identity — prove it works",
+    blurb: "Phase 1: six commands that send a real event through the pipeline.",
+  }}
+  prev={{
+    href: "/build/architecture/infrastructure",
+    title: "Infrastructure",
+    blurb: "The four-piece substrate this phase produced, in detail.",
+  }}
+/>
+
+<Sources
+  adrs={[1, 2, 3, 4, 5, 6, 12, 14]}
+  issues={[
+    "foundations/01-init-repo",
+    "foundations/02-docker-compose",
+    "foundations/03-kcat-smoke-test",
+    "foundations/04-topic-provisioning",
+    "first-schemas/01-define-schemas",
+    "first-schemas/02-publish-to-apicurio",
+    "first-schemas/03-ts-codegen",
+  ]}
+/>

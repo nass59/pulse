@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 
 import { Footer } from "@/components/docs/footer";
 import { Header } from "@/components/docs/header";
+import { PathRail } from "@/components/docs/path-rail";
 import { ThemeScript, ThemeToggle } from "@/components/docs/theme-toggle";
 import "./globals.css";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-full flex-col overflow-x-clip">
         <Header />
+        <PathRail />
         <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
           <article className="prose prose-slate dark:prose-invert max-w-none">
             {children}

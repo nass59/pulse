@@ -1,57 +1,90 @@
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Boxes, Map as MapIcon, Sparkles } from "lucide-react";
+import { ArrowRight, Combine, Waypoints, Workflow } from "lucide-react";
 import Link from "next/link";
 
-interface Tier {
+import { cn } from "@/lib/utils";
+
+type Accent = "kafka" | "go" | "kotlin";
+
+interface Pillar {
+  accent: Accent;
   blurb: string;
   href: string;
   icon: LucideIcon;
   title: string;
 }
 
-const TIERS: Tier[] = [
+/**
+ * The three learning pillars as navigation cards (ADR-0021). Each carries its
+ * own per-technology accent (yellow / blue / purple) so the homepage previews
+ * the colour system the pillars use. The Build lives in the header nav, not here
+ * — these cards are specifically "the three things I'm learning."
+ */
+const PILLARS: Pillar[] = [
   {
-    title: "Concepts",
+    title: "Kafka",
     blurb:
-      "The distributed-systems ideas, one page each — explained like a friend would, with a diagram instead of a wall of text.",
-    href: "/concepts",
-    icon: Sparkles,
+      "The backbone. From zero — the log, partitions, consumer groups — to the patterns Pulse runs on top: the outbox, server-authored events, schema evolution.",
+    href: "/kafka",
+    icon: Workflow,
+    accent: "kafka",
   },
   {
-    title: "Architecture",
+    title: "Go",
     blurb:
-      "The system topology and the infrastructure under it. What runs, what talks to what, and what's still on the drawing board.",
-    href: "/architecture",
-    icon: Boxes,
+      "The gateway language. Errors as values, a goroutine per connection, and a cgo-backed Kafka client — the ideas behind the chat service that holds thousands of live sockets.",
+    href: "/go",
+    icon: Waypoints,
+    accent: "go",
   },
   {
-    title: "Journey",
+    title: "Kotlin",
     blurb:
-      "Progress by phase: lessons unlocked, issues closed, and the war stories worth remembering.",
-    href: "/journey/foundations",
-    icon: MapIcon,
+      "Stream processing, coming soon. The analytics service on Kafka Streams — windowed aggregates and state stores — designed now, built when its phase lands.",
+    href: "/kotlin",
+    icon: Combine,
+    accent: "kotlin",
   },
 ];
 
-/** The three reading tiers as navigation cards. Server component. */
+const ACCENT: Record<Accent, { icon: string; hover: string }> = {
+  kafka: {
+    icon: "text-yellow-ink dark:text-electric-yellow",
+    hover: "hover:border-electric-yellow/50 dark:hover:shadow-glow-sm",
+  },
+  go: {
+    icon: "text-go-ink dark:text-go-blue",
+    hover: "hover:border-go-blue/50 dark:hover:shadow-glow-go-sm",
+  },
+  kotlin: {
+    icon: "text-kotlin-ink dark:text-kotlin-purple",
+    hover: "hover:border-kotlin-purple/50 dark:hover:shadow-glow-kotlin-sm",
+  },
+};
+
+/** The three learning pillars as navigation cards. Server component. */
 export const Tiers = () => (
   <section className="mx-auto max-w-5xl px-6 py-16">
     <div className="grid gap-4 md:grid-cols-3">
-      {TIERS.map((tier) => {
-        const Icon = tier.icon;
+      {PILLARS.map((pillar) => {
+        const Icon = pillar.icon;
+        const a = ACCENT[pillar.accent];
         return (
           <Link
-            className="group/tier flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-electric-yellow/50 hover:shadow-md dark:hover:shadow-glow-sm"
-            href={tier.href}
-            key={tier.href}
+            className={cn(
+              "group/tier flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:shadow-md",
+              a.hover
+            )}
+            href={pillar.href}
+            key={pillar.href}
           >
-            <Icon className="size-5 text-yellow-ink dark:text-electric-yellow" />
+            <Icon className={cn("size-5", a.icon)} />
             <h3 className="mt-4 flex items-center gap-1.5 font-semibold text-foreground text-lg tracking-[-0.01em]">
-              {tier.title}
+              {pillar.title}
               <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover/tier:translate-x-0.5 group-hover/tier:opacity-100" />
             </h3>
             <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
-              {tier.blurb}
+              {pillar.blurb}
             </p>
           </Link>
         );

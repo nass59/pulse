@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Server-authored events — Pulse docs",
+  description:
+    "Everything chat produces is authored by the gateway. The client supplies only a body; messageId, userId, channel/stream identity, and sentAt are all server-stamped — so authorship can't be forged or backdated.",
+};
+
+<PageHeader
+  eyebrow="Concept · Phase 1"
+  title={<>The client supplies a body. The <span className="ds-mark">server stamps the truth.</span></>}
+/>
+
+<Hook>
+  A viewer's chat frame is two words: `{ "body": "gg" }`. Every other field on
+  the event that lands in Kafka is written by the gateway — not the browser.
+</Hook>
+
+Here's a rule that quietly prevents a whole class of bugs and abuse: **everything chat produces is server-authored.** The client never names the channel or stream, never supplies a `userId`, never sets a timestamp. Its entire contribution to a chat message is the text. The gateway stamps the rest.
+
+<ServerAuthoredStamp />
+
+The viewer speaks into a microphone; the gateway is the official scorer who decides what actually goes in the record. That split is the difference between an event you can *trust* and a claim you have to *verify*.
+
+## Why not let the client send the whole event?
+
+Because then anyone could lie. If the browser supplied `userId`, a viewer could post as someone else. If it supplied `sentAt`, a message could be backdated to jump the order or dodge a moderation window. Trusting client-supplied identity or timing means validating all of it server-side anyway — so you may as well author it server-side in the first place and make forgery *impossible by construction* rather than merely *detected*.
+
+So the gateway stamps:
+
+- **`messageId`** — a server-minted UUIDv7 (time-ordered, so ids sort roughly by creation).
+- **`userId`** — the account on the connection, never a value from the frame.
+- **`channelId` + `streamId`** — the channel and stream this socket joined.
+- **`sentAt`** — the gateway's own receipt time.
+
+<Callout variant="key" title="One invariant, every topic chat owns">
+  This isn't a chat-message quirk — it's chat-wide. Presence events
+  (`ViewerJoined` / `ViewerLeft`) are server-authored too: the client's only
+  "input" is the act of opening or closing a gated socket. The gateway stamps the
+  identity and timing on those exactly the same way. Authorship can't be forged
+  anywhere chat produces.
+</Callout>
+
+## The wristband: identity captured at the gate
+
+Where do `channelId` and `streamId` come from on every message? Not a per-message lookup in the live-channel map — that would be wasteful and could drift if the stream ended mid-session. Instead, when the socket connects and passes the [liveness gate](/kafka/concepts/consumer-groups), the gateway pins that channel and stream **onto the connection itself**. We call it the **wristband**: you're checked once at the gate, given the band, and it's read all night.
+
+```text
+join  → gate passes → stamp {channelId, streamId} onto the conn   (the wristband)
+msg   → read body from the frame, read identity from the conn      (not a lookup)
+produce → ChatMessageSent { body, ...wristband, userId, sentAt }
+```
+
+Every later message reads the wristband off the connection — fast, and stable for the life of the session. Even when a stream ends and chat force-closes the socket, the final `ViewerLeft` is built from that same wristband, so it carries the correct `streamId` it was always associated with.
+
+## Receipt time is what orders a channel
+
+Because `sentAt` is always the gateway's clock — never a client's — there's a single authority timing every message in a channel. Client clocks are wrong, skewed across timezones, or outright spoofable; leaning on them would scramble order. With one server clock stamping every record and [per-channel partitioning](/kafka/concepts/partitions-and-ordering) keeping them in one lane, a channel's messages are totally ordered *as the gateway witnessed them*. It's the finish-line camera deciding the race, not each runner's wristwatch.
+
+## Did it stick?
+
+<ConceptQuiz slug="server-authored-events" />
+
+<PageNav
+  prev={{
+    href: "/kafka/concepts/consumer-groups",
+    title: "Consumer groups",
+    blurb: "The consume side: how chat learned which channels are live.",
+  }}
+  next={{
+    href: "/go/concepts/websocket-fanout",
+    title: "WebSocket fan-out",
+    blurb: "Where that authored message goes next — live, and durably.",
+  }}
+/>
+
+<Sources
+  adrs={[3, 14]}
+  issues={["chat-mvp/03-kafka-producer", "chat-mvp/06-produce-presence"]}
+/>
