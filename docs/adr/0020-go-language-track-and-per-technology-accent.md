@@ -38,3 +38,14 @@ Pulse's own brand identity is unchanged: yellow remains the glow, the logo, the 
 
 - **A third accent is proposed.** Re-read decision §2: is it a named technology with its own brand colour, or decoration creeping in?
 - **The `Go` track stops being linear** — grows reference depth or branches — at which point reconsider whether it is still a "from a TS background" track or has become a second catalogue (the same trigger ADR-0011 set for `Learn`).
+
+## Amendment (2026-06-21) — the homepage is the one place all three accents co-star
+
+Decision §2 names "the homepage" as a yellow-only brand surface. The homepage redesign (the three-pillar landing) supersedes that single clause: **the homepage is the deliberate exception where all three technology accents appear together**, because its whole job is to be the doorway to the three pillars and preview the colour system the reader will meet inside them. `tiers.tsx` already did this incidentally ("the homepage previews the colour system the pillars use"); this amendment makes it intentional and bounds it.
+
+The semantic rule from §2 is **unchanged and is what keeps the exception principled** — an accent on the homepage still means "this surface is about *that* technology," never colour-for-variety:
+
+- The hero's **rotating word** carries the accent of the language it names (the word "Go" in `go-blue`, "Kotlin" in `kotlin-purple`) — the accent doing its most literal possible job. The hero *surface* stays neutral/brand at rest; only the word is tinted, so Pulse still reads as a yellow brand at first paint.
+- Each **per-pillar section** carries its technology's accent because the section *is about* that technology — the same logic as the pillar pages themselves.
+
+Everything else in §2 stands: yellow remains the Pulse brand/glow/logo; `go-blue` and `kotlin-purple` remain reserved for their own technology surfaces elsewhere; the build-state colour (`accent-green` for `live`) stays orthogonal. The exception is the homepage, and only the homepage.
