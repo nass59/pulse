@@ -16,5 +16,6 @@ All Kafka event payloads are Avro-encoded. Schemas live as `.avsc` files in `pac
 - Every service's build pipeline includes an Avro codegen step targeting its language.
 - Adding or changing an event requires a PR that touches `packages/schemas/`, making contract changes loud and reviewable.
 - The shared TypeScript codegen output (`packages/schemas/generated/`) is **committed**, against the repo's default `**/generated/` ignore (see the scoped negation in `.gitignore`). A schema change therefore shows up as a reviewable *type* diff in the PR — the same loudness discipline applied to the generated side. Per-service codegen (Go, Kotlin) is regenerated at build time and stays ignored; only the shared TS package is committed.
+- `analytics` (Kotlin) realises the per-service codegen path via the `com.github.davidmc24.gradle.plugin.avro` Gradle plugin, with `generateAvroJava` reading `packages/schemas/avro` **in place** (no copy into the service), decoding through Confluent's `SpecificAvroSerde` against Apicurio's ccompat endpoint. Generated `SpecificRecord` classes land in `build/` and stay ignored.
 - Compatibility breaks fail in CI rather than at runtime in production.
 - Each Kafka topic carries exactly one event type — multi-event topics are explicitly out of scope.
