@@ -63,6 +63,7 @@
         "kafkajs": "^2.2.4",
       },
       "devDependencies": {
+        "@kafkajs/confluent-schema-registry": "^4.1.0",
         "@types/node": "^20",
         "typescript": "^5",
       },
