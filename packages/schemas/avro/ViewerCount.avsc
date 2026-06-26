@@ -1,0 +1,32 @@
+{
+  "type": "record",
+  "name": "ViewerCount",
+  "namespace": "pulse.events.v1",
+  "fields": [
+    {
+      "name": "streamId",
+      "type": {
+        "type": "string",
+        "logicalType": "uuid"
+      }
+    },
+    {
+      "name": "windowStart",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "windowEnd",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "count",
+      "type": "int"
+    }
+  ]
+}

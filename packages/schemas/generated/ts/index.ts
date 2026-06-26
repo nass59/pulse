@@ -3,5 +3,6 @@
 export type { ChatMessageSent } from "./ChatMessageSent";
 export type { StreamEndReason, StreamEnded } from "./StreamEnded";
 export type { StreamStarted } from "./StreamStarted";
+export type { ViewerCount } from "./ViewerCount";
 export type { ViewerJoined } from "./ViewerJoined";
 export type { ViewerLeft } from "./ViewerLeft";

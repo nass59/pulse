@@ -2,6 +2,7 @@ import type {
   ChatMessageSent,
   StreamEnded,
   StreamStarted,
+  ViewerCount,
   ViewerJoined,
   ViewerLeft,
 } from "./generated/ts";
@@ -20,6 +21,7 @@ export const EVENT_TOPICS = {
   ChatMessageSent: "chat.messages.v1",
   ViewerJoined: "chat.presence.joined.v1",
   ViewerLeft: "chat.presence.left.v1",
+  ViewerCount: "analytics.viewer-count.v1",
 } as const;
 
 export type EventType = keyof typeof EVENT_TOPICS;
@@ -75,6 +77,11 @@ export const TOPIC_CONFIGS = {
     cleanupPolicy: "delete",
     retentionMs: DAY_MS,
   },
+  "analytics.viewer-count.v1": {
+    partitions: 6,
+    cleanupPolicy: "delete",
+    retentionMs: DAY_MS,
+  },
 } as const satisfies Record<Topic, TopicConfig>;
 
 /** Each event type → the shape codegen produced for its .avsc. */
@@ -82,6 +89,7 @@ export interface EventPayloads {
   ChatMessageSent: ChatMessageSent;
   StreamEnded: StreamEnded;
   StreamStarted: StreamStarted;
+  ViewerCount: ViewerCount;
   ViewerJoined: ViewerJoined;
   ViewerLeft: ViewerLeft;
 }
