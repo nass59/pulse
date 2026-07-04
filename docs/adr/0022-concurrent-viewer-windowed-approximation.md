@@ -90,6 +90,20 @@ recompute over an exact number we have to defend against every failure mode.
   seconds fresher but covers only `W−advance` of history and under-counts the
   oldest arrivals.
 
+- **The selected window needs a freshness cutoff.** Empty windows are never
+  materialized, so when a stream goes **silent** no newer window supersedes the
+  last populated one — it lingers in the `now−2W` fetch range and the naive
+  "freshest fully-elapsed window" read reports stale-high for up to ~`2W` (proven
+  live: three joins then silence held the count at `3` for ≈`2W`, not `W`). Since
+  the count means "joined within the last `W`," a window whose _end_ is far from
+  now describes an older horizon and is not "now." The query therefore returns
+  `0` unless the selected window ended within `advance + grace` of now. This puts
+  the silent-stream age-out at ≈`W + advance + grace` (honoring the horizon)
+  rather than ≈`2W`, and — with no heartbeat — is the same mechanism that makes a
+  session watched longer than `W` undercount to `0` (the documented MVP limit).
+  For a continuously-active stream every advance yields a fresh populated window,
+  so the cutoff never fires spuriously.
+
 - **Absence is `0`, not "not found."** `analytics` consumes only the presence
   topics, never `stream.started.v1` / `stream.ended.v1`, so it has no registry
   of valid `streamId`s. An empty store read cannot be told apart across three
