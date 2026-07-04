@@ -75,9 +75,17 @@ db-reset: && identity-migrate
 # once: registry subjects, Kafka topic data, AND the Postgres outbox (which stores
 # *pre-encoded* event bytes — purging Kafka alone leaves an undelivered old-schema
 # row that the relay resurrects on boot).
-# The full nuke — registry + topics + Postgres/outbox. Destructive, dev-only; stop `identity-dev` first.
-reset-all: && up-all
+# The full nuke — registry + topics + Postgres/outbox + analytics local state. Destructive, dev-only; stop `identity-dev` first.
+reset-all: && up-all analytics-reset
 	docker compose -f infra/docker-compose.yaml down -v
+
+# Wipe analytics' local Kafka Streams state — the embedded RocksDB store + checkpoint
+# under build/kafka-streams (host fs, so `down -v` can't reach it). Rebuildable by
+# replay, so safe whenever the app is stopped: this is the deliberate cure for a stale
+# local checkpoint pointing at changelog offsets a cluster wipe deleted. NOT done on
+# every boot — issue 04's restart-recovery relies on this state SURVIVING normal restarts.
+analytics-reset:
+	rm -rf services/analytics/build/kafka-streams
 
 # Run the identity service in watch mode: HTTP on :3100 + the outbox relay polling.
 identity-dev:
@@ -98,6 +106,14 @@ identity-go-live slug="alices-channel":
 # POST end-stream for a channel slug (default `alices-channel`). Prints body + status: 200 / 404 / 409-not-live.
 identity-end-stream slug="alices-channel":
 	curl -s -X POST localhost:3100/channels/{{slug}}/end-stream -w '\n%{http_code}\n'
+
+# Run the chat WebSocket gateway: HTTP/WS on :8081. Needs infra + a live channel (`identity-go-live`).
+chat-dev:
+	cd services/chat && go run .
+
+# Run the analytics Kafka Streams topology + Ktor query API on :8082. Needs infra + presence events.
+analytics-dev:
+	cd services/analytics && ./gradlew run
 
 # Run the docs site in dev mode (Next.js + Turbopack).
 docs-dev:
