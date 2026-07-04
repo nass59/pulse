@@ -13,6 +13,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// demoUserID stands in for a real authenticated viewer until identity issues
+// userIds (Phase 3). It MUST be a valid UUID: the userId field is an Avro `uuid`
+// logical type (ViewerJoined/ViewerLeft/ChatMessageSent .avsc), and JVM consumers
+// (analytics) enforce that strictly on read -- a non-UUID string like "u_demo" is
+// a poison pill that shuts the consumer down. Presence is session-grained, so one
+// shared demo identity is correct for the MVP (CONTEXT.md -> Viewer session).
+const demoUserID = "00000000-0000-0000-0000-000000000001"
+
 type conn struct {
 	ws        *websocket.Conn
 	send      chan []byte // this viewer's send buffer (drops when full -- ADR-0018)
@@ -46,7 +54,7 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.log.Info("ws connect", "channel", slug, "userId", "u_demo")
+	s.log.Info("ws connect", "channel", slug, "userId", demoUserID)
 
 	c := &conn{ws: ws, send: make(chan []byte, 16), channelID: channelID, streamID: streamID}
 
@@ -54,7 +62,7 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 	s.emitViewerJoined(c)       // +1 turnstile click — gate already passed
 	defer s.emitViewerLeft(c)   // −1, on ANY return below
 	defer s.unregister(slug, c) // clean up on ANY exit
-	defer s.log.Info("ws disconnect", "channel", slug, "userId", "u_demo")
+	defer s.log.Info("ws disconnect", "channel", slug, "userId", demoUserID)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -84,7 +92,7 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 			MessageID: id.String(),
 			ChannelID: c.channelID,      // ← the WRISTBAND
 			StreamID:  c.streamID,       // ← the WRISTBAND
-			UserID:    "u_demo",         // hardcoded MVP
+			UserID:    demoUserID,         // hardcoded MVP
 			Body:      string(data),     // the ONLY client input
 			SentAt:    time.Now().UTC(), // server receipt time
 		}
@@ -117,7 +125,7 @@ func (s *server) emitViewerJoined(c *conn) {
 	ev := producer.ViewerJoined{
 		ChannelID: c.channelID,
 		StreamID:  c.streamID,
-		UserID:    "u_demo",
+		UserID:    demoUserID,
 		JoinedAt:  time.Now().UTC(),
 	}
 
@@ -130,7 +138,7 @@ func (s *server) emitViewerLeft(c *conn) {
 	ev := producer.ViewerLeft{
 		ChannelID: c.channelID,
 		StreamID:  c.streamID,
-		UserID:    "u_demo",
+		UserID:    demoUserID,
 		LeftAt:    time.Now().UTC(),
 	}
 
