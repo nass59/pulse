@@ -4,7 +4,10 @@
 streams (`chat.presence.joined.v1`, `chat.presence.left.v1`) into a **hopping
 window** keyed by `streamId`: window size `W` (the _presence horizon_, MVP
 `60s`), advancing every `10s`, with a `+1` per join and `−1` per leave. The
-count read for "now" is the latest window. A join contributes for `W` after it
+count read for "now" is the **freshest fully-elapsed window** — the one whose
+end is nearest to now — _not_ the most-recently-_started_ window, which has
+barely accumulated any of the horizon yet (see Consequences → _Reading "now"_).
+A join contributes for `W` after it
 lands and then **ages out**; the count is therefore "sessions that joined within
 the last `W` and have not since left" — deliberately approximate. This records
 why we did _not_ keep an exact running count.
@@ -73,6 +76,27 @@ recompute over an exact number we have to defend against every failure mode.
 - **Re-keying cost.** Presence is keyed by `channelId` (ADR-0012); aggregating by
   `streamId` triggers an internal repartition topic, and every producer plus the
   repartition must hash keys with murmur2 (ADR-0014) or co-partitioning breaks.
+
+- **Reading "now" is not `store.get(key)`.** `viewers-per-stream` is a windowed
+  store: at any instant ~`W/advance` (≈6) windows are live per `streamId`, and
+  they hold **different** counts, because each window only sums the deltas whose
+  event-time falls inside its own span. The most-recently-_started_ window
+  contains almost none of the horizon (for a stable audience it reads ≈`0`); the
+  window whose _end_ is nearest to now carries the full trailing `W`. So the
+  query (issue 04) must `fetch(streamId, now−2W, now)` and select the window with
+  the greatest `windowStart` where `windowStart + W ≤ now` — the freshest
+  fully-elapsed window. This is at most `advance` (10s) stale, which is the
+  refresh cadence by design. The alternative (oldest still-open window) is a few
+  seconds fresher but covers only `W−advance` of history and under-counts the
+  oldest arrivals.
+
+- **Absence is `0`, not "not found."** `analytics` consumes only the presence
+  topics, never `stream.started.v1` / `stream.ended.v1`, so it has no registry
+  of valid `streamId`s. An empty store read cannot be told apart across three
+  cases — unknown id, live-but-empty stream, everyone aged out — so the query
+  API (issue 04) returns `200 { count: 0 }` for all of them rather than a `404`
+  that would dress "no data" up as "does not exist." A typo'd id therefore reads
+  as `0`; that is the honest limit of a presence-only view.
 
 - **The window is the mechanism, not a shortcut.** Earlier framing treated the
   windowed count as an MVP compromise on the way to a "real" continuous KTable.

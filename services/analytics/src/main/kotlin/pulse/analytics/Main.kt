@@ -3,6 +3,16 @@ package pulse.analytics
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import kotlinx.serialization.Serializable
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams.KafkaStreams
@@ -26,6 +36,17 @@ import java.time.Instant
 import java.util.Properties
 import java.util.UUID
 
+/**
+ * The JSON body of GET /health. @Serializable lets the kotlinx.serialization
+ * plugin generate the encoder at compile time; Ktor's ContentNegotiation then
+ * turns `call.respond(HealthResponse(...))` into `{"state":"RUNNING"}`.
+ *
+ * `state` is the KafkaStreams lifecycle state — CREATED, REBALANCING, RUNNING,
+ * ERROR, ... — surfaced so `/health` reflects the topology, not just "the web
+ * server answered." (Issue 04 AC: "/health includes the topology state.")
+ */
+@Serializable
+data class HealthResponse(val state: String)
 
 fun main() {
   val props = Properties().apply {
@@ -99,11 +120,14 @@ fun main() {
 
   /**
    * Each ±1 lands in 6 overlapping windows (60s / 10s), so you'll see ~6 lines
-   * per event — one per live window. "Now" is the window with the most recent start.
+   * per event — one per live window. The "current" count is the freshest
+   * FULLY-ELAPSED window (windowStart + 60s <= now), NOT the most recent start:
+   * a just-started window has barely any of the horizon in it (ADR-0022 →
+   * "Reading now"). Issue 04's query relies on that; this peek just dumps them all.
    */
   val countStream = counts.toStream()
 
-  // peek (unchanged) — read the most-recent window as "now"
+  // peek — dump every live window so you can watch the fold happen
   countStream.foreach { key, count ->
     println("stream=${key.key()} window=${key.window().start()} count=$count")
   }
@@ -124,10 +148,48 @@ fun main() {
     .to("analytics.viewer-count.v1", Produced.with(Serdes.String(), viewerCountSerde))
 
   val streams = KafkaStreams(builder.build(), props)
+
+  /**
+   * The HTTP door into this JVM (interactive queries). Ktor with the Netty
+   * engine, bound on 8082. `embeddedServer(...)` only BUILDS the server — nothing
+   * binds the socket until .start() below.
+   *
+   * The trailing lambda is the "application module": everything the server does.
+   *  - install(ContentNegotiation){ json() } turns typed responses into JSON.
+   *  - routing { ... } declares the URL map. `call` (inside get{}) is the
+   *    request/response handle; `call.respond(x)` serializes x and sends it.
+   *
+   * NOTE: `streams` is captured by this lambda (a closure), so the route can read
+   * the live topology state. Right now /health is the only route; the
+   * /streams/{id}/viewers query lands in Step 2.
+   */
+  val server = embeddedServer(Netty, port = 8082) {
+    install(ContentNegotiation) { json() }
+    routing {
+      get("/health") {
+        call.respond(HealthResponse(streams.state().name))
+      }
+    }
+  }
+
+  /**
+   * One shutdown hook for BOTH lifecycles. On SIGTERM/SIGINT (installDist run —
+   * remember `gradle run` swallows SIGINT, learning-record 0001): stop the HTTP
+   * server first (drain in-flight requests, 1s grace / 2s hard timeout), then
+   * close Streams (flush + checkpoint RocksDB) so restart replays less.
+   */
   Runtime.getRuntime().addShutdownHook(Thread {
     println("shutting down")
+    server.stop(gracePeriodMillis = 1_000, timeoutMillis = 2_0000)
     streams.close()
   })
 
+  /**
+   * Start order matters. streams.start() RETURNS immediately (the topology runs
+   * on its own background threads), giving the store a head start toward RUNNING.
+   * Then server.start(wait = true) BLOCKS the main thread — that block is what
+   * keeps the JVM alive and is the natural place for main() to park.
+   */
   streams.start()
+  server.start(wait = true)
 }
