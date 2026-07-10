@@ -4,7 +4,7 @@ import { config } from "./config";
 import { sql } from "./db";
 import { warmSchemaCache } from "./registry";
 import { startRelay, stopRelay } from "./relay";
-import { registerStreamRoutes } from "./routes";
+import { registerChannelRoutes, registerStreamRoutes } from "./routes";
 
 const app = Fastify({
   logger: true,
@@ -59,6 +59,7 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 registerStreamRoutes(app);
+registerChannelRoutes(app);
 
 try {
   await app.listen({ port: config.port, host: "0.0.0.0" });

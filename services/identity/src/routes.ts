@@ -169,3 +169,59 @@ export const registerStreamRoutes = (app: FastifyInstance): void => {
     }
   );
 };
+
+/**
+ * A channel's current public view, for the viewer page to render and poll.
+ * `streamId` is present exactly when `isLive` is true — the page uses it to poll
+ * the analytics viewer-count endpoint (which is keyed by streamId, not slug).
+ */
+interface ChannelView {
+  isLive: boolean;
+  slug: string;
+  streamId?: string;
+  title: string;
+}
+
+/**
+ * The channel *read* endpoint — deliberately the opposite of registerStreamRoutes
+ * above. No transaction, no outbox, no event: it's a projection of current state
+ * for the viewer page to poll. The write path is where the architecture's
+ * ceremony lives; the read path is allowed to be boring.
+ */
+export const registerChannelRoutes = (app: FastifyInstance): void => {
+  app.get<{ Params: SlugParams }>("/channels/:slug", async (request, reply) => {
+    const { slug } = request.params;
+
+    /**
+     * One query is the whole endpoint. LEFT JOIN the *active* stream
+     * (`ended_at IS NULL` — the same predicate end-stream's guard and go-live's
+     * unique index use). If the join produces a stream row the channel is live
+     * and we have its id; if the right side is NULL the channel exists but is
+     * offline; if there's no row at all the slug is unknown. Deriving `isLive`
+     * from `streamId !== null` (not from reading `c.is_live`) makes the flag and
+     * the returned streamId a single source of truth — they cannot disagree.
+     */
+    const [row] = await sql<
+      { slug: string; title: string; streamId: string | null }[]
+    >`
+      SELECT c.slug, c.title, s.id AS "streamId"
+      FROM channels c
+      LEFT JOIN streams s
+        ON s.channel_id = c.id AND s.ended_at IS NULL
+      WHERE c.slug = ${slug}
+    `;
+
+    if (!row) {
+      return reply.code(404).send({ error: "channel not found" });
+    }
+
+    const view: ChannelView = {
+      slug: row.slug,
+      title: row.title,
+      isLive: row.streamId !== null,
+      ...(row.streamId === null ? {} : { streamId: row.streamId }),
+    };
+
+    return reply.code(200).send(view);
+  });
+};
