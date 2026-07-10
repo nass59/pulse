@@ -115,7 +115,7 @@ chat-dev:
 analytics-dev:
 	cd services/analytics && ./gradlew run
 
-# Run the docs site in dev mode (Next.js + Turbopack).
+# Run the docs site in dev mode (Next.js + Turbopack) on :3002 — 3000 is reserved for apps/web (ADR-0023).
 docs-dev:
 	bun --cwd apps/docs dev
 
