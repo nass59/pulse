@@ -123,6 +123,10 @@ docs-dev:
 docs-build:
 	bun --cwd apps/docs build
 
+# Run the web site in dev mode (Next.js + Turbopack) on :3000.
+web-dev:
+	bun --cwd apps/web dev
+
 # Run Storybook (interactive components in isolation) on localhost:6006.
 docs-storybook:
 	bun --cwd apps/docs storybook
