@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { type SubmitEvent, use, useEffect, useRef, useState } from "react";
 import { useChatSocket } from "@/lib/use-chat-socket";
 import { useTRPC } from "@/trpc/client";
@@ -13,6 +13,23 @@ export default function ChannelPage({ params }: Props) {
   const { slug } = use(params);
   const trpc = useTRPC();
   const channel = useQuery(trpc.channel.get.queryOptions({ slug }));
+
+  /**
+   * The viewer poll. React Query owns the 5s timer, dedupes, and keeps the last
+   * value while refetching. Keyed by streamId (present only when live), so the
+   * `enabled` gate stops it dead on offline channels — no streamId, no requests.
+   */
+  const streamId = channel.data?.streamId;
+  const viewers = useQuery(
+    trpc.channel.viewers.queryOptions(
+      { streamId: streamId ?? "" }, // never runs with "" — enabled is false then
+      {
+        enabled: Boolean(streamId),
+        refetchInterval: 5000, // the entire "poll every 5s"
+        placeholderData: keepPreviousData, // keep last count across ticks / 503s
+      }
+    )
+  );
 
   // Hooks run unconditionally, above the early returns. The socket gates on `enabled`.
   const { messages, send } = useChatSocket(slug, channel.data?.isLive ?? false);
@@ -91,8 +108,25 @@ export default function ChannelPage({ params }: Props) {
             {isLive ? "🔴 LIVE" : "Offline"}
           </span>
 
-          <h1>{title}</h1>
+          {isLive && (
+            <span
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                padding: "4px 8px",
+                borderRadius: 4,
+                fontSize: 14,
+                fontWeight: 600,
+                color: "white",
+                background: "rgba(0, 0, 0, 0.6)",
+              }}
+            >
+              {viewers.data?.count ?? "—"}
+            </span>
+          )}
         </div>
+        <h1>{title}</h1>
       </section>
 
       <aside
