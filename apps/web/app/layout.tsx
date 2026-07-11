@@ -3,9 +3,9 @@ import { TRPCReactProvider } from "@/trpc/client";
 
 export const metadata: Metadata = { title: "Pulse" };
 
-interface Props {
+type Props = {
   children: React.ReactNode;
-}
+};
 
 export default function RootLayout({ children }: Props) {
   return (
