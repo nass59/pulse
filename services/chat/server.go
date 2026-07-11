@@ -39,7 +39,14 @@ type server struct {
 func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("channelSlug") // from /ws/{channelSlug}
 
-	ws, err := websocket.Accept(w, r, nil) // the HTTP 101 upgrade
+	ws, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		// The browser dev server is a different origin (:3000 → :8081), so the
+		// gateway must allow it explicitly. coder/websocket rejects cross-origin
+		// upgrades by default — that default is CSWSH (cross-site WebSocket
+		// hijacking) protection, so we opt into an allowlist, we don't disable it.
+		// getenv keeps it configurable per env, matching the PORT/config idiom.
+		OriginPatterns: []string{getenv("WEB_ORIGIN", "localhost:3000")},
+	}) // the HTTP 101 upgrade
 	if err != nil {
 		return
 	}
@@ -92,7 +99,7 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 			MessageID: id.String(),
 			ChannelID: c.channelID,      // ← the WRISTBAND
 			StreamID:  c.streamID,       // ← the WRISTBAND
-			UserID:    demoUserID,         // hardcoded MVP
+			UserID:    demoUserID,       // hardcoded MVP
 			Body:      string(data),     // the ONLY client input
 			SentAt:    time.Now().UTC(), // server receipt time
 		}
