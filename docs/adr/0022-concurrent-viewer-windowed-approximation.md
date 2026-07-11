@@ -73,6 +73,21 @@ recompute over an exact number we have to defend against every failure mode.
   still shows for the remainder of the windows it falls in). `60s` is an MVP
   guess, not a tuned value.
 
+- **The count tracks socket lifecycle, so client churn perturbs it — sharply in
+  dev.** Presence is emitted on WebSocket connect / disconnect, so anything that
+  opens or closes a socket writes a `±1`: a reconnect after a drop, a page
+  refresh, and — loudly in development — React StrictMode, which
+  mounts→unmounts→mounts the chat effect and so fires `+1, −1, +1` per tab
+  instead of a clean `+1`. Those stray deltas scatter across hops and can leave
+  the read window netting *below* the number of open tabs (observed: three live
+  tabs peaking at `2`). Combined with the trailing-window lag — three joins
+  spread over more than `W` of wall-clock never co-occupy one window — the
+  **observed peak can sit under the true concurrent count**, not only decay below
+  it over time. Treat the dev number as directional, never a socket count; a
+  production build (no StrictMode) is cleaner but still windowed. The heartbeat
+  upgrade above also damps this: a session re-asserting every interval survives
+  the churn instead of depending on one fragile connect event.
+
 - **Re-keying cost.** Presence is keyed by `channelId` (ADR-0012); aggregating by
   `streamId` triggers an internal repartition topic, and every producer plus the
   repartition must hash keys with murmur2 (ADR-0014) or co-partitioning breaks.
