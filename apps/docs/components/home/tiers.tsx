@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 
 type Accent = "kafka" | "go" | "kotlin";
 
-interface Pillar {
+type Pillar = {
   accent: Accent;
   blurb: string;
   href: string;
   icon: LucideIcon;
   title: string;
-}
+};
 
 /**
  * The three learning pillars as navigation cards (ADR-0021). Each carries its

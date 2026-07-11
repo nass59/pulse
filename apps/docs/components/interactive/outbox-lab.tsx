@@ -25,12 +25,12 @@ type Strategy = "dual-write" | "outbox";
 
 type StateKind = "ok" | "lost" | "ghost" | "dupe";
 
-interface EndState {
+type EndState = {
   detail: string;
   kind: StateKind;
-}
+};
 
-interface Scenario {
+type Scenario = {
   /** The crash point — the pill label. */
   crash: string;
   id: string;
@@ -41,7 +41,7 @@ interface Scenario {
   strategy: Strategy;
   /** The one-line takeaway under the result. */
   verdict: ReactNode;
-}
+};
 
 const SCENARIOS: Scenario[] = [
   {

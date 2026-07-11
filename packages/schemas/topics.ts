@@ -37,11 +37,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * (recreate + republish), not a config edit. `cleanupPolicy`/`retentionMs` are
  * set explicitly rather than inherited from broker defaults.
  */
-interface TopicConfig {
+type TopicConfig = {
   cleanupPolicy: "delete" | "compact";
   partitions: number;
   retentionMs: number;
-}
+};
 
 /**
  * Co-located with the name map so the two cannot drift: `satisfies
@@ -85,14 +85,14 @@ export const TOPIC_CONFIGS = {
 } as const satisfies Record<Topic, TopicConfig>;
 
 /** Each event type → the shape codegen produced for its .avsc. */
-export interface EventPayloads {
+export type EventPayloads = {
   ChatMessageSent: ChatMessageSent;
   StreamEnded: StreamEnded;
   StreamStarted: StreamStarted;
   ViewerCount: ViewerCount;
   ViewerJoined: ViewerJoined;
   ViewerLeft: ViewerLeft;
-}
+};
 
 /** Drift guard: this line stops compiling if EventPayloads' keys ≠ EventType. */
 type _KeysMatch = [keyof EventPayloads] extends [EventType]

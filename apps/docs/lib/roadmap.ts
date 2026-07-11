@@ -18,7 +18,7 @@
  */
 export type PhaseStatus = "shipped" | "current" | "planned";
 
-export interface PhaseItem {
+export type PhaseItem = {
   /**
    * Only meaningful inside the `current` phase, where the spine shows the work
    * in flight: `true` shipped, `false` still in progress. Undefined elsewhere.
@@ -28,9 +28,9 @@ export interface PhaseItem {
   href?: string;
   /** Short label — a concept name or a sub-epic topic. */
   label: string;
-}
+};
 
-export interface Phase {
+export type Phase = {
   /** Weekend-scale estimate, calendar-free on purpose. */
   effort: string;
   items: PhaseItem[];
@@ -42,7 +42,7 @@ export interface Phase {
   /** The concrete done-definition, surfaced on expand/hover. */
   shipsWhen: string;
   status: PhaseStatus;
-}
+};
 
 export const PHASES: Phase[] = [
   {

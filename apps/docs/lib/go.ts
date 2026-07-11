@@ -13,7 +13,7 @@ import { type LucideIcon, Package, Plug, Waypoints } from "lucide-react";
  * overview (`components/docs/pillar-overview.tsx`) renders this as a numbered path,
  * with the sticky `<PathRail>` tracking position; each page links on via `<PageNav>`.
  */
-export interface GoStep {
+export type GoStep = {
   /** One-line, plain-language promise of the page. */
   blurb: string;
   href: string;
@@ -21,7 +21,7 @@ export interface GoStep {
   /** Three-ish takeaways, shown on the index card. */
   takeaways: string[];
   title: string;
-}
+};
 
 export const GO_STEPS: GoStep[] = [
   {

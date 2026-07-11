@@ -5,12 +5,12 @@ import { producer } from "./kafka";
 
 const BATCH_SIZE = 100;
 
-interface OutboxRow {
+type OutboxRow = {
   id: string;
   partitionKey: string;
   payload: Uint8Array;
   topic: string;
-}
+};
 
 let running = false;
 let connected = false;

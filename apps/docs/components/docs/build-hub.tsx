@@ -17,12 +17,12 @@ import { FullBleed } from "@/components/docs/full-bleed";
  * belong to the running system rather than a language. Static server component,
  * Kafka-yellow accent — The Build is Pulse's own surface, not a guest technology.
  */
-interface Area {
+type Area = {
   blurb: string;
   href: string;
   icon: LucideIcon;
   title: string;
-}
+};
 
 const AREAS: Area[] = [
   {

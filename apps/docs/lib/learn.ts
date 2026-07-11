@@ -8,7 +8,7 @@ import { BookOpen, type LucideIcon, Rocket, Workflow } from "lucide-react";
  * (`components/docs/pillar-overview.tsx`) renders this as a numbered path, and the
  * sticky `<PathRail>` tracks position within it; each page links on via `<PageNav>`.
  */
-export interface LearnStep {
+export type LearnStep = {
   /** One-line, plain-language promise of the page. */
   blurb: string;
   href: string;
@@ -16,7 +16,7 @@ export interface LearnStep {
   /** Three-ish takeaways, shown on the index card. */
   takeaways: string[];
   title: string;
-}
+};
 
 export const LEARN_STEPS: LearnStep[] = [
   {

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 type Health = "unhealthy" | "healthy";
 
-interface Phase {
+type Phase = {
   clock: string;
   detail: string;
   health: Health;
@@ -16,7 +16,7 @@ interface Phase {
   /** True while this phase falls inside Kafka's healthcheck `start_period`. */
   inStartPeriod: boolean;
   title: string;
-}
+};
 
 /**
  * The real boot of Pulse's single-node KRaft broker, as configured in

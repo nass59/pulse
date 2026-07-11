@@ -33,9 +33,9 @@ const isUniqueViolation = (error: unknown, constraint: string): boolean =>
   "constraint_name" in error &&
   error.constraint_name === constraint;
 
-interface SlugParams {
+type SlugParams = {
   slug: string;
-}
+};
 
 export const registerStreamRoutes = (app: FastifyInstance): void => {
   app.post<{ Params: SlugParams }>(
@@ -175,12 +175,12 @@ export const registerStreamRoutes = (app: FastifyInstance): void => {
  * `streamId` is present exactly when `isLive` is true — the page uses it to poll
  * the analytics viewer-count endpoint (which is keyed by streamId, not slug).
  */
-interface ChannelView {
+type ChannelView = {
   isLive: boolean;
   slug: string;
   streamId?: string;
   title: string;
-}
+};
 
 /**
  * The channel *read* endpoint — deliberately the opposite of registerStreamRoutes

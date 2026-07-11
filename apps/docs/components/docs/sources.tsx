@@ -87,12 +87,12 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
 
 const pad = (n: number) => String(n).padStart(4, "0");
 
-interface ExternalRef {
+type ExternalRef = {
   href: string;
   label: string;
-}
+};
 
-interface SourcesProps {
+type SourcesProps = {
   /** ADR numbers this page derives from, e.g. `[5, 7]`. */
   adrs?: number[];
   /** Local-only issue references, e.g. `"foundations/02-docker-compose"`. */
@@ -103,7 +103,7 @@ interface SourcesProps {
    * canonical external docs instead of (or alongside) an ADR (ADR-0011).
    */
   refs?: ExternalRef[];
-}
+};
 
 export const Sources = ({
   adrs = [],

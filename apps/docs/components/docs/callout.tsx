@@ -55,12 +55,12 @@ const VARIANTS: Record<
   },
 };
 
-interface CalloutProps {
+type CalloutProps = {
   children: ReactNode;
   /** Overrides the default variant label. */
   title?: string;
   variant?: Variant;
-}
+};
 
 export const Callout = ({
   variant = "note",

@@ -24,7 +24,7 @@ import type { ReactNode } from "react";
  * `go-<page-slug>` (e.g. `go-goroutines-and-channels`), and renders the widget
  * with `accent="blue"`. Same data shape, different accent.
  */
-export interface QuizQuestion {
+export type QuizQuestion = {
   /** Index into `options` of the correct answer. */
   answer: number;
   /** Revealed after answering — the teaching beat, where the analogy lives. */
@@ -32,13 +32,13 @@ export interface QuizQuestion {
   id: string;
   options: ReactNode[];
   prompt: ReactNode;
-}
+};
 
-export interface ConceptQuiz {
+export type ConceptQuiz = {
   questions: QuizQuestion[];
   /** A one-line, concept-flavoured tagline shown in the quiz header. */
   tagline: string;
-}
+};
 
 export const QUIZZES: Record<string, ConceptQuiz> = {
   "kraft-mode": {

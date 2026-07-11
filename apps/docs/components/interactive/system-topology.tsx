@@ -64,17 +64,17 @@ type NodeId =
   | "postgres"
   | "redis";
 
-interface HandleSpec {
+type HandleSpec = {
   id: string;
   position: Position;
   type: "source" | "target";
-}
+};
 
-interface TopicFlow {
+type TopicFlow = {
   event: EventType;
   state: BuildState;
   topic: string;
-}
+};
 
 /** Resolve an event to its real topic from the canonical map — never hand-typed. */
 const flow = (event: EventType, state: BuildState): TopicFlow => ({
@@ -94,12 +94,12 @@ const CHAT_FLOWS: TopicFlow[] = [
 ];
 const ALL_FLOWS: TopicFlow[] = [...STREAM_FLOWS, ...CHAT_FLOWS];
 
-interface FlowGroup {
+type FlowGroup = {
   items: TopicFlow[];
   label: string;
-}
+};
 
-interface NodeSpec {
+type NodeSpec = {
   flows: FlowGroup[];
   handles: HandleSpec[];
   icon: LucideIcon;
@@ -116,7 +116,7 @@ interface NodeSpec {
   /** The Kafka backbone gets a taller card + partition motif. */
   spine?: boolean;
   state: BuildState;
-}
+};
 
 const NODE_SPECS: NodeSpec[] = [
   {
@@ -234,7 +234,7 @@ const SPEC_BY_ID = Object.fromEntries(
   NODE_SPECS.map((s) => [s.id, s])
 ) as Record<NodeId, NodeSpec>;
 
-interface EdgeDef {
+type EdgeDef = {
   id: string;
   label: string;
   source: NodeId;
@@ -242,7 +242,7 @@ interface EdgeDef {
   target: NodeId;
   targetHandle: string;
   tone: BuildState;
-}
+};
 
 /**
  * Edge labels are deliberately short summaries — the panel carries the precise

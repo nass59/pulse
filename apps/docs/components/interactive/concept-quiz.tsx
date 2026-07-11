@@ -77,11 +77,11 @@ const shuffledIndices = (n: number, seed: number): number[] => {
   return order;
 };
 
-interface Verdict {
+type Verdict = {
   note: string;
   title: string;
   tone: "gold" | "green" | "amber" | "red";
-}
+};
 
 /** Map a score onto a themed, sports/game-flavoured verdict. */
 const verdictFor = (score: number, total: number): Verdict => {

@@ -5,6 +5,17 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
+  "linter": {
+    "rules": {
+      "style": {
+        // Prefer `type X = { ... }` over `interface X { ... }`. Autofixable.
+        "useConsistentTypeDefinitions": {
+          "level": "error",
+          "options": { "style": "type" }
+        }
+      }
+    }
+  },
   "overrides": [
     {
       "includes": ["**/scripts/*.ts"],

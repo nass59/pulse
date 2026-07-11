@@ -18,11 +18,11 @@ import { cn } from "@/lib/utils";
  * many matches run in parallel. Dynamics-shaped per ADR-0007: a parameter space
  * (the partition count) with a visible effect on routing.
  */
-interface Match {
+type Match = {
   dot: string;
   key: string;
   ring: string;
-}
+};
 
 const MATCHES: Match[] = [
   {
@@ -60,12 +60,12 @@ const hashKey = (s: string) => {
 
 let recordSeq = 0;
 
-interface PartRecord {
+type PartRecord = {
   dot: string;
   id: number;
   key: string;
   text: string;
-}
+};
 
 const COUNTS = [2, 3, 4];
 

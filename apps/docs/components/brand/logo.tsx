@@ -22,11 +22,11 @@ export const Flask = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface LogoProps {
+type LogoProps = {
   className?: string;
   /** Show the "DevLab" wordmark beside the flask mark. */
   showWordmark?: boolean;
-}
+};
 
 /**
  * The brand lockup: a flask inside a yellow circle (glowing on dark) next to

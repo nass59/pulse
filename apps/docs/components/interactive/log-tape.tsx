@@ -34,10 +34,10 @@ const PACKETS = [
 const MAX = 11;
 const TICK_MS = 1700;
 
-interface Record {
+type Record = {
   label: string;
   offset: number;
-}
+};
 
 /**
  * Label is derived from the offset, not a mutable counter — so the seed records

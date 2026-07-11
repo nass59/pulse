@@ -111,11 +111,11 @@ const Connector = ({ label }: { label?: string }) => (
 /* Healthchecks — the start_period grace window on a probe timeline.    */
 /* ------------------------------------------------------------------ */
 
-interface Probe {
+type Probe = {
   at: string;
   ok: boolean;
   shielded: boolean;
-}
+};
 
 const PROBES: Probe[] = [
   { at: "0s", ok: false, shielded: true },
@@ -373,13 +373,13 @@ export const AutoTopicFlow = () => (
 /* Explicit provisioning — the 1-partition mirage vs the real contract. */
 /* ------------------------------------------------------------------ */
 
-interface ChannelKey {
+type ChannelKey = {
   dot: string;
   /** Illustrative partition under the 6-partition contract (toy placement). */
   grown: number;
   key: string;
   ring: string;
-}
+};
 
 /**
  * Four channel keys. `grown` is where each lands once the topic is provisioned
@@ -706,7 +706,7 @@ export const OutboxFlow = () => (
 /* Smoke test — the run-it-yourself ladder for the identity pipeline.   */
 /* ------------------------------------------------------------------ */
 
-interface Rung {
+type Rung = {
   cmd: string;
   icon: LucideIcon;
   /** The payoff rung — the decoded event arriving — wears the yellow accent. */
@@ -715,7 +715,7 @@ interface Rung {
   proof: string;
   /** The system this command brings online or exercises. */
   system: string;
-}
+};
 
 const RUNGS: Rung[] = [
   {
@@ -825,13 +825,13 @@ export const SmokeTestLadder = () => (
   </DiagramFrame>
 );
 
-interface Quorum {
+type Quorum = {
   id: string;
   majority: number;
   pulse?: boolean;
   tolerates: number;
   voters: number;
-}
+};
 
 const QUORUMS: Quorum[] = [
   { id: "q1", voters: 1, majority: 1, tolerates: 0, pulse: true },
@@ -908,10 +908,10 @@ export const QuorumFaultTolerance = () => (
 /* Server-authored events — client sends a body; the gateway stamps.    */
 /* ------------------------------------------------------------------ */
 
-interface StampedField {
+type StampedField = {
   detail: string;
   field: string;
-}
+};
 
 const STAMPED_FIELDS: StampedField[] = [
   { field: "messageId", detail: "server-minted UUIDv7" },
@@ -979,11 +979,11 @@ export const ServerAuthoredStamp = () => (
 /* The log & offsets — append-only cells, independent reader cursors.    */
 /* ------------------------------------------------------------------ */
 
-interface LogReader {
+type LogReader = {
   at: number;
   label: string;
   tone: "green" | "orange";
-}
+};
 
 const LOG_CELLS = ["m0", "m1", "m2", "m3", "m4", "m5"];
 const LOG_READERS: LogReader[] = [
@@ -1050,11 +1050,11 @@ export const LogWithOffsets = () => (
 /* Partitions & ordering — one key, one partition, co-partitioned types. */
 /* ------------------------------------------------------------------ */
 
-interface KeyedEvent {
+type KeyedEvent = {
   icon: LucideIcon;
   label: string;
   topic: string;
-}
+};
 
 const ALICE_EVENTS: KeyedEvent[] = [
   { label: "ChatMessageSent", topic: "chat.messages.v1", icon: MessageSquare },
@@ -1123,10 +1123,10 @@ export const CoPartitionRouting = () => (
 /* Consumer groups — replay the lifecycle log into a live-channel map.  */
 /* ------------------------------------------------------------------ */
 
-interface LifecycleFold {
+type LifecycleFold = {
   channel: string;
   kind: "started" | "ended";
-}
+};
 
 const LIFECYCLE_LOG: LifecycleFold[] = [
   { channel: "alice", kind: "started" },

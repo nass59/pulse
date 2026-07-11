@@ -18,12 +18,12 @@ import { cn } from "@/lib/utils";
  */
 type Kind = "chat" | "react" | "viewer";
 
-interface Particle {
+type Particle = {
   id: number;
   kind: Kind;
   lane: number;
   text: string;
-}
+};
 
 const CHAT_LINES = [
   "let's goooo",

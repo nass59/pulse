@@ -13,7 +13,7 @@ Pulse is a learning project. The primary goal is for the maintainer to learn Kaf
 
 Maintainer overrides that the Ultracite preset below doesn't enforce — follow these in all TS/TSX:
 
-- **Prefer `const` arrow functions over `function` declarations**, including components. Write `export const MotionDemo = () => { ... }`, not `export function MotionDemo() { ... }`.
+- **Prefer `const` arrow functions over `function` declarations**, including components. Write `export const MotionDemo = () => { ... }`, not `export function MotionDemo() { ... }`. **Exception:** Next.js pages and layouts (`app/**/page.tsx`, `app/**/layout.tsx`) keep their conventional `export default function` form.
 - **Use JSDoc-style block comments (`/** ... */`) for any multi-line comment**, not stacked `//` lines:
   ```ts
   /**

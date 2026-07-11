@@ -6,13 +6,13 @@ import {
 import type { TransactionSql } from "postgres";
 import { registry, schemaIdForTopic } from "./registry";
 
-export interface OutboxEvent<K extends EventType> {
+export type OutboxEvent<K extends EventType> = {
   aggregateId: string;
   aggregateType: string;
   eventType: K;
   partitionKey: string;
   payload: EventPayloads[K];
-}
+};
 
 export const writeEvent = async <K extends EventType>(
   tx: TransactionSql,

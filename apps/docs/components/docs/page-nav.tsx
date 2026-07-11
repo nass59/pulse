@@ -13,11 +13,11 @@ import { cn } from "@/lib/utils";
  * the right column so the forward motion stays on the right. Cards carry the
  * DevLab hover lift + yellow glow on dark.
  */
-interface NavLink {
+type NavLink = {
   blurb?: string;
   href: string;
   title: string;
-}
+};
 
 const NavCard = ({
   link,

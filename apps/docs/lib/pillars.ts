@@ -16,15 +16,15 @@ import { LEARN_STEPS } from "./learn";
 export type PillarAccent = "kafka" | "go" | "kotlin";
 
 /** A lesson in a pillar's ordered path; the shape <PathRail/> needs. */
-export interface PathStep {
+export type PathStep = {
   blurb: string;
   href: string;
   icon: LucideIcon;
   takeaways: string[];
   title: string;
-}
+};
 
-export interface PillarSpec {
+export type PillarSpec = {
   accent: PillarAccent;
   comingConcepts: Concept[];
   concepts: Concept[];
@@ -37,7 +37,7 @@ export interface PillarSpec {
   steps: PathStep[];
   /** Title rendered as `lead <mark> tail`, the mark swiped in the accent. */
   title: { lead: string; mark: string; tail?: string };
-}
+};
 
 export const PILLARS: Record<PillarAccent, PillarSpec> = {
   kafka: {

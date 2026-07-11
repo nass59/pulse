@@ -29,7 +29,7 @@ import {
  * moves to Go; infrastructure concepts that belong to the running system rather
  * than a technology move to The Build.
  */
-export interface Concept {
+export type Concept = {
   /** One-line, plain-language hook. */
   blurb: string;
   /** Present ⇒ the page exists ⇒ the concept is `live`. */
@@ -38,7 +38,7 @@ export interface Concept {
   /** Carries an interactive widget (earns the dynamics-shaped filter). */
   interactive?: boolean;
   title: string;
-}
+};
 
 /**
  * Kafka pillar — pure-Kafka concepts plus the Kafka-adjacent patterns (outbox,

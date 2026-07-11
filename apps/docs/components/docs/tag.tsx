@@ -20,7 +20,7 @@ const ACCENTS: Record<Accent, string> = {
   orange: "border-accent-orange/40 text-accent-orange",
 };
 
-interface TagProps {
+type TagProps = {
   /** Category signifier colour. Defaults to neutral. */
   accent?: Accent;
   children: ReactNode;
@@ -29,7 +29,7 @@ interface TagProps {
   hash?: boolean;
   /** Optional leading line icon (browse-context pills). */
   icon?: LucideIcon;
-}
+};
 
 export const Tag = ({
   children,

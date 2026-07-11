@@ -12,26 +12,26 @@
 
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 
-interface AvroComplex {
+type AvroComplex = {
   logicalType?: string;
   name?: string;
   symbols?: string[];
   type: string;
-}
+};
 
 type AvroType = string | AvroComplex | AvroType[];
 
-interface AvroField {
+type AvroField = {
   name: string;
   type: AvroType;
-}
+};
 
-interface AvroRecord {
+type AvroRecord = {
   fields: AvroField[];
   name: string;
   namespace?: string;
   type: "record";
-}
+};
 
 /** Avro primitive → TS. uuid/string land here as `string`, long-based instants as `number`. */
 const PRIMITIVE_TS: Record<string, string> = {

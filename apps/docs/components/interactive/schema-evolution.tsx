@@ -32,10 +32,10 @@ import { cn } from "@/lib/utils";
  * break-it-in-CI drill is Phase 3). The rename scenario is the real 409 the
  * `viewerId → userId` collapse hit during first-schemas, not an invented one.
  */
-interface Field {
+type Field = {
   name: string;
   type: string;
-}
+};
 
 /** `ChatMessageSent` as registered under `chat.messages.v1-value` (v1). */
 const BASE_FIELDS: Field[] = [
@@ -49,11 +49,11 @@ const BASE_FIELDS: Field[] = [
 
 type DiffKind = "same" | "add" | "remove" | "change";
 
-interface DiffLine extends Field {
+type DiffLine = Field & {
   kind: DiffKind;
-}
+};
 
-interface Scenario {
+type Scenario = {
   compatible: boolean;
   /** The diff applied to the base schema. */
   diff: DiffLine[];
@@ -62,7 +62,7 @@ interface Scenario {
   label: string;
   /** The new-reads-old reasoning behind the verdict. */
   why: ReactNode;
-}
+};
 
 const same = (): DiffLine[] =>
   BASE_FIELDS.map((f) => ({ ...f, kind: "same" as const }));
