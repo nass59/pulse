@@ -6,9 +6,9 @@
  *
  * Honesty rules carried over from `AGENTS.md`:
  *  - Status is hand-set from the real issue tracker, never invented progress.
- *    `foundations/` and `first-schemas/` are both shipped, so Phase 0 is
- *    `shipped` and Phase 1 — First Light — is now `current` ("you are here");
- *    everything after it is `planned`.
+ *    Phase 1 — First Light — closed 2026-07-11 (`frontend-mvp` was its last
+ *    epic), so Phases 0 and 1 are `shipped`, Phase 2 — Scale lessons — is
+ *    `current` ("you are here"), and everything after it is `planned`.
  *  - `items` with an `href` are `live` concept pages and link out; the rest are
  *    `coming` — rendered dashed/dimmed, never linked, until their page ships.
  *  - Effort is weekend-scale, the way the roadmap actually measures itself.
@@ -88,7 +88,7 @@ export const PHASES: Phase[] = [
     lesson:
       "Cross-language event-driven contracts. “Almost everything is an event,” made real.",
     effort: "3–4 weekends",
-    status: "current",
+    status: "shipped",
     shipsWhen:
       "In a browser: flip a channel live, see a player + chat box, send messages other tabs receive in real time, and watch the viewer count tick — all routed through Kafka.",
     items: [
@@ -122,7 +122,12 @@ export const PHASES: Phase[] = [
         href: "/go/concepts/websocket-fanout",
         done: true,
       },
-      { label: "Stream–table joins", done: false },
+      /**
+       * Shipped as a capability (`analytics-mvp`, the windowed viewer count)
+       * but its concept page hasn't been written yet — so no `href`, and it
+       * renders dashed until the Kotlin pillar's content pass lands.
+       */
+      { label: "Hopping windows", done: true },
     ],
   },
   {
@@ -131,13 +136,13 @@ export const PHASES: Phase[] = [
     lesson:
       "Projections off the log — compacted topics and derived storage. Why “Kafka as source of truth” forces specific UX.",
     effort: "3–4 weekends",
-    status: "planned",
+    status: "current",
     shipsWhen:
       "Two chat nodes fan out through a Redis ring buffer, ended streams archive to object storage, and moderation redactions join in via a compacted topic.",
     items: [
-      { label: "Redis ring buffer & fan-out" },
-      { label: "Chat archiver → object storage" },
-      { label: "Compacted redactions (KStream–KTable)" },
+      { label: "Redis ring buffer & fan-out", done: false },
+      { label: "Chat archiver → object storage", done: false },
+      { label: "Compacted redactions (KStream–KTable)", done: false },
     ],
   },
   {

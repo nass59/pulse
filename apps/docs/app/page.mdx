@@ -1,33 +1,23 @@
 import { FullBleed } from "@/components/docs/full-bleed";
-import { FirehoseSection } from "@/components/home/firehose-section";
-import { Hero } from "@/components/home/hero";
+import { EventRide } from "@/components/home/event-ride";
+import { HomeSheet } from "@/components/home/home-sheet";
+import { PillarPanels } from "@/components/home/pillar-panels";
 import { RoadmapPhaseDrawers } from "@/components/home/roadmap/phase-drawers";
 import { Tiers } from "@/components/home/tiers";
+import { TitleBlock } from "@/components/home/title-block";
 
 export const metadata = {
-  title: "Pulse — learn Kafka by building the system that needs it",
+  title: "Pulse — learning Kafka by building the real thing",
   description:
-    "A friendly, diagram-first read of Pulse: a Twitch-style livestream platform built to learn Kafka and distributed-systems architecture, one lesson at a time.",
+    "A Twitch-style platform where every chat message and viewer count rides a real event-streaming backbone — TypeScript, Go and Kotlin around a Kafka log, built in public with every decision written down.",
 };
 
 <FullBleed>
-  <Hero />
+  <HomeSheet>
+    <EventRide />
+    <PillarPanels />
+    <RoadmapPhaseDrawers />
+    <Tiers />
+    <TitleBlock />
+  </HomeSheet>
 </FullBleed>
-
-<FirehoseSection />
-
-<FullBleed>
-  <RoadmapPhaseDrawers />
-</FullBleed>
-
-<FullBleed>
-  <Tiers />
-</FullBleed>
-
-<Callout variant="note" title="This is a study artifact">
-  These pages are the *friendly* read of Pulse — they translate decisions made
-  and recorded elsewhere in the repo. They aim to teach, not to be the final
-  word: when a page disagrees with the canonical write-ups, the write-ups win.
-  Every page keeps a collapsed **Sources** trail at the bottom if you want to dig
-  to the original reasoning.
-</Callout>

@@ -5,7 +5,7 @@ import { Logo } from "@/components/brand/logo";
  * every page: the canonical sources are the ADRs and `CONTEXT.md`, not here.
  */
 export const Footer = () => (
-  <footer className="mt-24 border-border border-t">
+  <footer className="border-border border-t">
     <div className="mx-auto flex max-w-5xl flex-col gap-3 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
       <Logo />
       <p className="ds-meta max-w-md text-muted-foreground text-xs leading-relaxed">

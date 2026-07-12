@@ -129,6 +129,19 @@
   --shadow-glow-kotlin-lg: 0 0 30px oklch(0.586 0.237 295.4 / 0.4);
 
   --radius-pill: 9999px;
+
+  /**
+   * The homepage ticker belt — a doubled item list sliding half its own
+   * width, so the loop point is invisible. Consumers pair it with
+   * `motion-reduce:animate-none`.
+   */
+  --animate-ticker-belt: ticker-belt 44s linear infinite;
+
+  @keyframes ticker-belt {
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 /* ---------- SEMANTIC: LIGHT THEME (default — paper editorial) ---------- */

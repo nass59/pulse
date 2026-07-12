@@ -30,6 +30,15 @@ Pulse gets a Next.js documentation site at **`apps/docs/`**, generated and updat
 - **The site is not the entry point for agents working on Pulse code.** CLAUDE.md and `CONTEXT.md` remain the authoritative front door for that purpose. The site is for humans (currently: one human, the maintainer) to *read*.
 - **Building the site is outside the Kafka/distributed-systems curriculum.** The discipline is to treat it as a study-aid project, agent-authored, and resist letting it expand into a UI side-project that displaces the actual Pulse learning.
 
+## Amendment (2026-07-12) — the homepage is a portfolio front door; every tier behind it stays a study artifact
+
+This ADR says the site is for "one human, the maintainer, to *read*." The Phase-2 homepage redesign supersedes that clause for **exactly one page**: the homepage (`app/page.mdx`) is optimised for a first-time external visitor — a developer or hiring manager who doesn't know what Pulse is, gives it seconds, and judges craft as much as content. It is a portfolio front door whose job is proof-of-life: Phase 1 closed the real loop (browser chat → Go → Kafka → Kotlin windowing → viewer count back in the browser, ADR-0022/0023), and the homepage leads with that evidence.
+
+Everything behind the homepage is unchanged: `/learn`, `/kafka`, `/go`, `/build` remain derived study artifacts under this ADR's rules — build-state honesty, the dynamics-shaped widget filter, and markdown as the source of truth all still bind, on the homepage too (its centerpiece depicts the *shipped* loop, stylised but never aspirational). The split resolves design arguments by naming the reader: the homepage does not teach (its reader doesn't want a lesson yet); the tiers do not sell (their reader is already in).
+
+- **Rejected — keep the homepage a study artifact too.** Reads as an index page; wastes the one URL an outside visitor actually lands on, now that there is a running system worth showing.
+- **Rejected — make the whole site portfolio-grade.** Inverts the site's purpose and reintroduces the "always polished, always current" maintenance burden this ADR explicitly declined.
+
 ## Revisit triggers
 
 - **Scoped Turborepo for the JS side.** Adding `apps/docs/` (and soon `apps/web/`) plus `services/identity/` means the JS workspace spans three packages. This is the trigger condition called out in ADR-0005 — defer until `apps/docs/` is real and the JS-side build/test/dev tasks start to feel disjointed, then evaluate.

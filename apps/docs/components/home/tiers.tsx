@@ -40,7 +40,7 @@ const PILLARS: Pillar[] = [
   {
     title: "Kotlin",
     blurb:
-      "Stream processing, coming soon. The analytics service on Kafka Streams — windowed aggregates and state stores — designed now, built when its phase lands.",
+      "Stream processing, live. The analytics service on Kafka Streams — hopping windows and state stores computing the viewer count you watched tick above.",
     href: "/kotlin",
     icon: Combine,
     accent: "kotlin",
@@ -62,9 +62,19 @@ const ACCENT: Record<Accent, { icon: string; hover: string }> = {
   },
 };
 
-/** The three learning pillars as navigation cards. Server component. */
+/**
+ * The three learning pillars as navigation cards — the homepage's
+ * end-of-journey fan-out: by the time a reader reaches these, they've ridden
+ * the loop and can pick a track with context. Server component.
+ */
 export const Tiers = () => (
   <section className="mx-auto max-w-5xl px-6 py-16">
+    <p className="font-medium font-mono text-[11px] text-olive uppercase tracking-[0.14em]">
+      {"// where to, from here"}
+    </p>
+    <h2 className="mt-3 mb-9 font-bold text-3xl text-foreground tracking-[-0.02em] sm:text-4xl">
+      Pick up the story where it interests you.
+    </h2>
     <div className="grid gap-4 md:grid-cols-3">
       {PILLARS.map((pillar) => {
         const Icon = pillar.icon;
