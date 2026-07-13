@@ -193,24 +193,32 @@ const TICKER_ITEMS = [
 ];
 
 const Ticker = () => (
+  /**
+   * Sticky under the 65px header (z below its z-40) — the belt of plain-fact
+   * claims rides along for the whole page. The translucent carbon backdrop
+   * keeps ride content from bleeding through; the edge-fade mask lives on the
+   * inner wrapper so the backdrop itself doesn't fade.
+   */
   <div
     aria-hidden
-    className="overflow-hidden border-electric-yellow/15 border-y bg-electric-yellow/[0.02] [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
+    className="sticky top-[65px] z-30 border-electric-yellow/15 border-y bg-carbon-900/85 backdrop-blur-md"
   >
-    <div className="flex w-max animate-ticker-belt gap-10 py-2.5 motion-reduce:animate-none">
-      {(["a", "b"] as const).flatMap((copy) =>
-        TICKER_ITEMS.map((item, i) => (
-          <span
-            className={cn(
-              "whitespace-nowrap font-mono text-[10.5px] uppercase tracking-[0.12em]",
-              i % 2 === 0 ? "text-electric-yellow/55" : "text-white/45"
-            )}
-            key={`${copy}-${item}`}
-          >
-            {item}
-          </span>
-        ))
-      )}
+    <div className="overflow-hidden bg-electric-yellow/[0.02] [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]">
+      <div className="flex w-max animate-ticker-belt gap-10 py-2.5 motion-reduce:animate-none">
+        {(["a", "b"] as const).flatMap((copy) =>
+          TICKER_ITEMS.map((item, i) => (
+            <span
+              className={cn(
+                "whitespace-nowrap font-mono text-[10.5px] uppercase tracking-[0.12em]",
+                i % 2 === 0 ? "text-electric-yellow/55" : "text-white/45"
+              )}
+              key={`${copy}-${item}`}
+            >
+              {item}
+            </span>
+          ))
+        )}
+      </div>
     </div>
   </div>
 );
@@ -275,8 +283,8 @@ export const EventRide = () => {
             thing — in <RotatingWord />
           </h1>
           <p className="mt-5 max-w-md text-balance text-white/65 leading-relaxed lg:mt-7 lg:max-w-lg lg:text-lg">
-            This platform runs. Prove it to yourself: send a chat message, then
-            scroll — the page follows{" "}
+            Pulse runs. Prove it to yourself: send a chat message, then scroll —
+            the page follows{" "}
             <em className="text-electric-yellow not-italic">your</em> payload
             through Go, the log, and Kotlin, all the way back to your screen.
           </p>
@@ -304,8 +312,8 @@ export const EventRide = () => {
             />
           </motion.div>
           <p className="mt-3 font-mono text-[10px] text-white/40 leading-relaxed">
-            A faithful miniature of the real channel page. Your message stays on
-            this page — the journey below is a stylised replay of the shipped
+            A faithful miniature of pulse.tv's channel page. Your message stays
+            on this page — the journey below is a stylised replay of the shipped
             pipeline.
           </p>
         </div>
