@@ -12,6 +12,16 @@ The path that carries the actual video and audio bytes from a creator's encoder 
 
 Everything _around_ the stream: account lifecycle, follows, chat, emotes, notifications, analytics, recommendations, moderation. The control plane is event-driven and Kafka is its backbone. The control plane _observes_ the media plane through lifecycle events (e.g. `StreamStarted`, `StreamEnded`, `ViewerJoined`) but does not transport media.
 
+### Fan-out plane
+
+The path that carries a chat message from the gateway node that received it to the viewers connected to *other* gateway nodes, live. Since Phase 2 `chat` runs as N independent nodes, and a node's WebSocket connections are visible only to itself — so "reach everyone watching this channel, right now" is a cross-node problem, and the fan-out plane is what solves it. It is **Redis pub/sub**, keyed `chat:fanout:{channelId}` ([ADR-0024](docs/adr/0024-redis-pubsub-as-the-cross-node-fanout-plane.md)), and it is the **courier, never the record** — see Courier vs record. _Avoid:_ "the Redis channel is where chat lives"; deriving any state from the fan-out plane.
+
+### Courier vs record
+
+The division of labour behind every real-time surface in Pulse. The **record** is the durable, ordered, replayable copy — always a Kafka topic (`chat.messages.v1` for chat). The **courier** is whatever gets the message to connected clients *this instant* — Redis pub/sub, which is at-most-once, has no retention, no replay, and no acknowledgement. Those are disqualifying properties for a record and ideal ones for a courier: nothing is durable on the live plane because it doesn't have to be, the truth was written to Kafka before the publish happened.
+
+The rule that follows: **anything derived from the log survives a node restart and is rebuildable by replay; anything that lived only in a process or on the courier's wire does not, and must never be the only copy.** So every read model — the ring buffer, the archives, every analytics aggregate — is built by consuming Kafka, never by listening to the courier. A feature tempted to build state off the fan-out channel is a feature that should be a Kafka consumer. _Avoid:_ treating Redis as a message queue for chat; adding delivery guarantees to the live plane (that is rebuilding Kafka inside it).
+
 ### Stream
 
 A single live broadcast session by a creator. Has a lifecycle: scheduled → live → ended. Stream lifecycle transitions are first-class control-plane events.
@@ -48,6 +58,8 @@ Owns accounts, channels, and the follow graph. The user-facing API. Produces lif
 
 WebSocket gateway and chat ingestion. Handles thousands of concurrent viewer connections per node. Produces `ChatMessageSent`, `EmoteReacted`, `ViewerJoined`, `ViewerLeft`. Consumes channel/stream state from `identity` to validate who can chat where.
 
+Runs as **N independent nodes** (Phase 2). A node's connection registry is local to its process and keyed by `channelId`; reaching viewers on the other nodes is the job of the fan-out plane ([ADR-0024](docs/adr/0024-redis-pubsub-as-the-cross-node-fanout-plane.md)). Fan-out has exactly **one** call site — the Redis subscriber — on every node, including the one that received the message; the inbound handler only produces to Kafka and publishes. Liveness needs no cross-node work: each node replays the lifecycle topics under a fresh-per-boot consumer group, so every node independently materialises the same live-channel map.
+
 This liveness gate is **eventually consistent**: `chat` learns a channel is live by consuming `stream.started.v1` / `stream.ended.v1`, so it lags `identity` by its own consumer lag. Two windows follow and are accepted deliberately (the alternative — a synchronous check against `identity` — is the coupling we're avoiding): a viewer who connects between `StreamStarted` and `chat` consuming it is rejected (close `1008`) though the channel is genuinely live; a message sent on a still-open socket between `StreamEnded` and its consumption is produced against an already-ended `streamId`. Both are self-healing (the client retries the upgrade). On `StreamEnded`, `chat` force-closes the channel's open connections with close code `1001` ("going away").
 
 ### `analytics` — Kotlin + Kafka Streams
@@ -77,6 +89,8 @@ Presence is **split into two topics**, not one `chat.presence.v1` carrying both 
 
 - **Redis** — per-channel last-N ring buffer for mid-stream-join UX
 - **S3 / MinIO** — per-stream chat archives written by an archiver consumer on `StreamEnded`
+
+Redis appears twice in `chat`'s design and the two uses must not be conflated: as the **fan-out plane** (pub/sub, the courier, nothing derived from it) and as the **home of a projection** (the ring buffer, built by a consumer of `chat.messages.v1` — off the log, not off the pub/sub stream). Same infrastructure, opposite roles.
 
 ## Schemas & contracts
 

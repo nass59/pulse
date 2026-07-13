@@ -157,7 +157,7 @@ func (c *Consumer) applyEnded(ev StreamEnded) {
 	c.log.Info("stream ended", "slug", ev.ChannelSlug, "channelId", ev.ChannelID, "streamId", ev.StreamID)
 
 	if c.onEnded != nil {
-		c.onEnded(ev.ChannelSlug)
+		c.onEnded(ev.ChannelID)
 	}
 }
 
@@ -196,6 +196,6 @@ func (c *Consumer) Close() {
 	_ = c.c.Close()
 }
 
-func (c *Consumer) OnEnded(fn func(slug string)) {
+func (c *Consumer) OnEnded(fn func(channelID string)) {
 	c.onEnded = fn
 }

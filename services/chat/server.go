@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"pulse/chat/internal/consumer"
+	"pulse/chat/internal/fanout"
 	"pulse/chat/internal/producer"
 	"sync"
 	"time"
@@ -22,6 +23,7 @@ import (
 const demoUserID = "00000000-0000-0000-0000-000000000001"
 
 type conn struct {
+	id        string // per-connection, minted by this node — the fan-out skip handle
 	ws        *websocket.Conn
 	send      chan []byte // this viewer's send buffer (drops when full -- ADR-0018)
 	channelID string
@@ -34,6 +36,7 @@ type server struct {
 	log      *slog.Logger
 	prod     *producer.Producer
 	cons     *consumer.Consumer
+	fan      *fanout.Fanout
 }
 
 func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
@@ -63,12 +66,31 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	s.log.Info("ws connect", "channel", slug, "userId", demoUserID)
 
-	c := &conn{ws: ws, send: make(chan []byte, 16), channelID: channelID, streamID: streamID}
+	connID, _ := uuid.NewV7()
+	c := &conn{id: connID.String(), ws: ws, send: make(chan []byte, 16), channelID: channelID, streamID: streamID}
 
-	s.register(slug, c)         // add to registry
-	s.emitViewerJoined(c)       // +1 turnstile click — gate already passed
-	defer s.emitViewerLeft(c)   // −1, on ANY return below
-	defer s.unregister(slug, c) // clean up on ANY exit
+	/*
+	 * The registry doubles as the subscription's reference count: this node only
+	 * needs a channel's Redis fan-out while it has viewers on it. context.Background()
+	 * (not the request ctx) because the unsubscribe fires from a defer, after the
+	 * request context is already cancelled.
+	 */
+	if first := s.register(c); first {
+		if err := s.fan.Subscribe(context.Background(), c.channelID); err != nil {
+			s.log.Error("fanout subscribe failed", "err", err, "channelID", c.channelID)
+		}
+	}
+
+	defer func() {
+		if last := s.unregister(c); last {
+			if err := s.fan.Unsubscribe(context.Background(), c.channelID); err != nil {
+				s.log.Error("fanout unsubscribe failed", "err", err, "channelID", c.channelID)
+			}
+		}
+	}()
+
+	s.emitViewerJoined(c)     // +1 turnstile click — gate already passed
+	defer s.emitViewerLeft(c) // −1, on ANY return below
 	defer s.log.Info("ws disconnect", "channel", slug, "userId", demoUserID)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -108,21 +130,35 @@ func (s *server) handleWS(w http.ResponseWriter, r *http.Request) {
 			s.log.Error("produce failed", "err", err)
 		}
 
-		s.broadcast(slug, c, data) // fan out to everyone else
+		/*
+		 * Publish, never broadcast locally. This node's own viewers get the message
+		 * back through its Redis subscription like everyone else's — one fan-out
+		 * path, no origin-node special case, no loopback suppression.
+		 */
+		env := fanout.Envelope{SenderID: c.id, Body: string(data)}
+		if err := s.fan.Publish(ctx, c.channelID, env); err != nil {
+			s.log.Error("fanout publish failed", "err", err)
+		}
 	}
 }
 
-func (s *server) broadcast(slug string, sender *conn, msg []byte) {
+// broadcast is now the ONLY fan-out path, driven by the Redis subscription.
+func (s *server) broadcast(channelID string, env fanout.Envelope) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for c := range s.channels[slug] {
-		if c == sender {
-			continue // don't echo to the sender
+	for c := range s.channels[channelID] {
+		/*
+		 * Only the origin node holds the sender's socket; other nodes find no match
+		 * and fan out to everyone. The sender's client already showed the message
+		 * optimistically (chat-mvp/04), so echoing it back would duplicate it.
+		 */
+		if c.id == env.SenderID {
+			continue
 		}
 
 		select {
-		case c.send <- msg: // queue in their send buffer
+		case c.send <- []byte(env.Body): // queue in their send buffer
 		default: // send buffer FULL = slow client -> drop (ADR-0018)
 		}
 	}
@@ -154,37 +190,43 @@ func (s *server) emitViewerLeft(c *conn) {
 	}
 }
 
-func (s *server) register(slug string, c *conn) {
+func (s *server) register(c *conn) (first bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.channels[slug] == nil {
-		s.channels[slug] = make(map[*conn]struct{})
+	if s.channels[c.channelID] == nil {
+		s.channels[c.channelID] = make(map[*conn]struct{})
+		first = true
 	}
 
-	s.channels[slug][c] = struct{}{}
+	s.channels[c.channelID][c] = struct{}{}
+
+	return first
 }
 
-func (s *server) unregister(slug string, c *conn) {
+func (s *server) unregister(c *conn) (last bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	delete(s.channels[slug], c)
+	delete(s.channels[c.channelID], c)
 
-	if len(s.channels[slug]) == 0 {
-		delete(s.channels, slug)
+	if len(s.channels[c.channelID]) == 0 {
+		delete(s.channels, c.channelID)
+		return true
 	}
+
+	return false
 }
 
-func (s *server) closeChannel(slug string) {
+func (s *server) closeChannel(channelID string) {
 	s.mu.RLock()
-	conns := make([]*conn, 0, len(s.channels[slug]))
+	conns := make([]*conn, 0, len(s.channels[channelID]))
 
-	for c := range s.channels[slug] {
+	for c := range s.channels[channelID] {
 		conns = append(conns, c)
 	}
 
 	s.mu.RUnlock()
-	s.log.Info("force-closing channel", "slug", slug, "conns", len(conns))
+	s.log.Info("force-closing channel", "channelID", channelID, "conns", len(conns))
 
 	for _, c := range conns {
 		_ = c.ws.Close(websocket.StatusGoingAway, "stream ended")

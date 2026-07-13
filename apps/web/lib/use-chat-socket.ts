@@ -2,9 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const CHAT_WS_URL =
-  process.env.NEXT_PUBLIC_CHAT_WS_URL ?? "ws://localhost:8081";
-
 export type ChatMessage = {
   id: string; // client-local, for React keys only — NOT the server's messageId
   body: string;
@@ -13,6 +10,18 @@ export type ChatMessage = {
 
 const NOT_LIVE = 1008; // StatusPolicyViolation — channel isn't live
 const STREAM_ENDED = 1001; // StatusGoingAway — stream ended, force-closed
+
+/**
+ * Which gateway node this tab talks to. `?node=ws://localhost:8083` overrides the
+ * default — chat-multi-node runs N gateway nodes, and a per-tab query param is all the
+ * "ingress" we want: a real load balancer with sticky sessions would hide the cross-node
+ * fan-out split the epic exists to expose. Called inside connect(), not at module scope —
+ * `window` doesn't exist during SSR.
+ */
+const chatWsURL = () =>
+  new URLSearchParams(window.location.search).get("node") ??
+  process.env.NEXT_PUBLIC_CHAT_WS_URL ??
+  "ws://localhost:8081";
 
 /**
  * Owns the chat socket for one channel. `enabled` gates on liveness: an offline
@@ -30,7 +39,7 @@ export const useChatSocket = (slug: string, enabled: boolean) => {
     }
 
     const connect = () => {
-      const ws = new WebSocket(`${CHAT_WS_URL}/ws/${slug}`);
+      const ws = new WebSocket(`${chatWsURL()}/ws/${slug}`);
       wsRef.current = ws;
 
       ws.onopen = () => {

@@ -44,6 +44,11 @@ infra-ps:
 infra-logs service="":
 	docker compose -f infra/docker-compose.yaml logs -f {{service}}
 
+# redis-cli inside the container (no host install needed). Bare = interactive REPL; or pass a
+# command: `just infra-redis PSUBSCRIBE 'chat:fanout:*'` to watch cross-node fan-out envelopes.
+infra-redis *args:
+	docker compose -f infra/docker-compose.yaml exec redis redis-cli {{args}}
+
 # Generate TypeScript types from the Avro schemas into packages/schemas/generated/.
 codegen-schemas:
 	bun --cwd packages/schemas codegen
@@ -107,9 +112,18 @@ identity-go-live slug="alices-channel":
 identity-end-stream slug="alices-channel":
 	curl -s -X POST localhost:3100/channels/{{slug}}/end-stream -w '\n%{http_code}\n'
 
-# Run the chat WebSocket gateway: HTTP/WS on :8081. Needs infra + a live channel (`identity-go-live`).
-chat-dev:
-	cd services/chat && go run .
+# Run the chat WebSocket gateway on :8081 (or `just chat-dev 8083` for a second node). Needs infra + a live channel (`identity-go-live`).
+chat-dev port="8081":
+	cd services/chat && PORT={{port}} go run .
+
+# NOT :8082 — that port is analytics' Ktor query API. Both nodes replay the lifecycle
+# topics independently (unique group id per boot), so both gate liveness correctly — but
+# each keeps its OWN fan-out registry in memory, so a message on one node never reaches
+# viewers on the other. That split is the point of chat-multi-node/01; Redis closes it in 02.
+# Point a tab at node B with ?node=ws://localhost:8083.
+# Run two gateway nodes side by side (:8081, :8083) against the same Kafka. Ctrl-C stops both.
+chat-cluster:
+	cd services/chat && (PORT=8081 go run . & PORT=8083 go run . & wait)
 
 # Run the analytics Kafka Streams topology + Ktor query API on :8082. Needs infra + presence events.
 analytics-dev:

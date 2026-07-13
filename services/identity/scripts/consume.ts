@@ -10,9 +10,26 @@
  * rebalance handling — when Pulse grows a real consumer it will look nothing
  * like this. The point here is only to make the wire-format human-readable.
  */
-import { Kafka } from "kafkajs";
+import { CompressionCodecs, CompressionTypes, Kafka } from "kafkajs";
 import { config } from "../src/config";
 import { registry } from "../src/registry";
+
+/**
+ * Compression is chosen by the PRODUCER but must be understood by the CONSUMER —
+ * it's stamped in the record-batch header, not negotiated. `chat`'s Go producer
+ * compresses with zstd (producer.go), which librdkafka and the JVM client speak
+ * natively but KafkaJS does not: it ships gzip only and throws
+ * `KafkaJSNotImplemented: ZSTD compression not implemented` on anything else.
+ * Registering a codec here is what lets a TypeScript tool read a topic a Go
+ * service wrote. Bun has zstd in its runtime, so this needs no dependency — the
+ * published `@kafkajs/zstd` wraps a node-gyp addon that won't build under Bun.
+ */
+CompressionCodecs[CompressionTypes.ZSTD] = () => ({
+  compress: ({ buffer }: { buffer: Buffer }) =>
+    Promise.resolve(Bun.zstdCompressSync(buffer)),
+  decompress: (buffer: Buffer) =>
+    Promise.resolve(Bun.zstdDecompressSync(buffer)),
+});
 
 const topic = process.argv[2] ?? "stream.started.v1";
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"pulse/chat/internal/consumer"
+	"pulse/chat/internal/fanout"
 	"pulse/chat/internal/producer"
 	"syscall"
 	"time"
@@ -51,8 +52,20 @@ func main() {
 	defer cons.Close()
 	go cons.Run()
 
-	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod, cons: cons}
+	redisURL := getenv("REDIS_URL", "redis://localhost:6379")
+
+	fan, err := fanout.New(redisURL, logger)
+	if err != nil {
+		logger.Error("fan init failed", "err", err)
+		os.Exit(1)
+	}
+	defer fan.Close()
+
+	s := &server{channels: make(map[string]map[*conn]struct{}), log: logger, prod: prod, cons: cons, fan: fan}
 	cons.OnEnded(s.closeChannel)
+	fan.OnMessage(s.broadcast)
+	go fan.Run()
+
 	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
 
 	srv := &http.Server{Addr: ":" + port, Handler: mux}

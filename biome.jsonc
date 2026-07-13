@@ -5,6 +5,10 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
+  "javascript": {
+    // Bun is the runtime for every TS package here (ADR-0006), so its global is real.
+    "globals": ["Bun"]
+  },
   "linter": {
     "rules": {
       "style": {
