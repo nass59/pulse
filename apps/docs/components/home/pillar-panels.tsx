@@ -76,6 +76,16 @@ const Panel = ({
 
 const REPLAY_TOTAL = 30;
 
+/**
+ * Precomputed at module scope so each bar has a stable identity (its offset)
+ * to key by — same trick as log-tape's `makeRecord`. Heights are a
+ * deterministic pseudo-random pattern, safe for SSR.
+ */
+const REPLAY_BARS = Array.from({ length: REPLAY_TOTAL }, (_, i) => ({
+  offset: i,
+  height: 30 + ((i * 37) % 60),
+}));
+
 /** Kafka — scrub the consumer offset and re-read the log. */
 const KafkaReplay = () => {
   const reduce = useReducedMotion();
@@ -83,6 +93,7 @@ const KafkaReplay = () => {
   const inView = useInView(ref, { amount: 0.3 });
   const [head, setHead] = useState(reduce ? REPLAY_TOTAL - 1 : 0);
   const [playing, setPlaying] = useState(false);
+  const autoplayed = useRef(false);
 
   useEffect(() => {
     if (!(playing && inView) || reduce) {
@@ -100,12 +111,12 @@ const KafkaReplay = () => {
     return () => clearInterval(id);
   }, [playing, inView, reduce]);
 
+  /** Autoplay is a one-shot on first entry into view. */
   useEffect(() => {
-    if (inView && !reduce && head === 0) {
+    if (inView && !reduce && !autoplayed.current) {
+      autoplayed.current = true;
       setPlaying(true);
     }
-    /** Autoplay is a one-shot on first entry — head is read, not tracked. */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView, reduce]);
 
   return (
@@ -115,15 +126,15 @@ const KafkaReplay = () => {
         re-reads every record — nothing is consumed-and-gone.
       </p>
       <div className="mt-5 flex h-16 items-end gap-[3px]">
-        {Array.from({ length: REPLAY_TOTAL }, (_, i) => (
+        {REPLAY_BARS.map((bar) => (
           <span
             className={cn(
               "flex-1 rounded-t-[2px] transition-colors duration-150",
-              i <= head ? "bg-electric-yellow" : "bg-white/15",
-              i === head && "shadow-glow-sm"
+              bar.offset <= head ? "bg-electric-yellow" : "bg-white/15",
+              bar.offset === head && "shadow-glow-sm"
             )}
-            key={i}
-            style={{ height: `${30 + ((i * 37) % 60)}%` }}
+            key={bar.offset}
+            style={{ height: `${bar.height}%` }}
           />
         ))}
       </div>
@@ -163,6 +174,12 @@ const KafkaReplay = () => {
 
 const FAN_LINES = 40;
 
+/** Endpoint y-coordinates of the fan — each doubles as its line's key. */
+const FAN_LINE_YS = Array.from(
+  { length: FAN_LINES },
+  (_, i) => 10 + i * (180 / (FAN_LINES - 1))
+);
+
 /** Go — one gateway, thousands of sockets, a goroutine each. */
 const GoFanout = () => {
   const reduce = useReducedMotion();
@@ -184,7 +201,7 @@ const GoFanout = () => {
         live connections · 1 goroutine each
       </p>
       <svg
-        aria-hidden
+        aria-hidden="true"
         className="mt-3 h-36 w-full"
         preserveAspectRatio="none"
         viewBox="0 0 320 200"
@@ -202,18 +219,18 @@ const GoFanout = () => {
           fill="none"
           r="17"
         />
-        {Array.from({ length: FAN_LINES }, (_, i) => (
+        {FAN_LINE_YS.map((y, i) => (
           <motion.line
             animate={active ? { pathLength: 1 } : { pathLength: 0 }}
             className="stroke-go-blue/50"
             initial={false}
-            key={i}
+            key={y}
             strokeWidth="1.1"
             transition={{ duration: 0.55, delay: i * 0.02, ease: "easeOut" }}
             x1="46"
             x2="300"
             y1="100"
-            y2={10 + i * (180 / (FAN_LINES - 1))}
+            y2={y}
           />
         ))}
       </svg>
@@ -230,6 +247,12 @@ const HOP_WINDOWS = [
 
 /** Sweep-line positions per tick, in percent. */
 const SWEEP_LEFT = [12, 32, 52, 72, 92];
+
+/** Presence-event tick marks along the timeline; `left` is each one's key. */
+const PRESENCE_TICKS = Array.from({ length: 14 }, (_, i) => ({
+  left: 6 + i * 6.6,
+  opacity: 0.4 + ((i * 7) % 5) * 0.12,
+}));
 
 /** Kotlin — the hopping window that computes the hero's viewer count. */
 const KotlinHopping = () => {
@@ -282,14 +305,11 @@ const KotlinHopping = () => {
           </div>
         ))}
         <div aria-hidden className="absolute inset-x-0 bottom-4 h-2">
-          {Array.from({ length: 14 }, (_, i) => (
+          {PRESENCE_TICKS.map((mark) => (
             <span
               className="absolute bottom-0 h-2 w-1 rounded-[1px] bg-white/40"
-              key={i}
-              style={{
-                left: `${6 + i * 6.6}%`,
-                opacity: 0.4 + ((i * 7) % 5) * 0.12,
-              }}
+              key={mark.left}
+              style={{ left: `${mark.left}%`, opacity: mark.opacity }}
             />
           ))}
         </div>
@@ -309,7 +329,7 @@ const KotlinHopping = () => {
 };
 
 export const PillarPanels = () => (
-  <section className="mx-auto max-w-6xl px-6 py-[11vh]" id="pillars">
+  <section className="mx-auto max-w-6xl px-6 py-16 lg:py-[11vh]" id="pillars">
     <p className="font-medium font-mono text-[11px] text-olive uppercase tracking-[0.14em]">
       {"// the machinery you just rode"}
     </p>

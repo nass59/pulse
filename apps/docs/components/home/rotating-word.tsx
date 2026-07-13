@@ -45,27 +45,30 @@ export const RotatingWord = () => {
   }, [reduce]);
 
   return (
-    <span
-      aria-label={WORDS.map((w) => w.text).join(", ")}
-      className="inline-grid overflow-hidden align-baseline"
-    >
-      {WORDS.map((word, i) => (
-        <span
-          aria-hidden={i !== index}
-          className={cn(
-            "col-start-1 row-start-1 transition-[transform,opacity,filter] duration-400 ease-out",
-            word.className,
-            i === index && visible
-              ? "translate-y-0 opacity-100 blur-none"
-              : "translate-y-[0.35em] opacity-0 blur-[3px]",
-            /** idle slots park above so the next word always enters upward */
-            i !== index && "-translate-y-[0.35em]"
-          )}
-          key={word.text}
-        >
-          {word.text}
-        </span>
-      ))}
-    </span>
+    <>
+      {/* Screen readers hear all three languages; the animation is visual-only. */}
+      <span className="sr-only">{WORDS.map((w) => w.text).join(", ")}</span>
+      <span
+        aria-hidden="true"
+        className="inline-grid overflow-hidden align-baseline"
+      >
+        {WORDS.map((word, i) => (
+          <span
+            className={cn(
+              "col-start-1 row-start-1 transition-[transform,opacity,filter] duration-400 ease-out",
+              word.className,
+              i === index && visible
+                ? "translate-y-0 opacity-100 blur-none"
+                : "translate-y-[0.35em] opacity-0 blur-[3px]",
+              /** idle slots park above so the next word always enters upward */
+              i !== index && "-translate-y-[0.35em]"
+            )}
+            key={word.text}
+          >
+            {word.text}
+          </span>
+        ))}
+      </span>
+    </>
   );
 };

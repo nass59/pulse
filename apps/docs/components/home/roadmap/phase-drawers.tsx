@@ -55,6 +55,8 @@ const ConceptChip = ({ item }: { item: PhaseItem }) => {
       {pending && (
         <span className="size-1.5 animate-pulse rounded-full bg-electric-yellow" />
       )}
+      {/* done but unlinked — the capability shipped, its write-up is coming */}
+      {item.done && <Check className="size-3.5" />}
       {item.label}
     </span>
   );

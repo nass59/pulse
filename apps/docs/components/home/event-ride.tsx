@@ -228,16 +228,16 @@ export const EventRide = () => {
   return (
     <>
       {/* HERO — become an event */}
-      <header className="mx-auto grid min-h-[92vh] max-w-6xl items-center gap-10 px-6 pt-28 pb-10 lg:grid-cols-[6fr_5fr] lg:gap-14">
+      <header className="mx-auto grid max-w-6xl items-center gap-12 px-6 pt-24 pb-16 lg:min-h-[92vh] lg:grid-cols-[6fr_5fr] lg:gap-14 lg:pt-28 lg:pb-10 xl:max-w-[88rem]">
         <div>
           <p className="font-medium font-mono text-[11px] text-olive uppercase tracking-[0.14em]">
             Pulse · learning in public
           </p>
-          <h1 className="mt-4 text-balance font-bold text-4xl text-white leading-[1.05] tracking-[-0.03em] sm:text-5xl">
+          <h1 className="mt-4 text-balance font-bold text-4xl text-white leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-6xl xl:text-7xl">
             Learning <span className="ds-mark">Kafka</span> by building the real
             thing — in <RotatingWord />
           </h1>
-          <p className="mt-5 max-w-md text-balance text-white/65 leading-relaxed">
+          <p className="mt-5 max-w-md text-balance text-white/65 leading-relaxed lg:mt-7 lg:max-w-lg lg:text-lg">
             This platform runs. Prove it to yourself: send a chat message, then
             scroll — the page follows{" "}
             <em className="text-electric-yellow not-italic">your</em> payload
@@ -254,7 +254,7 @@ export const EventRide = () => {
               : "① type something ② hit send ③ scroll"}
           </p>
         </div>
-        <div className="w-full max-w-sm justify-self-center">
+        <div className="w-full max-w-sm justify-self-center lg:max-w-md xl:max-w-lg">
           <MiniChannelApp
             className="shadow-[0_30px_80px_-25px_rgba(0,0,0,0.8),0_0_40px_-20px_var(--color-electric-yellow)]"
             interactive
@@ -277,7 +277,7 @@ export const EventRide = () => {
             const a = ACCENTS[s.accent];
             return (
               <section
-                className="relative flex min-h-[85vh] flex-col justify-center border-white/10 border-l pl-8"
+                className="relative flex flex-col justify-center border-white/10 border-l py-14 pl-8 lg:min-h-[85vh] lg:py-0"
                 data-idx={i}
                 id={s.id}
                 key={s.id}
