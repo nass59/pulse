@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
 import { type ReactNode, useEffect, useState } from "react";
 
@@ -282,8 +282,8 @@ export const EventRide = () => {
           </p>
           <p
             className={cn(
-              "mt-7 font-mono text-[11px] tracking-[0.14em] transition-colors duration-300",
-              sent ? "text-electric-yellow" : "text-white/45"
+              "mt-7 font-mono text-[12.5px] tracking-[0.14em] transition-colors duration-300",
+              sent ? "text-electric-yellow" : "text-white/80"
             )}
           >
             {sent
@@ -436,7 +436,7 @@ export const EventRide = () => {
               ) : (
                 <div className="flex min-h-48 items-center justify-center gap-2.5 font-mono text-accent-green text-sm">
                   <span className="grid size-7 place-items-center rounded-full border-[1.5px] border-accent-green">
-                    <Check className="size-3.5" />
+                    <IconCheck className="size-3.5" />
                   </span>
                   round trip complete
                 </div>

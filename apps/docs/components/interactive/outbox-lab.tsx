@@ -1,6 +1,13 @@
 "use client";
 
-import { Check, Database, Radio, TriangleAlert, X, Zap } from "lucide-react";
+import {
+  IconAlertTriangle,
+  IconBolt,
+  IconBroadcast,
+  IconCheck,
+  IconDatabase,
+  IconX,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type ReactNode, useState } from "react";
 
@@ -179,12 +186,12 @@ const headlineFor = (kafkaKind: StateKind, consistent: boolean): string => {
 
 const StateIcon = ({ kind }: { kind: StateKind }) => {
   if (kind === "ok") {
-    return <Check className="size-4" />;
+    return <IconCheck className="size-4" />;
   }
   if (kind === "dupe") {
-    return <TriangleAlert className="size-4" />;
+    return <IconAlertTriangle className="size-4" />;
   }
-  return <X className="size-4" />;
+  return <IconX className="size-4" />;
 };
 
 /** One end-state chip — Postgres or Kafka after the dust settles. */
@@ -235,7 +242,7 @@ export const OutboxLab = () => {
   return (
     <div className="not-prose my-6 rounded-2xl border bg-card p-5">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Zap className="size-4 text-electric-yellow" />
+        <IconBolt className="size-4 text-electric-yellow" />
         <span className="ds-eyebrow text-[10px]">
           pick a write strategy, then a moment to crash
         </span>
@@ -289,12 +296,12 @@ export const OutboxLab = () => {
         >
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <EndStateChip
-              icon={<Database className="size-3.5" />}
+              icon={<IconDatabase className="size-3.5" />}
               label="Postgres · the truth"
               state={active.postgres}
             />
             <EndStateChip
-              icon={<Radio className="size-3.5" />}
+              icon={<IconBroadcast className="size-3.5" />}
               label="Kafka · what consumers saw"
               state={active.kafka}
             />

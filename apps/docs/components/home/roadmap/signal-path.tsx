@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 
@@ -37,7 +37,7 @@ const Chip = ({ item }: { item: PhaseItem }) => {
         )}
         href={item.href}
       >
-        <Check className="size-3" />
+        <IconCheck className="size-3" />
         {item.label}
       </Link>
     );

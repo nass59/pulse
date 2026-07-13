@@ -1,4 +1,9 @@
-import { ArrowRight, Inbox, ScrollText, Terminal } from "lucide-react";
+import {
+  IconArrowRight,
+  IconInbox,
+  IconScript,
+  IconTerminal2,
+} from "@tabler/icons-react";
 
 import { DiagramFrame } from "@/components/docs/diagram";
 import { cn } from "@/lib/utils";
@@ -203,14 +208,14 @@ export const ProducerLogConsumer = () => (
   <DiagramFrame caption="A producer only ever appends — to the right end. Consumers read from whatever offset they're at, at their own speed, and reading changes nothing. The record stays put for the next reader.">
     <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
       <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border px-4 py-3 text-center">
-        <Terminal className="size-4 text-muted-foreground" />
+        <IconTerminal2 className="size-4 text-muted-foreground" />
         <span className="font-medium text-sm">producer</span>
         <span className="font-mono text-[10px] text-muted-foreground">
           appends →
         </span>
       </div>
 
-      <ArrowRight className="mx-auto size-4 rotate-90 text-muted-foreground sm:rotate-0" />
+      <IconArrowRight className="mx-auto size-4 rotate-90 text-muted-foreground sm:rotate-0" />
 
       <div className="flex-1">
         <div className="mb-1 flex items-center justify-between px-1">
@@ -230,7 +235,7 @@ export const ProducerLogConsumer = () => (
               )}
               key={o}
             >
-              <ScrollText className="size-3.5 opacity-60" />
+              <IconScript className="size-3.5 opacity-60" />
               <span className="mt-0.5 text-[10px]">{o}</span>
             </li>
           ))}
@@ -241,10 +246,10 @@ export const ProducerLogConsumer = () => (
         </div>
       </div>
 
-      <ArrowRight className="mx-auto size-4 rotate-90 text-muted-foreground sm:rotate-0" />
+      <IconArrowRight className="mx-auto size-4 rotate-90 text-muted-foreground sm:rotate-0" />
 
       <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border px-4 py-3 text-center">
-        <Inbox className="size-4 text-muted-foreground" />
+        <IconInbox className="size-4 text-muted-foreground" />
         <span className="font-medium text-sm">consumer</span>
         <span className="font-mono text-[10px] text-muted-foreground">
           reads at its offset
@@ -268,7 +273,7 @@ export const RoundTrip = () => (
     <div className="grid items-stretch gap-3 sm:grid-cols-[1fr_auto_1fr]">
       <div className="rounded-xl border border-border bg-muted/30 p-3">
         <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-          <Terminal className="size-3" /> terminal A · produce
+          <IconTerminal2 className="size-3" /> terminal A · produce
         </div>
         <code className="mt-2 block font-mono text-[11px] text-foreground leading-relaxed">
           echo "hello pulse" |<br />
@@ -278,7 +283,7 @@ export const RoundTrip = () => (
 
       <div className="flex flex-col items-center justify-center gap-1">
         <div className="flex size-11 items-center justify-center rounded-xl border border-electric-yellow/60 bg-electric-yellow/10">
-          <ScrollText className="size-5 text-yellow-ink dark:text-electric-yellow" />
+          <IconScript className="size-5 text-yellow-ink dark:text-electric-yellow" />
         </div>
         <span className="font-mono text-[9px] text-muted-foreground">
           broker
@@ -287,7 +292,7 @@ export const RoundTrip = () => (
 
       <div className="rounded-xl border border-border bg-muted/30 p-3">
         <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-          <Inbox className="size-3" /> terminal B · consume
+          <IconInbox className="size-3" /> terminal B · consume
         </div>
         <code className="mt-2 block font-mono text-[11px] text-foreground leading-relaxed">
           kcat -C -t pulse.smoke.test
@@ -295,7 +300,7 @@ export const RoundTrip = () => (
           -o beginning -e
         </code>
         <div className="mt-2 flex items-center gap-1.5 font-mono text-[11px] text-accent-green">
-          <ArrowRight className="size-3" /> hello pulse
+          <IconArrowRight className="size-3" /> hello pulse
         </div>
       </div>
     </div>

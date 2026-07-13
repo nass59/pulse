@@ -1,4 +1,9 @@
-import { BookOpen, type LucideIcon, Rocket, Workflow } from "lucide-react";
+import {
+  IconBook,
+  IconRocket,
+  IconSitemap,
+  type TablerIcon,
+} from "@tabler/icons-react";
 
 /**
  * The Kafka pillar's path spine (ADR-0011, reorganized by ADR-0021): a short,
@@ -12,7 +17,7 @@ export type LearnStep = {
   /** One-line, plain-language promise of the page. */
   blurb: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   /** Three-ish takeaways, shown on the index card. */
   takeaways: string[];
   title: string;
@@ -24,7 +29,7 @@ export const LEARN_STEPS: LearnStep[] = [
     blurb:
       "The problem it solves: every service wants to know when something happened, and wiring them point-to-point doesn't scale.",
     href: "/kafka/path/what-is-kafka",
-    icon: BookOpen,
+    icon: IconBook,
     takeaways: [
       "Why N×M point-to-point integrations collapse",
       "“Almost everything is an event”",
@@ -36,7 +41,7 @@ export const LEARN_STEPS: LearnStep[] = [
     blurb:
       "The mechanism, four ideas deep: the append-only log, partitions, offsets, and consumer groups — with a live diagram for each.",
     href: "/kafka/path/how-it-works",
-    icon: Workflow,
+    icon: IconSitemap,
     takeaways: [
       "The log: append-only, replay-friendly, not a queue",
       "Partitions: the unit of parallelism and ordering",
@@ -48,7 +53,7 @@ export const LEARN_STEPS: LearnStep[] = [
     blurb:
       "Hands-on: bring a real broker up with Docker and round-trip your first message with kcat — the exact Pulse Phase 0 setup.",
     href: "/kafka/path/getting-started",
-    icon: Rocket,
+    icon: IconRocket,
     takeaways: [
       "docker compose up → a healthy single-node broker",
       "Produce and consume with kcat, the universal Kafka REPL",

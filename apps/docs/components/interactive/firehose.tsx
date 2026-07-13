@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MessageSquare, UserPlus } from "lucide-react";
+import { IconHeart, IconMessage, IconUserPlus } from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -38,20 +38,20 @@ const CHAT_LINES = [
 
 const KIND_STYLE: Record<
   Kind,
-  { icon: typeof Heart; ring: string; text: string }
+  { icon: typeof IconHeart; ring: string; text: string }
 > = {
   chat: {
-    icon: MessageSquare,
+    icon: IconMessage,
     ring: "border-white/15 bg-white/[0.06] text-white/85",
     text: "",
   },
   react: {
-    icon: Heart,
+    icon: IconHeart,
     ring: "border-electric-yellow/40 bg-electric-yellow/10 text-electric-yellow",
     text: "",
   },
   viewer: {
-    icon: UserPlus,
+    icon: IconUserPlus,
     ring: "border-accent-green/40 bg-accent-green/10 text-accent-green",
     text: "+1 viewer",
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Shuffle } from "lucide-react";
+import { IconArrowsShuffle, IconSend } from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useState } from "react";
 
@@ -203,10 +203,10 @@ export const PartitionRouter = () => {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button onClick={() => send(selected)} size="sm">
-          <Send /> Send {selected} event
+          <IconSend /> IconSend {selected} event
         </Button>
         <Button onClick={scatter} size="sm" variant="outline">
-          <Shuffle /> One from every match
+          <IconArrowsShuffle /> One from every match
         </Button>
       </div>
 

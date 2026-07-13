@@ -1,10 +1,10 @@
 import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  Compass,
-  Sparkles,
-} from "lucide-react";
+  IconArrowRight,
+  IconArrowUpRight,
+  IconCheck,
+  IconCompass,
+  IconSparkles,
+} from "@tabler/icons-react";
 import Link from "next/link";
 
 import { Eyebrow } from "@/components/docs/eyebrow";
@@ -96,7 +96,7 @@ const StepCard = ({
           <h3 className="font-semibold text-foreground text-xl tracking-[-0.01em]">
             {step.title}
           </h3>
-          <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover/card:translate-x-0.5 group-hover/card:text-foreground" />
+          <IconArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover/card:translate-x-0.5 group-hover/card:text-foreground" />
         </div>
         <p className="mt-1.5 text-muted-foreground text-sm leading-relaxed">
           {step.blurb}
@@ -107,7 +107,7 @@ const StepCard = ({
               className="flex items-start gap-2 text-foreground/80 text-xs"
               key={t}
             >
-              <Check className={cn("mt-0.5 size-3 shrink-0", a.check)} />
+              <IconCheck className={cn("mt-0.5 size-3 shrink-0", a.check)} />
               {t}
             </li>
           ))}
@@ -143,13 +143,13 @@ const LiveConceptCard = ({
         >
           <Icon className="size-5" />
         </span>
-        <ArrowUpRight className="size-4 text-muted-foreground transition-all group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 group-hover/card:text-foreground" />
+        <IconArrowUpRight className="size-4 text-muted-foreground transition-all group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 group-hover/card:text-foreground" />
       </div>
       <h3 className="mt-4 flex flex-wrap items-center gap-2 font-semibold text-foreground text-lg tracking-[-0.01em]">
         {concept.title}
         {concept.interactive && (
           <span className="inline-flex items-center gap-1 rounded-pill border border-accent-purple/40 px-2 py-0.5 font-medium font-mono text-[10px] text-accent-purple uppercase tracking-[0.08em]">
-            <Sparkles className="size-2.5" />
+            <IconSparkles className="size-2.5" />
             interactive
           </span>
         )}
@@ -213,7 +213,7 @@ export const PillarOverview = ({ pillar }: { pillar: PillarAccent }) => {
             a.note
           )}
         >
-          <Compass className={cn("mt-0.5 size-4 shrink-0", a.noteIcon)} />
+          <IconCompass className={cn("mt-0.5 size-4 shrink-0", a.noteIcon)} />
           <p className="text-foreground/80 text-sm leading-relaxed">
             {spec.note}
           </p>

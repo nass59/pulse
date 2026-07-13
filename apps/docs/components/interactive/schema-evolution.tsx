@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  Check,
-  Minus,
-  PencilLine,
-  Plus,
-  Replace,
-  ShieldCheck,
-  X,
-} from "lucide-react";
+  IconCheck,
+  IconMinus,
+  IconPencil,
+  IconPlus,
+  IconReplace,
+  IconShieldCheck,
+  IconX,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type ReactNode, useState } from "react";
 
@@ -71,7 +71,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "add-optional",
     label: "Add optional field",
-    icon: <Plus />,
+    icon: <IconPlus />,
     compatible: true,
     diff: [
       ...same(),
@@ -89,7 +89,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "add-required",
     label: "Add required field",
-    icon: <Plus />,
+    icon: <IconPlus />,
     compatible: false,
     diff: [
       ...same(),
@@ -107,7 +107,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "remove",
     label: "Remove a field",
-    icon: <Minus />,
+    icon: <IconMinus />,
     compatible: true,
     diff: same().map((l) =>
       l.name === "body" ? { ...l, kind: "remove" as const } : l
@@ -123,7 +123,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "rename",
     label: "Rename a field",
-    icon: <PencilLine />,
+    icon: <IconPencil />,
     compatible: false,
     diff: same().flatMap((l) =>
       l.name === "userId"
@@ -145,7 +145,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "retype",
     label: "Change a field's type",
-    icon: <Replace />,
+    icon: <IconReplace />,
     compatible: false,
     diff: same().map((l) =>
       l.name === "body"
@@ -193,7 +193,7 @@ export const SchemaEvolution = () => {
   return (
     <div className="not-prose my-6 rounded-2xl border bg-card p-5">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <ShieldCheck className="size-4 text-electric-yellow" />
+        <IconShieldCheck className="size-4 text-electric-yellow" />
         <span className="ds-eyebrow text-[10px]">
           propose a change to chat.messages.v1-value
         </span>
@@ -272,9 +272,9 @@ export const SchemaEvolution = () => {
             )}
           >
             {active.compatible ? (
-              <Check className="size-3.5" />
+              <IconCheck className="size-3.5" />
             ) : (
-              <X className="size-3.5" />
+              <IconX className="size-3.5" />
             )}
           </span>
           <div>

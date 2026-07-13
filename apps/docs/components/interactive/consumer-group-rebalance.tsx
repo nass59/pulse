@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, UserRound } from "lucide-react";
+import { IconMinus, IconPlus, IconUser } from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 
@@ -77,7 +77,7 @@ export const ConsumerGroupRebalance = () => {
               key={c}
             >
               <div className="mb-2 flex items-center gap-1.5">
-                <UserRound
+                <IconUser
                   className={cn("size-3.5", idle && "text-muted-foreground")}
                 />
                 <span
@@ -131,14 +131,14 @@ export const ConsumerGroupRebalance = () => {
           size="sm"
           variant="outline"
         >
-          <Minus /> Remove consumer
+          <IconMinus /> Remove consumer
         </Button>
         <Button
           disabled={size >= MAX}
           onClick={() => setSize((s) => Math.min(MAX, s + 1))}
           size="sm"
         >
-          <Plus /> Add consumer
+          <IconPlus /> Add consumer
         </Button>
       </div>
 

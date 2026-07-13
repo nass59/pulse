@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { TablerIcon } from "@tabler/icons-react";
 import {
   type Concept,
   GO_CONCEPTS,
@@ -19,7 +19,7 @@ export type PillarAccent = "kafka" | "go" | "kotlin";
 export type PathStep = {
   blurb: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   takeaways: string[];
   title: string;
 };

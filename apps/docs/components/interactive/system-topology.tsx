@@ -2,6 +2,16 @@
 
 import { EVENT_TOPICS, type EventType } from "@pulse/schemas/topics";
 import {
+  IconChartBar,
+  IconDatabase,
+  IconFingerprint,
+  IconMessages,
+  IconNetwork,
+  IconShieldCheck,
+  IconStack2,
+  type TablerIcon,
+} from "@tabler/icons-react";
+import {
   Background,
   BaseEdge,
   type Edge,
@@ -16,16 +26,6 @@ import {
   Position,
   ReactFlow,
 } from "@xyflow/react";
-import {
-  BarChart3,
-  Database,
-  Fingerprint,
-  Layers,
-  type LucideIcon,
-  MessagesSquare,
-  Network,
-  ShieldCheck,
-} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -102,7 +102,7 @@ type FlowGroup = {
 type NodeSpec = {
   flows: FlowGroup[];
   handles: HandleSpec[];
-  icon: LucideIcon;
+  icon: TablerIcon;
   id: NodeId;
   label: string;
   /** The mono sub-line on the node card. */
@@ -124,7 +124,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "Apicurio",
     meta: "registry · :8080",
     state: "live",
-    icon: ShieldCheck,
+    icon: IconShieldCheck,
     position: { x: 300, y: 0 },
     handles: [{ type: "source", position: Position.Bottom, id: "b" }],
     role: "Schema registry — the referee every service resolves Avro schemas from.",
@@ -136,7 +136,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "Postgres",
     meta: ":5432",
     state: "live",
-    icon: Database,
+    icon: IconDatabase,
     position: { x: 0, y: 130 },
     handles: [{ type: "target", position: Position.Right, id: "r" }],
     role: "identity's canonical store.",
@@ -150,7 +150,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "identity",
     meta: "service · TS · live",
     state: "live",
-    icon: Fingerprint,
+    icon: IconFingerprint,
     position: { x: 210, y: 130 },
     handles: [
       { type: "target", position: Position.Top, id: "t" },
@@ -166,7 +166,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "Redis",
     meta: ":6379",
     state: "live",
-    icon: Layers,
+    icon: IconStack2,
     position: { x: 0, y: 300 },
     handles: [{ type: "target", position: Position.Right, id: "r" }],
     role: "chat's read projection.",
@@ -180,7 +180,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "chat",
     meta: "service · Go · live",
     state: "live",
-    icon: MessagesSquare,
+    icon: IconMessages,
     position: { x: 210, y: 300 },
     handles: [
       { type: "target", position: Position.Top, id: "t" },
@@ -199,7 +199,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "Kafka",
     meta: "KRaft · :9092",
     state: "live",
-    icon: Network,
+    icon: IconNetwork,
     spine: true,
     position: { x: 480, y: 150 },
     handles: [
@@ -218,7 +218,7 @@ const NODE_SPECS: NodeSpec[] = [
     label: "analytics",
     meta: "service · Kotlin · planned",
     state: "planned",
-    icon: BarChart3,
+    icon: IconChartBar,
     position: { x: 710, y: 215 },
     handles: [{ type: "target", position: Position.Left, id: "l" }],
     role: "Kafka Streams aggregator. No external API beyond a query layer.",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 import {
   type ComponentProps,
   isValidElement,
@@ -62,7 +62,7 @@ const languageLabel = (className: string | undefined): string | null => {
  *
  * The DevLab code-block design (claude.ai/design — DevLab Design System) frames
  * the carbon surface as an editor window: a title bar with macOS traffic-light
- * dots, the fence's language as a mono olive label, and Copy living in the bar.
+ * dots, the fence's language as a mono olive label, and IconCopy living in the bar.
  *
  * Token colours come from Shiki (`@shikijs/rehype`, build-time — ADR-0010),
  * which hands this component a pre-highlighted `<code>` plus its own `className`
@@ -99,7 +99,7 @@ export const CodeBlock = ({
 
   return (
     <div className="not-prose my-6 overflow-hidden rounded-xl border border-carbon-600 bg-carbon-800 dark:bg-black">
-      {/* Window title bar — traffic lights, language label, Copy. */}
+      {/* Window title bar — traffic lights, language label, IconCopy. */}
       <div className="relative flex items-center justify-between border-carbon-600 border-b bg-carbon-850 px-3.5 py-2.5">
         <div aria-hidden="true" className="flex items-center gap-[7px]">
           <span className="block size-[11px] rounded-full bg-[#FF5F57]" />
@@ -117,7 +117,11 @@ export const CodeBlock = ({
           onClick={copy}
           type="button"
         >
-          {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+          {copied ? (
+            <IconCheck className="size-3" />
+          ) : (
+            <IconCopy className="size-3" />
+          )}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>

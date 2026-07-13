@@ -1,5 +1,10 @@
-import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Combine, Waypoints, Workflow } from "lucide-react";
+import type { TablerIcon } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconLayersIntersect,
+  IconRoute,
+  IconSitemap,
+} from "@tabler/icons-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -10,7 +15,7 @@ type Pillar = {
   accent: Accent;
   blurb: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   title: string;
 };
 
@@ -26,7 +31,7 @@ const PILLARS: Pillar[] = [
     blurb:
       "The backbone. From zero — the log, partitions, consumer groups — to the patterns Pulse runs on top: the outbox, server-authored events, schema evolution.",
     href: "/kafka",
-    icon: Workflow,
+    icon: IconSitemap,
     accent: "kafka",
   },
   {
@@ -34,7 +39,7 @@ const PILLARS: Pillar[] = [
     blurb:
       "The gateway language. Errors as values, a goroutine per connection, and a cgo-backed Kafka client — the ideas behind the chat service that holds thousands of live sockets.",
     href: "/go",
-    icon: Waypoints,
+    icon: IconRoute,
     accent: "go",
   },
   {
@@ -42,7 +47,7 @@ const PILLARS: Pillar[] = [
     blurb:
       "Stream processing, live. The analytics service on Kafka Streams — hopping windows and state stores computing the viewer count you watched tick above.",
     href: "/kotlin",
-    icon: Combine,
+    icon: IconLayersIntersect,
     accent: "kotlin",
   },
 ];
@@ -91,7 +96,7 @@ export const Tiers = () => (
             <Icon className={cn("size-5", a.icon)} />
             <h3 className="mt-4 flex items-center gap-1.5 font-semibold text-foreground text-lg tracking-[-0.01em]">
               {pillar.title}
-              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-[translate,opacity] group-hover/tier:translate-x-0.5 group-hover/tier:opacity-100" />
+              <IconArrowRight className="size-4 text-muted-foreground opacity-0 transition-[translate,opacity] group-hover/tier:translate-x-0.5 group-hover/tier:opacity-100" />
             </h3>
             <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
               {pillar.blurb}

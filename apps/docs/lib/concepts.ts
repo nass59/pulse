@@ -1,21 +1,21 @@
 import {
-  Columns3,
-  Combine,
-  Database,
-  HardDrive,
-  HeartPulse,
-  type LucideIcon,
-  Mailbox,
-  Network,
-  ScrollText,
-  Share2,
-  ShieldCheck,
-  SlidersHorizontal,
-  Stamp,
-  Timer,
-  UsersRound,
-  Wand2,
-} from "lucide-react";
+  IconAdjustmentsHorizontal,
+  IconColumns3,
+  IconDatabase,
+  IconDeviceFloppy,
+  IconHeartbeat,
+  IconLayersIntersect,
+  IconMailbox,
+  IconNetwork,
+  IconRubberStamp,
+  IconScript,
+  IconShare2,
+  IconShieldCheck,
+  IconStopwatch,
+  IconUsersGroup,
+  IconWand,
+  type TablerIcon,
+} from "@tabler/icons-react";
 
 /**
  * The concept catalogues, split per pillar (ADR-0021). Each pillar's overview
@@ -34,7 +34,7 @@ export type Concept = {
   blurb: string;
   /** Present ⇒ the page exists ⇒ the concept is `live`. */
   href?: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   /** Carries an interactive widget (earns the dynamics-shaped filter). */
   interactive?: boolean;
   title: string;
@@ -50,58 +50,58 @@ export const KAFKA_CONCEPTS: Concept[] = [
     title: "The log & offsets",
     blurb: "Why Kafka is a log, not a queue — and replay from the start.",
     href: "/kafka/concepts/the-log-and-offsets",
-    icon: ScrollText,
+    icon: IconScript,
   },
   {
     title: "Partitions & ordering",
     blurb: "The unit of parallelism — and its ordering price.",
     href: "/kafka/concepts/partitions-and-ordering",
-    icon: Columns3,
+    icon: IconColumns3,
   },
   {
     title: "Consumer groups",
     blurb: "Many readers, each message once — and state rebuilt from the log.",
     href: "/kafka/concepts/consumer-groups",
-    icon: UsersRound,
+    icon: IconUsersGroup,
   },
   {
     title: "KRaft mode",
     blurb: "Kafka without ZooKeeper — a broker that elects itself controller.",
     href: "/kafka/concepts/kraft-mode",
-    icon: Network,
+    icon: IconNetwork,
     interactive: true,
   },
   {
     title: "Auto topic creation",
     blurb: "The convenience that quietly eats a typo in production.",
     href: "/kafka/concepts/auto-topic-creation",
-    icon: Wand2,
+    icon: IconWand,
   },
   {
     title: "Explicit topic provisioning",
     blurb: "Partition count is a contract — a 1-partition default lies.",
     href: "/kafka/concepts/explicit-topic-provisioning",
-    icon: SlidersHorizontal,
+    icon: IconAdjustmentsHorizontal,
   },
   {
     title: "Schema compatibility",
     blurb: "Evolving events without breaking readers.",
     href: "/kafka/concepts/schema-compatibility",
-    icon: ShieldCheck,
+    icon: IconShieldCheck,
     interactive: true,
   },
   {
     title: "Transactional outbox",
     blurb: "Postgres truth, Kafka notification — atomically.",
     href: "/kafka/concepts/transactional-outbox",
-    icon: Mailbox,
+    icon: IconMailbox,
     interactive: true,
   },
   {
     title: "Server-authored events",
     blurb: "The client supplies a body; the gateway stamps the truth.",
     href: "/kafka/concepts/server-authored-events",
-    icon: Stamp,
+    icon: IconRubberStamp,
   },
 ];
 
@@ -111,7 +111,7 @@ export const GO_CONCEPTS: Concept[] = [
     title: "WebSocket fan-out",
     blurb: "Best-effort delivery to live tabs; the log is the durable record.",
     href: "/go/concepts/websocket-fanout",
-    icon: Share2,
+    icon: IconShare2,
   },
 ];
 
@@ -124,13 +124,13 @@ export const BUILD_CONCEPTS: Concept[] = [
     title: "Healthchecks",
     blurb: "“Started” isn't “ready” — and the grace window between them.",
     href: "/build/architecture/healthchecks",
-    icon: HeartPulse,
+    icon: IconHeartbeat,
   },
   {
     title: "Named volumes",
     blurb: "How Postgres data outlives a container teardown.",
     href: "/build/architecture/named-volumes",
-    icon: HardDrive,
+    icon: IconDeviceFloppy,
   },
 ];
 
@@ -143,16 +143,16 @@ export const KOTLIN_COMING_CONCEPTS: Concept[] = [
   {
     title: "Windowed aggregates",
     blurb: "Counting concurrent viewers over a sliding window of events.",
-    icon: Timer,
+    icon: IconStopwatch,
   },
   {
     title: "State stores",
     blurb: "RocksDB-backed local state, recoverable by replay.",
-    icon: Database,
+    icon: IconDatabase,
   },
   {
     title: "Stream–table joins",
     blurb: "Enriching a stream from changing state.",
-    icon: Combine,
+    icon: IconLayersIntersect,
   },
 ];

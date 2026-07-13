@@ -1,9 +1,9 @@
 import {
-  ArrowRight,
-  Boxes,
-  type LucideIcon,
-  Map as MapIcon,
-} from "lucide-react";
+  IconArrowRight,
+  IconBoxMultiple,
+  IconMap,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import Link from "next/link";
 
 import { Eyebrow } from "@/components/docs/eyebrow";
@@ -20,7 +20,7 @@ import { FullBleed } from "@/components/docs/full-bleed";
 type Area = {
   blurb: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   title: string;
 };
 
@@ -30,14 +30,14 @@ const AREAS: Area[] = [
     blurb:
       "The system topology and the infrastructure under it — what runs, what talks to what, and what's still on the drawing board. Healthchecks and named volumes live here too.",
     href: "/build/architecture",
-    icon: Boxes,
+    icon: IconBoxMultiple,
   },
   {
     title: "Journey",
     blurb:
       "The build by phase: lessons unlocked, issues closed, and the runnable proofs for each epic — foundations, identity, and chat so far.",
     href: "/build/journey/foundations",
-    icon: MapIcon,
+    icon: IconMap,
   },
 ];
 
@@ -66,7 +66,7 @@ export const BuildHub = () => (
               <Icon className="size-5 text-yellow-ink dark:text-electric-yellow" />
               <h3 className="mt-4 flex items-center gap-1.5 font-semibold text-foreground text-lg tracking-[-0.01em]">
                 {area.title}
-                <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover/card:translate-x-0.5 group-hover/card:opacity-100" />
+                <IconArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover/card:translate-x-0.5 group-hover/card:opacity-100" />
               </h3>
               <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
                 {area.blurb}

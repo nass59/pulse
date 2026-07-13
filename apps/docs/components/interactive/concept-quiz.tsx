@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  ArrowRight,
-  Check,
-  Gamepad2,
-  RotateCcw,
-  Trophy,
-  X,
-} from "lucide-react";
+  IconArrowRight,
+  IconCheck,
+  IconDeviceGamepad2,
+  IconRotate,
+  IconTrophy,
+  IconX,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -224,8 +224,8 @@ const OptionButton = ({
           !answered && "border-border text-muted-foreground"
         )}
       >
-        {revealCorrect && <Check className="size-3.5" />}
-        {revealWrong && <X className="size-3.5" />}
+        {revealCorrect && <IconCheck className="size-3.5" />}
+        {revealWrong && <IconX className="size-3.5" />}
         {!answered && String.fromCharCode(65 + index)}
         {dimmed && String.fromCharCode(65 + index)}
       </span>
@@ -324,7 +324,7 @@ const QuestionView = ({
                 type="button"
               >
                 {isLast ? "See results" : "Next question"}
-                <ArrowRight className="size-3.5" />
+                <IconArrowRight className="size-3.5" />
               </button>
             </div>
           </motion.div>
@@ -357,7 +357,7 @@ const ResultsView = ({
           VERDICT_TONE[verdict.tone]
         )}
       >
-        <Trophy className="size-6" />
+        <IconTrophy className="size-6" />
       </span>
       <p className="mt-4 font-bold text-3xl text-foreground tracking-[-0.02em]">
         {score}
@@ -392,7 +392,7 @@ const ResultsView = ({
         onClick={onRestart}
         type="button"
       >
-        <RotateCcw className="size-3.5" />
+        <IconRotate className="size-3.5" />
         Run it back
       </button>
     </div>
@@ -451,7 +451,7 @@ export const ConceptQuiz = ({
   return (
     <div className="not-prose my-8 rounded-2xl border bg-card p-5 sm:p-6">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Gamepad2 className={cn("size-4", ACCENT[accent].icon)} />
+        <IconDeviceGamepad2 className={cn("size-4", ACCENT[accent].icon)} />
         <span className="ds-eyebrow text-[10px]">Check yourself</span>
       </div>
       <p className="mt-2 text-foreground text-sm leading-relaxed">

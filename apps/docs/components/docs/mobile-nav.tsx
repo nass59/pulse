@@ -1,6 +1,10 @@
 "use client";
 
-import { ArrowUpRight, Menu } from "lucide-react";
+import {
+  IconArrowUpRight,
+  IconBrandGithub,
+  IconMenu2,
+} from "@tabler/icons-react";
 import Link from "next/link";
 
 import {
@@ -31,7 +35,7 @@ export const MobileNav = ({
       aria-label="Open navigation"
       className="flex w-16 items-center justify-center border-electric-yellow/15 border-l text-foreground/70 transition-colors hover:bg-electric-yellow/[0.06] hover:text-foreground md:hidden"
     >
-      <Menu className="size-4" />
+      <IconMenu2 className="size-4" />
     </DrawerTrigger>
     <DrawerContent className="border-electric-yellow/25 bg-background">
       <DrawerTitle className="px-6 pt-4 pb-3 font-mono text-[9px] text-muted-foreground tracking-[0.2em]">
@@ -59,8 +63,9 @@ export const MobileNav = ({
             />
           }
         >
+          <IconBrandGithub className="size-4" />
           GitHub
-          <ArrowUpRight className="size-3.5" />
+          <IconArrowUpRight className="size-3.5" />
         </DrawerClose>
       </nav>
     </DrawerContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Play, User } from "lucide-react";
+import { IconArrowRight, IconPlayerPlay, IconUser } from "@tabler/icons-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
@@ -142,7 +142,7 @@ export const MiniChannelApp = ({
               "border-kotlin-purple text-kotlin-purple shadow-glow-kotlin-sm duration-150"
           )}
         >
-          <User className="size-2.5" />
+          <IconUser className="size-2.5" />
           <b className="font-semibold tabular-nums">{count.toLocaleString()}</b>
         </span>
       </div>
@@ -153,7 +153,7 @@ export const MiniChannelApp = ({
         className="grid aspect-[16/7.5] place-items-center bg-[radial-gradient(120%_140%_at_20%_0%,color-mix(in_oklab,var(--color-electric-yellow)_12%,transparent),transparent_55%),linear-gradient(150deg,#1d1d16,#0c0c0a)]"
       >
         <span className="grid size-9 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm">
-          <Play className="size-3.5 fill-current" />
+          <IconPlayerPlay className="size-3.5 fill-current" />
         </span>
       </div>
 
@@ -196,7 +196,7 @@ export const MiniChannelApp = ({
             className="grid w-7 place-items-center rounded-lg bg-electric-yellow text-yellow-ink transition-transform active:scale-95"
             type="submit"
           >
-            <ArrowRight className="size-3" />
+            <IconArrowRight className="size-3" />
           </button>
         </form>
       ) : (

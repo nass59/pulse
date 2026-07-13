@@ -1,4 +1,9 @@
-import { type LucideIcon, Package, Plug, Waypoints } from "lucide-react";
+import {
+  IconPackage,
+  IconPlug,
+  IconRoute,
+  type TablerIcon,
+} from "@tabler/icons-react";
 
 /**
  * The Go pillar's path spine (ADR-0020, reorganized by ADR-0021): a short, linear
@@ -17,7 +22,7 @@ export type GoStep = {
   /** One-line, plain-language promise of the page. */
   blurb: string;
   href: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   /** Three-ish takeaways, shown on the index card. */
   takeaways: string[];
   title: string;
@@ -29,7 +34,7 @@ export const GO_STEPS: GoStep[] = [
     blurb:
       "Packages, errors as values (no try/catch), structs over classes, and the standard library's surprisingly capable net/http — the Go mental model for a TS brain.",
     href: "/go/path/the-shape-of-a-service",
-    icon: Package,
+    icon: IconPackage,
     takeaways: [
       "Errors are returned values you handle, not exceptions you throw",
       "No classes — structs plus methods, and interfaces are implicit",
@@ -41,7 +46,7 @@ export const GO_STEPS: GoStep[] = [
     blurb:
       "The reason Go fits a WebSocket gateway: a goroutine per connection, channels to move messages between them, and context to cancel cleanly without leaking.",
     href: "/go/path/goroutines-and-channels",
-    icon: Waypoints,
+    icon: IconRoute,
     takeaways: [
       "A goroutine is a near-free thread; one per connection is normal",
       "Channels are typed pipes — the safe way goroutines talk",
@@ -53,7 +58,7 @@ export const GO_STEPS: GoStep[] = [
     blurb:
       "confluent-kafka-go wraps the C library librdkafka, so the build crosses into C. Delivery reports over a channel, the cgo build tax, and the Avro struct-tag gotcha.",
     href: "/go/path/the-cgo-kafka-client",
-    icon: Plug,
+    icon: IconPlug,
     takeaways: [
       "cgo lets Go call C — and makes the build need a C toolchain",
       "Delivery confirmations arrive asynchronously, on a channel",

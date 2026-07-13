@@ -1,32 +1,32 @@
 import {
-  ArrowRight,
-  Box,
-  Boxes,
-  Braces,
-  Check,
-  Columns3,
-  Crown,
-  Database,
-  FileCode,
-  HardDrive,
-  Hash,
-  Inbox,
-  KeyRound,
-  ListChecks,
-  type LucideIcon,
-  MessageSquare,
-  Radio,
-  ScrollText,
-  Send,
-  Server,
-  Share2,
-  Stamp,
-  Trash2,
-  Users,
-  Wifi,
-  WifiOff,
-  X,
-} from "lucide-react";
+  IconArrowRight,
+  IconBox,
+  IconBoxMultiple,
+  IconBraces,
+  IconBroadcast,
+  IconCheck,
+  IconColumns3,
+  IconCrown,
+  IconDatabase,
+  IconDeviceFloppy,
+  IconFileCode,
+  IconHash,
+  IconInbox,
+  IconKey,
+  IconListCheck,
+  IconMessage,
+  IconRubberStamp,
+  IconScript,
+  IconSend,
+  IconServer,
+  IconShare2,
+  IconTrash,
+  IconUsers,
+  IconWifi,
+  IconWifiOff,
+  IconX,
+  type TablerIcon,
+} from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -100,7 +100,7 @@ const FlowBox = ({
 
 const Connector = ({ label }: { label?: string }) => (
   <div className="flex shrink-0 flex-col items-center gap-1 text-muted-foreground">
-    <ArrowRight className="size-5 rotate-90 sm:rotate-0" />
+    <IconArrowRight className="size-5 rotate-90 sm:rotate-0" />
     {label ? (
       <span className="font-mono text-[10px] leading-none">{label}</span>
     ) : null}
@@ -168,9 +168,9 @@ export const HealthcheckTimeline = () => (
                 )}
               >
                 {probe.ok ? (
-                  <Check className="size-4" />
+                  <IconCheck className="size-4" />
                 ) : (
-                  <X className="size-4" />
+                  <IconX className="size-4" />
                 )}
               </span>
             </div>
@@ -192,9 +192,9 @@ export const HealthcheckTimeline = () => (
 
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-border border-t pt-3 font-mono text-[11px]">
       <span className="text-muted-foreground">container started</span>
-      <ArrowRight className="size-3 text-muted-foreground" />
+      <IconArrowRight className="size-3 text-muted-foreground" />
       <span className="text-accent-orange">booting (probes fail, ignored)</span>
-      <ArrowRight className="size-3 text-muted-foreground" />
+      <IconArrowRight className="size-3 text-muted-foreground" />
       <span className="text-accent-green">ready · healthcheck green</span>
     </div>
   </DiagramFrame>
@@ -216,17 +216,17 @@ export const DependsOnRace = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="orange">
-          <Database className="size-4" />
+          <IconDatabase className="size-4" />
           broker · still booting
         </FlowBox>
         <Connector label="starts now" />
         <FlowBox mono tone="ink">
-          <Box className="size-4" />
+          <IconBox className="size-4" />
           consumer
         </FlowBox>
         <Connector label="first call" />
         <FlowBox mono tone="orange">
-          <X className="size-4" />
+          <IconX className="size-4" />
           connection refused
         </FlowBox>
       </div>
@@ -238,17 +238,17 @@ export const DependsOnRace = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="green">
-          <Database className="size-4" />
+          <IconDatabase className="size-4" />
           broker · probe green
         </FlowBox>
         <Connector label="waits" />
         <FlowBox mono tone="ink">
-          <Box className="size-4" />
+          <IconBox className="size-4" />
           consumer
         </FlowBox>
         <Connector label="first call" />
         <FlowBox mono tone="green">
-          <Check className="size-4" />
+          <IconCheck className="size-4" />
           connected
         </FlowBox>
       </div>
@@ -271,14 +271,14 @@ export const VolumePersistence = () => (
       <div className="flex flex-col items-center gap-1.5">
         <span className="ds-eyebrow text-[10px]">before restart</span>
         <FlowBox mono tone="neutral">
-          <Box className="size-4" />
+          <IconBox className="size-4" />
           postgres (v1)
         </FlowBox>
       </div>
       <div className="flex flex-col items-center gap-1.5">
         <span className="ds-eyebrow text-[10px]">after restart</span>
         <FlowBox mono tone="ink">
-          <Box className="size-4" />
+          <IconBox className="size-4" />
           postgres (v2)
         </FlowBox>
       </div>
@@ -289,7 +289,7 @@ export const VolumePersistence = () => (
     </div>
 
     <div className="flex items-center justify-center gap-2 rounded-xl border border-accent-green/40 bg-accent-green/[0.05] px-4 py-3 text-accent-green text-sm">
-      <HardDrive className="size-4" />
+      <IconDeviceFloppy className="size-4" />
       <span className="font-mono text-xs">
         postgres_data — persists across restarts
       </span>
@@ -297,13 +297,13 @@ export const VolumePersistence = () => (
 
     <div className="mt-4 grid grid-cols-2 gap-3 font-mono text-xs">
       <div className="flex items-center gap-2 rounded-lg border border-accent-green/40 px-3 py-2 text-accent-green">
-        <Check className="size-3.5 shrink-0" />
+        <IconCheck className="size-3.5 shrink-0" />
         <span>
           <span className="font-medium">down</span> — volume kept
         </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-destructive/40 px-3 py-2 text-destructive">
-        <Trash2 className="size-3.5 shrink-0" />
+        <IconTrash className="size-3.5 shrink-0" />
         <span>
           <span className="font-medium">down -v</span> — volume wiped
         </span>
@@ -329,17 +329,17 @@ export const AutoTopicFlow = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="neutral">
-          <Send className="size-4" />
+          <IconSend className="size-4" />
           produce → pulse.smoke.test
         </FlowBox>
         <Connector label="unknown" />
         <FlowBox mono tone="ink">
-          <Database className="size-4" />
+          <IconDatabase className="size-4" />
           broker
         </FlowBox>
         <Connector label="auto-create" />
         <FlowBox mono tone="green">
-          <Check className="size-4" />
+          <IconCheck className="size-4" />
           topic exists
         </FlowBox>
       </div>
@@ -351,17 +351,17 @@ export const AutoTopicFlow = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="orange">
-          <Send className="size-4" />
+          <IconSend className="size-4" />
           produce → chat.mesages.v1
         </FlowBox>
         <Connector label="typo" />
         <FlowBox mono tone="ink">
-          <Database className="size-4" />
+          <IconDatabase className="size-4" />
           broker
         </FlowBox>
         <Connector label="auto-create" />
         <FlowBox mono tone="orange">
-          <X className="size-4" />
+          <IconX className="size-4" />
           phantom topic · no consumer
         </FlowBox>
       </div>
@@ -520,7 +520,11 @@ const BrokerChip = ({
         : "border-border text-muted-foreground"
     )}
   >
-    {controller ? <Crown className="size-4" /> : <Server className="size-4" />}
+    {controller ? (
+      <IconCrown className="size-4" />
+    ) : (
+      <IconServer className="size-4" />
+    )}
     broker {id}
     {controller ? (
       <span className="font-medium text-[9px] uppercase tracking-wider">
@@ -556,7 +560,7 @@ export const ControllerRole = () => (
 
     <ul className="flex flex-col gap-1.5 rounded-xl border border-electric-yellow/40 bg-yellow-tint p-3 dark:border-electric-yellow/20 dark:bg-electric-yellow/[0.06]">
       <li className="flex items-center gap-2 font-mono text-[11px] text-yellow-ink dark:text-electric-yellow">
-        <ListChecks className="size-3.5 shrink-0" />
+        <IconListCheck className="size-3.5 shrink-0" />
         the cluster's metadata
       </li>
       {CONTROLLER_BOOKS.map((book) => (
@@ -564,7 +568,7 @@ export const ControllerRole = () => (
           className="flex items-center gap-2 pl-1 text-foreground/80 text-xs"
           key={book}
         >
-          <Check className="size-3 shrink-0 text-accent-green" />
+          <IconCheck className="size-3 shrink-0 text-accent-green" />
           {book}
         </li>
       ))}
@@ -599,7 +603,7 @@ export const KraftVsZookeeper = () => (
             ↕ metadata over the network
           </div>
           <div className="flex items-center justify-center gap-2 rounded-lg border border-accent-orange/50 px-3 py-2.5 text-accent-orange">
-            <Users className="size-4 shrink-0" />
+            <IconUsers className="size-4 shrink-0" />
             <span className="font-mono text-[11px]">
               ZooKeeper ensemble — the clerk
             </span>
@@ -624,7 +628,7 @@ export const KraftVsZookeeper = () => (
             ↕ replicated among the brokers
           </div>
           <div className="flex items-center justify-center gap-2 rounded-lg border border-accent-green/50 px-3 py-2.5 text-accent-green">
-            <ScrollText className="size-4 shrink-0" />
+            <IconScript className="size-4 shrink-0" />
             <span className="font-mono text-[11px]">
               internal Raft metadata log
             </span>
@@ -655,12 +659,12 @@ export const OutboxFlow = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="neutral">
-          <Send className="size-4" />
+          <IconSend className="size-4" />
           POST /go-live
         </FlowBox>
         <Connector label="BEGIN" />
         <FlowBox mono tone="green">
-          <Database className="size-4" />
+          <IconDatabase className="size-4" />
           <span className="leading-snug">
             streams + channels.is_live
             <br />+ outbox row
@@ -668,7 +672,7 @@ export const OutboxFlow = () => (
         </FlowBox>
         <Connector label="COMMIT" />
         <FlowBox mono tone="ink">
-          <Check className="size-4" />
+          <IconCheck className="size-4" />
           200 streamId
         </FlowBox>
       </div>
@@ -680,7 +684,7 @@ export const OutboxFlow = () => (
       </span>
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
         <FlowBox mono tone="neutral">
-          <Inbox className="size-4" />
+          <IconInbox className="size-4" />
           <span className="leading-snug">
             outbox WHERE
             <br />
@@ -689,12 +693,12 @@ export const OutboxFlow = () => (
         </FlowBox>
         <Connector label="poll 500ms" />
         <FlowBox mono tone="ink">
-          <Radio className="size-4" />
+          <IconBroadcast className="size-4" />
           stream.started.v1
         </FlowBox>
         <Connector label="on ack" />
         <FlowBox mono tone="green">
-          <Check className="size-4" />
+          <IconCheck className="size-4" />
           set published_at
         </FlowBox>
       </div>
@@ -708,7 +712,7 @@ export const OutboxFlow = () => (
 
 type Rung = {
   cmd: string;
-  icon: LucideIcon;
+  icon: TablerIcon;
   /** The payoff rung — the decoded event arriving — wears the yellow accent. */
   payoff?: boolean;
   /** The proof the step prints — what tells you it actually worked. */
@@ -720,43 +724,43 @@ type Rung = {
 const RUNGS: Rung[] = [
   {
     cmd: "just infra-up",
-    icon: Boxes,
+    icon: IconBoxMultiple,
     system: "Docker stack",
     proof: "4 containers, all healthy",
   },
   {
     cmd: "just schemas-publish",
-    icon: FileCode,
+    icon: IconFileCode,
     system: "Apicurio registry",
     proof: "5 Avro subjects registered",
   },
   {
     cmd: "just infra-topics",
-    icon: Columns3,
+    icon: IconColumns3,
     system: "Kafka topics",
     proof: "5 topics · 6 partitions each",
   },
   {
     cmd: "just identity-migrate",
-    icon: Database,
+    icon: IconDatabase,
     system: "Postgres",
     proof: "tables created · alice & bob seeded",
   },
   {
     cmd: "just identity-dev",
-    icon: Server,
+    icon: IconServer,
     system: "identity service",
     proof: "relay polling · :3100 live",
   },
   {
     cmd: "just identity-go-live alices-channel",
-    icon: Send,
+    icon: IconSend,
     system: "request path",
     proof: "200 · state + outbox row committed",
   },
   {
     cmd: "just identity-consume",
-    icon: Braces,
+    icon: IconBraces,
     system: "Kafka → your terminal",
     proof: "StreamStarted prints, decoded",
     payoff: true,
@@ -815,7 +819,7 @@ export const SmokeTestLadder = () => (
                   : "text-accent-green"
               )}
             >
-              <Check className="size-3.5 shrink-0" />
+              <IconCheck className="size-3.5 shrink-0" />
               <span>{rung.proof}</span>
             </div>
           </li>
@@ -879,7 +883,7 @@ export const QuorumFaultTolerance = () => (
                   )}
                   key={dot.dotId}
                 >
-                  {dot.inMajority ? <Check className="size-3" /> : null}
+                  {dot.inMajority ? <IconCheck className="size-3" /> : null}
                 </span>
               ))}
             </div>
@@ -932,7 +936,7 @@ export const ServerAuthoredStamp = () => (
   <DiagramFrame caption="The client's whole contribution is body. The gateway stamps identity, timing, and the channel/stream the socket joined (its wristband) — so the event is the server's testimony, not the client's claim. Nothing the client sends can forge a userId or backdate a message.">
     <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
       <FlowBox mono tone="neutral">
-        <MessageSquare className="size-4" />
+        <IconMessage className="size-4" />
         <span className="leading-snug">
           client frame
           <br />
@@ -944,7 +948,7 @@ export const ServerAuthoredStamp = () => (
 
       <div className="flex flex-1 flex-col gap-2 rounded-xl border border-electric-yellow/40 bg-yellow-tint p-3 dark:border-electric-yellow/25 dark:bg-electric-yellow/[0.06]">
         <span className="flex items-center gap-1.5 font-mono text-[10px] text-yellow-ink uppercase tracking-wider dark:text-electric-yellow">
-          <Stamp className="size-3.5" />
+          <IconRubberStamp className="size-3.5" />
           the gateway stamps
         </span>
         <ul className="flex flex-col gap-1">
@@ -964,7 +968,7 @@ export const ServerAuthoredStamp = () => (
       <Connector label="produce" />
 
       <FlowBox mono tone="green">
-        <Radio className="size-4" />
+        <IconBroadcast className="size-4" />
         <span className="leading-snug">
           ChatMessageSent
           <br />
@@ -1005,7 +1009,7 @@ export const LogWithOffsets = () => (
         chat.messages.v1 · partition 2
       </span>
       <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green">
-        <Send className="size-3.5" />
+        <IconSend className="size-3.5" />
         append-only →
       </span>
     </div>
@@ -1034,7 +1038,7 @@ export const LogWithOffsets = () => (
                 : "border-accent-orange/50 text-accent-orange"
             )}
           >
-            <ScrollText className="size-3" />
+            <IconScript className="size-3" />
             {r.label}
           </span>
           <span className="font-mono text-[10px] text-muted-foreground">
@@ -1051,15 +1055,15 @@ export const LogWithOffsets = () => (
 /* ------------------------------------------------------------------ */
 
 type KeyedEvent = {
-  icon: LucideIcon;
+  icon: TablerIcon;
   label: string;
   topic: string;
 };
 
 const ALICE_EVENTS: KeyedEvent[] = [
-  { label: "ChatMessageSent", topic: "chat.messages.v1", icon: MessageSquare },
-  { label: "ViewerJoined", topic: "chat.presence.joined.v1", icon: Users },
-  { label: "StreamStarted", topic: "stream.started.v1", icon: Radio },
+  { label: "ChatMessageSent", topic: "chat.messages.v1", icon: IconMessage },
+  { label: "ViewerJoined", topic: "chat.presence.joined.v1", icon: IconUsers },
+  { label: "StreamStarted", topic: "stream.started.v1", icon: IconBroadcast },
 ];
 
 /**
@@ -1100,15 +1104,15 @@ export const CoPartitionRouting = () => (
 
       <div className="flex flex-row items-center justify-center gap-1 sm:flex-col">
         <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-          <Hash className="size-3" />
+          <IconHash className="size-3" />
           murmur2
         </span>
-        <ArrowRight className="size-5 rotate-90 text-muted-foreground sm:rotate-0" />
+        <IconArrowRight className="size-5 rotate-90 text-muted-foreground sm:rotate-0" />
       </div>
 
       <div className="flex items-center justify-center rounded-xl border border-accent-green/50 bg-accent-green/[0.05] px-5 py-3 text-accent-green">
         <div className="flex flex-col items-center gap-0.5">
-          <KeyRound className="size-4" />
+          <IconKey className="size-4" />
           <span className="font-mono text-sm">P2</span>
           <span className="font-mono text-[9px] text-muted-foreground">
             one ordered channel
@@ -1171,9 +1175,9 @@ export const LiveMapFromLog = () => (
               key={`${e.channel}-${e.kind}`}
             >
               {e.kind === "started" ? (
-                <Radio className="size-3.5 shrink-0" />
+                <IconBroadcast className="size-3.5 shrink-0" />
               ) : (
-                <X className="size-3.5 shrink-0" />
+                <IconX className="size-3.5 shrink-0" />
               )}
               <span>
                 {e.kind === "started" ? "StreamStarted" : "StreamEnded"}
@@ -1188,7 +1192,7 @@ export const LiveMapFromLog = () => (
 
       <div className="flex flex-col gap-1.5 rounded-xl border border-accent-green/50 bg-accent-green/[0.05] p-3">
         <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green uppercase tracking-wider">
-          <ListChecks className="size-3.5" />
+          <IconListCheck className="size-3.5" />
           live-channel map
         </span>
         <div className="flex flex-wrap gap-1.5">
@@ -1226,7 +1230,7 @@ export const FanoutVsLog = () => (
   <DiagramFrame caption="One message, two fates. Producing to Kafka is the durable record — replayable, every reader's source of truth. The in-memory fan-out is a best-effort live push to other tabs on the same node; a viewer on another node misses it and falls back to the log. Single-node is the deliberate MVP limit Phase 2 fixes with Redis.">
     <div className="flex justify-center">
       <FlowBox mono tone="ink">
-        <MessageSquare className="size-4" />
+        <IconMessage className="size-4" />
         message arrives on a socket
       </FlowBox>
     </div>
@@ -1238,7 +1242,7 @@ export const FanoutVsLog = () => (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-2 rounded-xl border border-accent-green/50 bg-accent-green/[0.05] p-3">
         <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-green uppercase tracking-wider">
-          <ScrollText className="size-3.5" />
+          <IconScript className="size-3.5" />
           durable · the log
         </span>
         <p className="text-foreground/80 text-xs leading-relaxed">
@@ -1250,7 +1254,7 @@ export const FanoutVsLog = () => (
 
       <div className="flex flex-col gap-2 rounded-xl border border-accent-orange/50 bg-accent-orange/[0.05] p-3">
         <span className="flex items-center gap-1.5 font-mono text-[10px] text-accent-orange uppercase tracking-wider">
-          <Share2 className="size-3.5" />
+          <IconShare2 className="size-3.5" />
           best-effort · live push
         </span>
         <p className="text-foreground/80 text-xs leading-relaxed">
@@ -1262,11 +1266,11 @@ export const FanoutVsLog = () => (
 
     <div className="mt-3 grid gap-3 sm:grid-cols-2">
       <div className="flex items-center gap-2 rounded-lg border border-accent-green/40 px-3 py-2 font-mono text-[11px] text-accent-green">
-        <Wifi className="size-3.5 shrink-0" />
+        <IconWifi className="size-3.5 shrink-0" />
         same node · gets the live push
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-muted-foreground/40 border-dashed px-3 py-2 font-mono text-[11px] text-muted-foreground">
-        <WifiOff className="size-3.5 shrink-0" />
+        <IconWifiOff className="size-3.5 shrink-0" />
         another node · reads the log (Phase 2: Redis)
       </div>
     </div>
@@ -1290,7 +1294,7 @@ export const GoroutineReadLoop = () => (
   <DiagramFrame caption="One connection, two goroutines: a read loop and a write pump, joined by a typed channel. A goroutine is cheap enough that one-per-connection is normal. context.WithCancel links their fates — when the read loop ends, cancel() stops the write pump, so a disconnect never leaks a goroutine.">
     <div className="flex justify-center">
       <FlowBox mono tone="blue">
-        <MessageSquare className="size-4" />
+        <IconMessage className="size-4" />
         viewer socket
       </FlowBox>
     </div>
@@ -1316,7 +1320,7 @@ export const GoroutineReadLoop = () => (
         <span className="rounded-pill border border-border px-2 py-0.5 font-mono text-[9px] text-muted-foreground">
           chan []byte
         </span>
-        <ArrowRight className="size-4 rotate-90 text-muted-foreground sm:rotate-0" />
+        <IconArrowRight className="size-4 rotate-90 text-muted-foreground sm:rotate-0" />
       </div>
 
       <div className="flex flex-col gap-2 rounded-xl border border-go-blue/40 p-3">

@@ -1,4 +1,4 @@
-import { Zap } from "lucide-react";
+import { IconBolt } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ export const Hook = ({
           t.chip
         )}
       >
-        <Zap className="size-4.5" />
+        <IconBolt className="size-4.5" />
       </span>
       <div className="ds-rich">
         <p

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Activity, GraduationCap, Zap } from "lucide-react";
+import { IconActivity, IconBolt, IconSchool } from "@tabler/icons-react";
 import { expect } from "storybook/test";
 
 import { Tag } from "./tag";
@@ -24,19 +24,19 @@ export const Editorial: Story = {
 };
 
 export const WithIcon: Story = {
-  args: { children: "Intermediate", icon: GraduationCap, accent: "orange" },
+  args: { children: "Intermediate", icon: IconSchool, accent: "orange" },
 };
 
 export const Accents: Story = {
   args: { children: "Tag" },
   render: () => (
     <div className="flex flex-wrap gap-2">
-      <Tag accent="yellow" icon={Zap}>
+      <Tag accent="yellow" icon={IconBolt}>
         Brand
       </Tag>
       <Tag accent="blue">TypeScript</Tag>
       <Tag accent="purple">Animation</Tag>
-      <Tag accent="green" icon={Activity}>
+      <Tag accent="green" icon={IconActivity}>
         System Online
       </Tag>
       <Tag accent="orange">Intermediate</Tag>

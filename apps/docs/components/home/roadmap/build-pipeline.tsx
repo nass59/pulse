@@ -1,6 +1,11 @@
 "use client";
 
-import { ArrowUpRight, Check, ChevronRight, Circle } from "lucide-react";
+import {
+  IconArrowUpRight,
+  IconCheck,
+  IconChevronRight,
+  IconCircle,
+} from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -27,7 +32,7 @@ const StageGlyph = ({ status }: { status: Phase["status"] }) => {
   if (status === "shipped") {
     return (
       <span className="flex size-6 items-center justify-center rounded-full bg-electric-yellow text-yellow-ink">
-        <Check className="size-3.5" />
+        <IconCheck className="size-3.5" />
       </span>
     );
   }
@@ -51,7 +56,7 @@ const StageGlyph = ({ status }: { status: Phase["status"] }) => {
   }
   return (
     <span className="flex size-6 items-center justify-center rounded-full border border-border border-dashed text-muted-foreground">
-      <Circle className="size-2 fill-current" />
+      <IconCircle className="size-2 fill-current" />
     </span>
   );
 };
@@ -71,7 +76,7 @@ const StatusPill = ({ status }: { status: Phase["status"] }) => (
 
 const StepGlyph = ({ item }: { item: PhaseItem }) => {
   if (item.done) {
-    return <Check className="size-3.5 shrink-0 text-electric-yellow" />;
+    return <IconCheck className="size-3.5 shrink-0 text-electric-yellow" />;
   }
   if (item.done === false) {
     return (
@@ -113,7 +118,7 @@ const Step = ({ item }: { item: PhaseItem }) => {
           href={item.href}
         >
           {label}
-          <ArrowUpRight className="size-3 text-muted-foreground transition-transform group-hover/step:translate-x-0.5 group-hover/step:-translate-y-0.5" />
+          <IconArrowUpRight className="size-3 text-muted-foreground transition-transform group-hover/step:translate-x-0.5 group-hover/step:-translate-y-0.5" />
         </Link>
       ) : (
         label
@@ -170,7 +175,7 @@ const Stage = ({
           <span className="font-mono text-[11px] text-muted-foreground">
             {phase.effort}
           </span>
-          <ChevronRight
+          <IconChevronRight
             className={cn(
               "size-4 text-muted-foreground transition-transform",
               open && "rotate-90"

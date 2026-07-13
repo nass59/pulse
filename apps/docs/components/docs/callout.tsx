@@ -1,5 +1,11 @@
-import type { LucideIcon } from "lucide-react";
-import { Gauge, Info, Lightbulb, Sparkles, TriangleAlert } from "lucide-react";
+import type { TablerIcon } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconBulb,
+  IconGauge,
+  IconInfoCircle,
+  IconSparkles,
+} from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -21,34 +27,34 @@ type Variant = "note" | "key" | "perf" | "lesson" | "footgun";
 
 const VARIANTS: Record<
   Variant,
-  { icon: LucideIcon; label: string; box: string; accent: string }
+  { icon: TablerIcon; label: string; box: string; accent: string }
 > = {
   note: {
-    icon: Info,
+    icon: IconInfoCircle,
     label: "Note",
     box: "border-border bg-muted/40",
     accent: "text-foreground/70",
   },
   key: {
-    icon: Lightbulb,
+    icon: IconBulb,
     label: "Key Concept",
     box: "border-electric-yellow/40 bg-yellow-tint dark:border-electric-yellow/20 dark:bg-electric-yellow/[0.06]",
     accent: "text-yellow-ink dark:text-electric-yellow",
   },
   perf: {
-    icon: Gauge,
+    icon: IconGauge,
     label: "Performance Note",
     box: "border-border bg-muted/50",
     accent: "text-olive",
   },
   lesson: {
-    icon: Sparkles,
+    icon: IconSparkles,
     label: "Lesson Learned",
     box: "border-electric-yellow/40 bg-yellow-tint dark:border-electric-yellow/20 dark:bg-electric-yellow/[0.06]",
     accent: "text-yellow-ink dark:text-electric-yellow",
   },
   footgun: {
-    icon: TriangleAlert,
+    icon: IconAlertTriangle,
     label: "Footgun in Production",
     box: "border-destructive/30 bg-destructive/[0.05] dark:bg-destructive/[0.1]",
     accent: "text-destructive",

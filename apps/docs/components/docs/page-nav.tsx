@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ const NavCard = ({
   direction: "prev" | "next";
 }) => {
   const isNext = direction === "next";
-  const Arrow = isNext ? ArrowRight : ArrowLeft;
+  const Arrow = isNext ? IconArrowRight : IconArrowLeft;
   return (
     <Link
       className={cn(

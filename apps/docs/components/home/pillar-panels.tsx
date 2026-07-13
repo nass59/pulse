@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { IconRotate } from "@tabler/icons-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -158,7 +158,7 @@ const KafkaReplay = () => {
           }}
           type="button"
         >
-          <RotateCcw className="size-3" />
+          <IconRotate className="size-3" />
           Replay from 0
         </button>
         <input

@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { IconArrowUpRight, IconBrandGithub } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
@@ -46,8 +46,9 @@ export const Header = () => (
           rel="noreferrer"
           target="_blank"
         >
+          <IconBrandGithub className="size-4" />
           GitHub
-          <ArrowUpRight className="size-3.5" />
+          <IconArrowUpRight className="size-3.5" />
         </a>
       </nav>
     </div>

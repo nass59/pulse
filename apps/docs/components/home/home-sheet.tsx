@@ -12,7 +12,11 @@ import type { ReactNode } from "react";
 export const HomeSheet = ({ children }: { children: ReactNode }) => (
   <div className="dark bg-carbon-900 text-foreground">
     <div
-      className="relative border border-electric-yellow/20 outline-1 outline-electric-yellow/5 outline-offset-4"
+      /**
+       * No border-top — the sticky header's bottom hairline already draws the
+       * sheet's top edge; both would show as a double rule.
+       */
+      className="relative border-electric-yellow/20 border-x border-b outline-1 outline-electric-yellow/5 outline-offset-4"
       style={{
         backgroundImage:
           "linear-gradient(color-mix(in oklab, var(--color-electric-yellow) 4%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--color-electric-yellow) 4%, transparent) 1px, transparent 1px)",

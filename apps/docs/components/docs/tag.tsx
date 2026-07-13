@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { TablerIcon } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ type TagProps = {
   /** Prefix the label with `#` (editorial context). */
   hash?: boolean;
   /** Optional leading line icon (browse-context pills). */
-  icon?: LucideIcon;
+  icon?: TablerIcon;
 };
 
 export const Tag = ({

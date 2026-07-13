@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Check, Plus } from "lucide-react";
+import { IconArrowUpRight, IconCheck, IconPlus } from "@tabler/icons-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -36,9 +36,9 @@ const ConceptChip = ({ item }: { item: PhaseItem }) => {
         )}
         href={item.href}
       >
-        <Check className="size-3.5" />
+        <IconCheck className="size-3.5" />
         {item.label}
-        <ArrowUpRight className="size-3.5 opacity-50 transition-transform group-hover/chip:translate-x-0.5 group-hover/chip:-translate-y-0.5 group-hover/chip:opacity-100" />
+        <IconArrowUpRight className="size-3.5 opacity-50 transition-transform group-hover/chip:translate-x-0.5 group-hover/chip:-translate-y-0.5 group-hover/chip:opacity-100" />
       </Link>
     );
   }
@@ -56,7 +56,7 @@ const ConceptChip = ({ item }: { item: PhaseItem }) => {
         <span className="size-1.5 animate-pulse rounded-full bg-electric-yellow" />
       )}
       {/* done but unlinked — the capability shipped, its write-up is coming */}
-      {item.done && <Check className="size-3.5" />}
+      {item.done && <IconCheck className="size-3.5" />}
       {item.label}
     </span>
   );
@@ -143,7 +143,7 @@ const Drawer = ({
             open && "rotate-45 bg-electric-yellow text-yellow-ink"
           )}
         >
-          <Plus className="size-4" />
+          <IconPlus className="size-4" />
         </span>
       </button>
 

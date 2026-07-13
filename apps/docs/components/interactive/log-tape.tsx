@@ -1,6 +1,11 @@
 "use client";
 
-import { Gauge, Plus, Radio, Rewind } from "lucide-react";
+import {
+  IconBroadcast,
+  IconGauge,
+  IconPlayerTrackPrev,
+  IconPlus,
+} from "@tabler/icons-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -156,7 +161,7 @@ export const LogTape = () => {
       {/* the two consumers */}
       <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
         <div className="flex items-center gap-2.5 rounded-xl border border-electric-yellow/40 bg-electric-yellow/[0.05] px-3 py-2.5">
-          <Radio className="size-4 shrink-0 text-yellow-ink dark:text-electric-yellow" />
+          <IconBroadcast className="size-4 shrink-0 text-yellow-ink dark:text-electric-yellow" />
           <div className="min-w-0">
             <p className="font-medium text-sm">Pit wall</p>
             <p className="font-mono text-[10px] text-muted-foreground">
@@ -165,7 +170,7 @@ export const LogTape = () => {
           </div>
         </div>
         <div className="flex items-center gap-2.5 rounded-xl border border-accent-blue/40 bg-accent-blue/[0.05] px-3 py-2.5">
-          <Gauge className="size-4 shrink-0 text-accent-blue" />
+          <IconGauge className="size-4 shrink-0 text-accent-blue" />
           <div className="min-w-0">
             <p className="font-medium text-sm">Strategy replay</p>
             <p className="font-mono text-[10px] text-muted-foreground">
@@ -177,7 +182,7 @@ export const LogTape = () => {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={full} onClick={append} size="sm">
-          <Plus /> Append packet
+          <IconPlus /> Append packet
         </Button>
         <Button
           disabled={replay >= head}
@@ -193,7 +198,7 @@ export const LogTape = () => {
           size="sm"
           variant="ghost"
         >
-          <Rewind /> Rewind to 0
+          <IconPlayerTrackPrev /> Rewind to 0
         </Button>
       </div>
 

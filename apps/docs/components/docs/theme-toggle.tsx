@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 /**
@@ -32,7 +32,11 @@ export const ThemeToggle = () => {
       onClick={toggle}
       type="button"
     >
-      {isDark ? <Moon className="size-5" /> : <Sun className="size-5" />}
+      {isDark ? (
+        <IconMoon className="size-5" />
+      ) : (
+        <IconSun className="size-5" />
+      )}
     </button>
   );
 };
