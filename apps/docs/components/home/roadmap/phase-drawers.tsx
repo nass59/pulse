@@ -139,7 +139,7 @@ const Drawer = ({
 
         <span
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-full border border-border transition-all group-hover:border-electric-yellow/60",
+            "flex size-9 shrink-0 items-center justify-center rounded-full border border-border transition-[rotate,border-color,background-color,color] group-hover:border-electric-yellow/60",
             open && "rotate-45 bg-electric-yellow text-yellow-ink"
           )}
         >

@@ -4,6 +4,7 @@ import { ArrowRight, Play, User } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
+import { EASE_OUT_STRONG } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -101,6 +102,14 @@ export const MiniChannelApp = ({
       return;
     }
     setDraft("");
+    /**
+     * The visitor's message lands in the feed like any other chat line — the
+     * miniature is evidence, and evidence that swallows your input is a lie.
+     */
+    setSelfMessages((m) => [
+      ...m.slice(-4),
+      { id: nextMessageId++, user: "you", text },
+    ]);
     onSend?.(text);
   };
 
@@ -128,7 +137,7 @@ export const MiniChannelApp = ({
         </span>
         <span
           className={cn(
-            "ml-auto inline-flex items-center gap-1 rounded-pill border border-white/10 px-2 py-0.5 text-[10px] text-white/70 transition-all duration-500",
+            "ml-auto inline-flex items-center gap-1 rounded-pill border border-white/10 px-2 py-0.5 text-[10px] text-white/70 transition-[border-color,color,box-shadow] duration-500",
             flash &&
               "border-kotlin-purple text-kotlin-purple shadow-glow-kotlin-sm duration-150"
           )}
@@ -156,7 +165,9 @@ export const MiniChannelApp = ({
             className="text-[11px] text-white/75 leading-snug"
             initial={reduce ? false : { opacity: 0, y: 6 }}
             key={message.id ?? `${message.user}-${message.text}`}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            /** rows glide up when the oldest message drops, instead of teleporting */
+            layout={!reduce}
+            transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
           >
             <b className="mr-1 font-semibold text-electric-yellow">
               {message.user}

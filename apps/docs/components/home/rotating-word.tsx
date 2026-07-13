@@ -55,7 +55,7 @@ export const RotatingWord = () => {
         {WORDS.map((word, i) => (
           <span
             className={cn(
-              "col-start-1 row-start-1 transition-[transform,opacity,filter] duration-400 ease-out",
+              "col-start-1 row-start-1 transition-[transform,opacity,filter] duration-400 ease-out-strong",
               word.className,
               i === index && visible
                 ? "translate-y-0 opacity-100 blur-none"

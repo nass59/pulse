@@ -2,13 +2,14 @@
 
 import { Check } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import {
   type ChatMessage,
   MiniChannelApp,
 } from "@/components/home/mini-channel-app";
 import { RotatingWord } from "@/components/home/rotating-word";
+import { EASE_OUT_STRONG } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -65,7 +66,7 @@ const ACCENTS: Record<
 
 type Stage = {
   accent: Accent;
-  body: string;
+  body: ReactNode;
   code: string | null;
   id: string;
   meta: string[];
@@ -93,7 +94,14 @@ const buildStages = (rawText: string): Stage[] => {
       accent: "go",
       place: "services/chat · Go",
       title: "A goroutine picks you up.",
-      body: "One goroutine per connection — yours included. The gateway stamps identity and time, then Avro-encodes the message against the registered ChatMessage schema. If that encoding fails, the error is a value, handled right there.",
+      body: (
+        <>
+          One goroutine per connection — yours included. The gateway stamps
+          identity and time, then Avro-encodes the message against the
+          registered <code className="text-go-blue">ChatMessage</code> schema.
+          If that encoding fails, the error is a value, handled right there.
+        </>
+      ),
       meta: [
         "goroutine per socket",
         "Avro · Schema Registry",
@@ -107,7 +115,17 @@ const buildStages = (rawText: string): Stage[] => {
       accent: "kafka",
       place: "Kafka · the log",
       title: "You become history.",
-      body: 'Produced to chat.messages.v1, keyed by channel — murmur2("nass") picks your partition, the same math in every producer language. Appended, never edited: from this moment your message is an immutable record anyone can re-read.',
+      body: (
+        <>
+          Produced to{" "}
+          <code className="text-electric-yellow">chat.messages.v1</code>, keyed
+          by channel —{" "}
+          <code className="text-electric-yellow">murmur2("nass")</code> picks
+          your partition, the same math in every producer language. Appended,
+          never edited: from this moment your message is an immutable record
+          anyone can re-read.
+        </>
+      ),
       meta: [
         "topic · chat.messages.v1",
         "key · murmur2(channel)",
@@ -143,6 +161,25 @@ const buildStages = (rawText: string): Stage[] => {
 };
 
 const STAGE_IDS = ["step-1", "step-2", "step-3", "step-4", "step-5"];
+
+/**
+ * One-time cinematic entrance per ride step: the parent staggers, each child
+ * rises. Sections re-render on every keystroke/step change, so the reveal is
+ * `viewport.once` — it plays exactly once per step, on first scroll into view.
+ */
+const STEP_GROUP = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+};
+
+const RISE = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: EASE_OUT_STRONG },
+  },
+};
 
 /** Plain-language facts an outsider parses with zero context — the belt. */
 const TICKER_ITEMS = [
@@ -255,11 +292,17 @@ export const EventRide = () => {
           </p>
         </div>
         <div className="w-full max-w-sm justify-self-center lg:max-w-md xl:max-w-lg">
-          <MiniChannelApp
-            className="shadow-[0_30px_80px_-25px_rgba(0,0,0,0.8),0_0_40px_-20px_var(--color-electric-yellow)]"
-            interactive
-            onSend={handleSend}
-          />
+          {/* the send moment gets one physical beat — the card breathes once */}
+          <motion.div
+            animate={sent && !reduce ? { scale: [1, 1.015, 1] } : undefined}
+            transition={{ duration: 0.5, ease: EASE_OUT_STRONG }}
+          >
+            <MiniChannelApp
+              className="shadow-[0_30px_80px_-25px_rgba(0,0,0,0.8),0_0_40px_-20px_var(--color-electric-yellow)]"
+              interactive
+              onSend={handleSend}
+            />
+          </motion.div>
           <p className="mt-3 font-mono text-[10px] text-white/40 leading-relaxed">
             A faithful miniature of the real channel page. Your message stays on
             this page — the journey below is a stylised replay of the shipped
@@ -276,34 +319,50 @@ export const EventRide = () => {
           {stages.map((s, i) => {
             const a = ACCENTS[s.accent];
             return (
-              <section
+              <motion.section
                 className="relative flex flex-col justify-center border-white/10 border-l py-14 pl-8 lg:min-h-[85vh] lg:py-0"
                 data-idx={i}
                 id={s.id}
+                initial={reduce ? false : "hidden"}
                 key={s.id}
+                variants={STEP_GROUP}
+                viewport={{ amount: 0.25, once: true }}
+                whileInView="show"
               >
+                {/* the "you are here" dot — swells while its step owns the centre */}
                 <span
                   aria-hidden
                   className={cn(
-                    "absolute top-1/2 -left-[5px] size-2.5 rounded-full",
-                    a.dot
+                    "absolute top-1/2 -left-[5px] size-2.5 rounded-full transition-transform duration-400",
+                    a.dot,
+                    i === active && "scale-150"
                   )}
                 />
-                <p
+                <motion.p
                   className={cn(
                     "font-mono text-[10.5px] uppercase tracking-[0.16em]",
                     a.eyebrow
                   )}
+                  variants={RISE}
                 >
                   {s.step} · {s.place}
-                </p>
-                <h2 className="mt-3 font-bold text-3xl text-white leading-[1.06] tracking-[-0.025em] sm:text-4xl">
+                </motion.p>
+                <motion.h2
+                  className="mt-3 font-bold text-3xl text-white leading-[1.06] tracking-[-0.025em] sm:text-4xl"
+                  variants={RISE}
+                >
                   {s.title}
-                </h2>
-                <p className="mt-4 max-w-md text-[15px] text-white/60 leading-relaxed">
+                </motion.h2>
+                <motion.p
+                  className="mt-4 max-w-md text-[15px] text-white/60 leading-relaxed"
+                  variants={RISE}
+                >
                   {s.body}
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2">
+                </motion.p>
+                <motion.div
+                  className="mt-5 flex flex-wrap gap-2"
+                  variants={RISE}
+                >
                   {s.meta.map((m) => (
                     <span
                       className={cn(
@@ -315,59 +374,74 @@ export const EventRide = () => {
                       {m}
                     </span>
                   ))}
-                </div>
-                {i === stages.length - 1 && (
-                  <div className="mt-8 max-w-sm">
-                    <MiniChannelApp
-                      flash
-                      messages={finalMessages}
-                      viewers={1287}
-                    />
-                  </div>
+                </motion.div>
+                {/* the inspector is desktop-only; on mobile each step carries its payload */}
+                {s.code && (
+                  <motion.pre
+                    className="mt-6 overflow-x-auto rounded-xl border border-white/10 bg-white/[0.03] p-4 font-mono text-[11.5px] text-white/85 leading-[1.7] lg:hidden"
+                    variants={RISE}
+                  >
+                    {s.code}
+                  </motion.pre>
                 )}
-              </section>
+                {i === stages.length - 1 && (
+                  <motion.div className="mt-8 max-w-sm" variants={RISE}>
+                    <MiniChannelApp
+                      flash={active === stages.length - 1}
+                      messages={finalMessages}
+                      viewers={active === stages.length - 1 ? 1287 : 1284}
+                    />
+                  </motion.div>
+                )}
+              </motion.section>
             );
           })}
         </div>
 
         {/* the inspector — hidden on mobile; steps carry their own meta */}
         <aside aria-live="polite" className="relative hidden lg:block">
-          <motion.div
-            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-            className="sticky top-[calc(50vh-160px)] overflow-hidden rounded-2xl border border-white/15 bg-white/[0.035] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.8)]"
-            initial={
-              reduce
-                ? false
-                : { opacity: 0.4, y: 10, scale: 0.985, filter: "blur(2px)" }
-            }
-            key={active}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <div className="flex items-center gap-3 border-white/10 border-b px-4 py-3">
-              <span
-                className={cn(
-                  "rounded-pill px-2.5 py-0.5 font-bold font-mono text-[10px] uppercase tracking-[0.14em]",
-                  accent.pill
-                )}
-              >
-                {stage.step}
-              </span>
-              <span className="font-mono text-[11.5px] text-white/60">
-                {stage.place}
-              </span>
-            </div>
-            {stage.code ? (
-              <pre className="min-h-48 overflow-x-auto px-4 py-5 font-mono text-[12.5px] text-white/85 leading-[1.7]">
-                {stage.code}
-              </pre>
-            ) : (
-              <div className="flex min-h-48 items-center justify-center gap-2.5 font-mono text-accent-green text-sm">
-                <span className="grid size-7 place-items-center rounded-full border-[1.5px] border-accent-green">
-                  <Check className="size-3.5" />
+          {/**
+           * The frame and progress bar stay mounted; only the content block is
+           * keyed by step, so fast scrolling re-animates the payload without
+           * flickering the card's border, shadow, or progress state.
+           */}
+          <div className="sticky top-[calc(50vh-160px)] overflow-hidden rounded-2xl border border-white/15 bg-white/[0.035] shadow-[0_24px_60px_-28px_rgba(0,0,0,0.8)]">
+            <motion.div
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              initial={
+                reduce
+                  ? false
+                  : { opacity: 0.4, y: 10, scale: 0.985, filter: "blur(2px)" }
+              }
+              key={active}
+              transition={{ duration: 0.35, ease: EASE_OUT_STRONG }}
+            >
+              <div className="flex items-center gap-3 border-white/10 border-b px-4 py-3">
+                <span
+                  className={cn(
+                    "rounded-pill px-2.5 py-0.5 font-bold font-mono text-[10px] uppercase tracking-[0.14em]",
+                    accent.pill
+                  )}
+                >
+                  {stage.step}
                 </span>
-                round trip complete
+                <span className="font-mono text-[11.5px] text-white/60">
+                  {stage.place}
+                </span>
               </div>
-            )}
+              {stage.code ? (
+                <pre className="min-h-48 overflow-x-auto px-4 py-5 font-mono text-[12.5px] text-white/85 leading-[1.7]">
+                  {stage.code}
+                </pre>
+              ) : (
+                <div className="flex min-h-48 items-center justify-center gap-2.5 font-mono text-accent-green text-sm">
+                  <span className="grid size-7 place-items-center rounded-full border-[1.5px] border-accent-green">
+                    <Check className="size-3.5" />
+                  </span>
+                  round trip complete
+                </div>
+              )}
+            </motion.div>
             <div
               aria-hidden
               className="flex gap-1.5 border-white/10 border-t px-4 py-3"
@@ -382,7 +456,7 @@ export const EventRide = () => {
                 />
               ))}
             </div>
-          </motion.div>
+          </div>
         </aside>
       </div>
     </>

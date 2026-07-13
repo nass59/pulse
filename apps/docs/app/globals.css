@@ -131,6 +131,13 @@
   --radius-pill: 9999px;
 
   /**
+   * The strong ease-out for entrances and content swaps — built-in `ease-out`
+   * is too weak for deliberate motion. JS twin: `EASE_OUT_STRONG` in
+   * `lib/motion.ts`. Keep the two in sync.
+   */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /**
    * The homepage ticker belt — a doubled item list sliding half its own
    * width, so the loop point is invisible. Consumers pair it with
    * `motion-reduce:animate-none`.

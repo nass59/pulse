@@ -82,7 +82,7 @@ export const Tiers = () => (
         return (
           <Link
             className={cn(
-              "group/tier flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:shadow-md",
+              "group/tier flex flex-col rounded-2xl border border-border bg-card p-6 transition-[translate,border-color,box-shadow] hover:-translate-y-0.5 hover:shadow-md",
               a.hover
             )}
             href={pillar.href}
@@ -91,7 +91,7 @@ export const Tiers = () => (
             <Icon className={cn("size-5", a.icon)} />
             <h3 className="mt-4 flex items-center gap-1.5 font-semibold text-foreground text-lg tracking-[-0.01em]">
               {pillar.title}
-              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover/tier:translate-x-0.5 group-hover/tier:opacity-100" />
+              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-[translate,opacity] group-hover/tier:translate-x-0.5 group-hover/tier:opacity-100" />
             </h3>
             <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
               {pillar.blurb}

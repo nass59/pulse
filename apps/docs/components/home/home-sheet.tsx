@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
  * drawing: carbon surface, faint yellow drafting grid, a hairline frame. The
  * `dark` class scopes the semantic tokens (and every `dark:` variant) to
  * forced-dark for everything inside, regardless of the site theme — the
- * homepage is the one deliberately dark "lab" surface end to end, while the
- * tiers behind it stay theme-aware.
+ * homepage is the one deliberately dark "lab" surface end to end. Everything
+ * on the sheet (including the tiers and roadmap, which are built theme-aware)
+ * renders dark here.
  */
 export const HomeSheet = ({ children }: { children: ReactNode }) => (
   <div className="dark bg-carbon-900 text-foreground">

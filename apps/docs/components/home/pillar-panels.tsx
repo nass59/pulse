@@ -4,6 +4,7 @@ import { RotateCcw } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
+import { EASE_OUT_STRONG } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,9 +19,14 @@ import { cn } from "@/lib/utils";
 /** Eases a display number toward a target while the panel is in view. */
 const useRamp = (target: number, active: boolean) => {
   const [value, setValue] = useState(0);
+  /** `done` in the deps retires the interval once the ramp lands. */
+  const done = value >= target;
   useEffect(() => {
     if (!active) {
       setValue(target);
+      return;
+    }
+    if (done) {
       return;
     }
     const id = setInterval(() => {
@@ -29,7 +35,7 @@ const useRamp = (target: number, active: boolean) => {
       );
     }, 55);
     return () => clearInterval(id);
-  }, [target, active]);
+  }, [target, active, done]);
   return value;
 };
 
@@ -145,7 +151,7 @@ const KafkaReplay = () => {
       </div>
       <div className="mt-4 flex items-center gap-4">
         <button
-          className="inline-flex items-center gap-2 rounded-pill border border-white/15 px-3.5 py-1.5 font-mono text-white/80 text-xs transition-all hover:border-electric-yellow/60 active:scale-[0.97]"
+          className="inline-flex items-center gap-2 rounded-pill border border-white/15 px-3.5 py-1.5 font-mono text-white/80 text-xs transition-[border-color,transform] hover:border-electric-yellow/60 active:scale-[0.97]"
           onClick={() => {
             setHead(0);
             setPlaying(true);
@@ -226,7 +232,11 @@ const GoFanout = () => {
             initial={false}
             key={y}
             strokeWidth="1.1"
-            transition={{ duration: 0.55, delay: i * 0.02, ease: "easeOut" }}
+            transition={{
+              duration: 0.55,
+              delay: i * 0.02,
+              ease: EASE_OUT_STRONG,
+            }}
             x1="46"
             x2="300"
             y1="100"
@@ -281,11 +291,12 @@ const KotlinHopping = () => {
         lands in six of them — and each close emits a fresh{" "}
         <code className="text-kotlin-purple">analytics.viewer-count.v1</code>.
       </p>
-      <div className="relative mt-5 h-36 border-white/15 border-b border-l">
+      {/* `@container` so the sweep line can travel in cqw — transform, not `left` */}
+      <div className="@container relative mt-5 h-36 border-white/15 border-b border-l">
         {HOP_WINDOWS.map((window, i) => (
           <div
             className={cn(
-              "absolute h-5 w-[38%] rounded border border-kotlin-purple bg-kotlin-purple/10 transition-all duration-400",
+              "absolute h-5 w-[38%] rounded border border-kotlin-purple bg-kotlin-purple/10 transition-[translate,opacity,background-color] duration-400",
               tick >= i
                 ? "translate-y-0 opacity-100"
                 : "translate-y-1 opacity-0",
@@ -314,8 +325,8 @@ const KotlinHopping = () => {
           ))}
         </div>
         <span
-          className="absolute top-0 bottom-3.5 w-px bg-electric-yellow shadow-glow-sm transition-[left] duration-1000 ease-linear"
-          style={{ left: `${SWEEP_LEFT[tick]}%` }}
+          className="absolute top-0 bottom-3.5 left-0 w-px bg-electric-yellow shadow-glow-sm transition-transform duration-1000 ease-linear"
+          style={{ transform: `translateX(${SWEEP_LEFT[tick]}cqw)` }}
         />
         <div className="absolute inset-x-0 -bottom-6 flex justify-between font-mono text-[9.5px] text-white/40">
           <span>−60s</span>
