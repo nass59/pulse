@@ -59,7 +59,7 @@ export default function RootLayout({
         <Header />
         <PathRail />
         <main className="mx-auto w-full max-w-3xl flex-1 px-6">
-          <article className="prose prose-slate dark:prose-invert max-w-none">
+          <article className="prose prose-slate dark:prose-invert max-w-none py-16">
             {children}
           </article>
         </main>
