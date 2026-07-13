@@ -1,13 +1,7 @@
 "use client";
 
 import { IconCheck, IconCopy } from "@tabler/icons-react";
-import {
-  type ComponentProps,
-  isValidElement,
-  type ReactElement,
-  useRef,
-  useState,
-} from "react";
+import { type ComponentProps, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -75,19 +69,24 @@ const languageLabel = (className: string | undefined): string | null => {
 export const CodeBlock = ({
   className,
   children,
+  codeClassName,
   style,
   ...props
-}: ComponentProps<"pre">) => {
+}: ComponentProps<"pre"> & {
+  /**
+   * The `<code>` child's className (`language-<lang>`), extracted server-side
+   * by the `pre` mapping in `mdx-components.tsx` and passed as a plain string.
+   * CodeBlock must never introspect `children` for it: across the RSC
+   * boundary the child can arrive as an unresolved lazy reference, so
+   * `isValidElement(children)` said yes on the server and no during
+   * hydration — a hydration mismatch that client-regenerated whole pages.
+   * String props serialise identically on both passes.
+   */
+  codeClassName?: string;
+}) => {
   const preRef = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
 
-  /**
-   * The language class lands on the `<code>` child; fall back to the `<pre>`'s
-   * own className (Shiki stamps both) so the label resolves either way.
-   */
-  const codeClassName = isValidElement(children)
-    ? (children as ReactElement<{ className?: string }>).props.className
-    : undefined;
   const label = languageLabel(codeClassName) ?? languageLabel(className);
 
   const copy = async () => {

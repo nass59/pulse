@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import { type ComponentProps, isValidElement, type ReactElement } from "react";
 
 import { Callout } from "@/components/docs/callout";
 import { CodeBlock } from "@/components/docs/code-block";
@@ -33,16 +34,37 @@ import { SchemaEvolution } from "@/components/interactive/schema-evolution";
 import { SystemTopology } from "@/components/interactive/system-topology";
 
 /**
+ * Server-side shim for fenced code blocks: reads the Shiki-stamped
+ * `language-<lang>` class off the `<code>` child *here*, where MDX hands over
+ * concrete elements, and forwards it to `CodeBlock` as a plain string prop.
+ * `CodeBlock` (a client component) must not introspect `children` itself —
+ * across the RSC boundary the child can arrive as an unresolved lazy
+ * reference, making the introspection disagree between the SSR pass and
+ * hydration (the code-block hydration-mismatch bug).
+ */
+const MdxPre = ({ children, ...props }: ComponentProps<"pre">) => {
+  const codeClassName = isValidElement(children)
+    ? (children as ReactElement<{ className?: string }>).props.className
+    : undefined;
+  return (
+    <CodeBlock {...props} codeClassName={codeClassName}>
+      {children}
+    </CodeBlock>
+  );
+};
+
+/**
  * Site-wide registry. Every `.mdx` page can use these by tag name without an
  * `import`. The interactive widgets carry their own `"use client"` boundary;
  * the MDX pages that embed them stay server components (the
  * server-component-with-client-leaf pattern proven on real content here).
  *
- * `pre` is mapped to the DevLab `CodeBlock` so every fenced code block in a doc
- * renders dark with a copy affordance, without per-page imports.
+ * `pre` is mapped to the DevLab `CodeBlock` (via the `MdxPre` shim) so every
+ * fenced code block in a doc renders dark with a copy affordance, without
+ * per-page imports.
  */
 const components: MDXComponents = {
-  pre: CodeBlock,
+  pre: MdxPre,
   table: Table,
   thead: Thead,
   tr: Tr,
