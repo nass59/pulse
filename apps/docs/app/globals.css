@@ -92,6 +92,18 @@
   --color-kotlin-ink: oklch(0.27 0.09 295.4);
   --color-kotlin-tint: oklch(0.965 0.018 295.4);
 
+  /**
+   * O'Reilly red — the Distributed Systems pillar accent (ADR-0025). The fourth
+   * accent amends ADR-0020's rule from "technology brand colour" to "real-world
+   * anchor": the pillar is book-driven and its shelf is O'Reilly, so the red
+   * points at where the content comes from, the way go-blue points at golang.org.
+   * #D3002D converted to oklch (ADR-0009 §1); dark enough that white ink clears
+   * AA on the fill, so `.ds-mark-systems` is light-on-red like Kotlin's.
+   */
+  --color-systems-red: oklch(0.545 0.215 24);
+  --color-systems-ink: oklch(0.3 0.11 24);
+  --color-systems-tint: oklch(0.966 0.014 24);
+
   --color-carbon-900: oklch(0.1776 0 89.88);
   --color-carbon-850: oklch(0.1986 0.0078 107.09);
   --color-carbon-800: oklch(0.2065 0.0133 107.51);
@@ -127,6 +139,11 @@
   --shadow-glow-kotlin-sm: 0 0 15px oklch(0.586 0.237 295.4 / 0.3);
   --shadow-glow-kotlin-md: 0 0 15px oklch(0.586 0.237 295.4 / 0.5);
   --shadow-glow-kotlin-lg: 0 0 30px oklch(0.586 0.237 295.4 / 0.4);
+
+  /* The O'Reilly-red glow — scoped to the /distributed-systems pillar (ADR-0025). */
+  --shadow-glow-systems-sm: 0 0 15px oklch(0.545 0.215 24 / 0.3);
+  --shadow-glow-systems-md: 0 0 15px oklch(0.545 0.215 24 / 0.5);
+  --shadow-glow-systems-lg: 0 0 30px oklch(0.545 0.215 24 / 0.4);
 
   --radius-pill: 9999px;
 
@@ -279,6 +296,21 @@
    */
   .ds-mark-kotlin {
     background: var(--color-kotlin-purple);
+    color: var(--color-paper-0);
+    padding: 0 0.12em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /**
+   * The Distributed Systems highlighter swipe — same shape, the O'Reilly-red
+   * accent (ADR-0025). Scoped to the /distributed-systems pillar so a
+   * highlighted word reads as "this is a discipline idea, learned from the
+   * shelf." White ink like `.ds-mark-kotlin`: systems-red is dark enough that
+   * white clears AA (~5.5:1).
+   */
+  .ds-mark-systems {
+    background: var(--color-systems-red);
     color: var(--color-paper-0);
     padding: 0 0.12em;
     box-decoration-break: clone;

@@ -6,14 +6,16 @@ import {
   KOTLIN_COMING_CONCEPTS,
 } from "./concepts";
 import { GO_STEPS } from "./go";
+import { HARD_PARTS_STEPS } from "./hard-parts";
 import { LEARN_STEPS } from "./learn";
 
 /**
- * The three learning pillars (ADR-0021). Each shares one shape — an overview,
- * an ordered `path/` track, and a `concepts/` reference — and one of the three
- * per-technology accents (ADR-0020): Kafka yellow, Go blue, Kotlin purple.
+ * The learning pillars (ADR-0021, extended by ADR-0025). Each shares one shape
+ * — an overview, an ordered track, and a `concepts/` reference — and one
+ * accent: Kafka yellow, Go blue, Kotlin purple, and O'Reilly red for the
+ * book-driven Distributed Systems pillar.
  */
-export type PillarAccent = "kafka" | "go" | "kotlin";
+export type PillarAccent = "kafka" | "go" | "kotlin" | "systems";
 
 /** A lesson in a pillar's ordered path; the shape <PathRail/> needs. */
 export type PathStep = {
@@ -64,6 +66,21 @@ export const PILLARS: Record<PillarAccent, PillarSpec> = {
     concepts: GO_CONCEPTS,
     comingConcepts: [],
   },
+  systems: {
+    accent: "systems",
+    eyebrow: "Distributed Systems · the discipline",
+    title: {
+      lead: "No best practices, only",
+      mark: "trade-offs",
+    },
+    intro:
+      "Readings from the architecture shelf — starting with Software Architecture: The Hard Parts — retold through Pulse. Each chapter maps a trade-off from the book onto a decision this system actually made, and shows what the losing option would have cost.",
+    note: "The track follows the book and grows chapter by chapter as the reading does. The concepts shelf stays dark on purpose: a pattern one technology implements lives in that technology's pillar, so a card lights here only when Pulse runs something genuinely cross-service.",
+    pathBase: "/distributed-systems/hard-parts",
+    steps: HARD_PARTS_STEPS,
+    concepts: [],
+    comingConcepts: [],
+  },
   kotlin: {
     accent: "kotlin",
     eyebrow: "Kotlin · stream processing",
@@ -83,9 +100,22 @@ export const PILLARS: Record<PillarAccent, PillarSpec> = {
  * pathname against each `base` to render "you are here" only on `path/` pages.
  * Kotlin has no entry — its path is still `coming`.
  */
-export const PILLAR_PATHS = [PILLARS.kafka, PILLARS.go].map((p) => ({
-  accent: p.accent,
-  base: p.pathBase,
-  label: `${p.eyebrow.split(" · ")[0]} path`,
-  steps: p.steps,
-}));
+export const PILLAR_PATHS = [
+  ...[PILLARS.kafka, PILLARS.go].map((p) => ({
+    accent: p.accent,
+    base: p.pathBase,
+    label: `${p.eyebrow.split(" · ")[0]} path`,
+    steps: p.steps,
+  })),
+  /**
+   * The Hard Parts book track (ADR-0025) is ordered like a path, so it gets
+   * the rail — labelled by the book, not the pillar, since each future book
+   * will be its own track.
+   */
+  {
+    accent: PILLARS.systems.accent,
+    base: PILLARS.systems.pathBase,
+    label: "Hard Parts",
+    steps: PILLARS.systems.steps,
+  },
+];

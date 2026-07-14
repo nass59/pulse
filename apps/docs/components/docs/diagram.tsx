@@ -4,6 +4,7 @@ import {
   IconBoxMultiple,
   IconBraces,
   IconBroadcast,
+  IconChartHistogram,
   IconCheck,
   IconColumns3,
   IconCrown,
@@ -1334,6 +1335,90 @@ export const GoroutineReadLoop = () => (
           ctx cancelled → return (no leak)
         </span>
       </div>
+    </div>
+  </DiagramFrame>
+);
+
+/* ------------------------------------------------------------------ */
+/* Distributed Systems — one question, three answers (The Hard Parts).  */
+/* ------------------------------------------------------------------ */
+
+type TruthAnswer = {
+  answer: string;
+  because: string;
+  icon: TablerIcon;
+  service: string;
+  /** Kafka yellow marks the one service where the log itself is canonical. */
+  tone: Tone;
+};
+
+const TRUTH_ANSWERS: TruthAnswer[] = [
+  {
+    service: "identity",
+    icon: IconDatabase,
+    tone: "ink",
+    answer: "Postgres is canonical",
+    because:
+      "Uniqueness and “one live stream per channel” need a referee that can say no right now — the log is only the broadcast (outbox).",
+  },
+  {
+    service: "chat",
+    icon: IconMessage,
+    tone: "yellow",
+    answer: "Kafka is the truth",
+    because:
+      "A message is a fact as the gateway saw it. Every read model — ring buffer, archives — is rebuilt by replaying the log.",
+  },
+  {
+    service: "analytics",
+    icon: IconChartHistogram,
+    tone: "neutral",
+    answer: "No original state",
+    because:
+      "State stores are views over upstream topics. Losing one costs nothing but a replay.",
+  },
+];
+
+/**
+ * Chapter 1 of "The Hard Parts" in one figure: Pulse asks "where does truth
+ * live?" once per service and deliberately gets three different answers
+ * (ADR-0003). A discipline figure, not a technology one — so the frame stays
+ * neutral and the only accent is the Kafka yellow on the one column where the
+ * log itself is canonical.
+ */
+export const SourceOfTruthSplit = () => (
+  <DiagramFrame caption="The same question answered three times, differently on purpose. If a best practice existed, the three columns would match — instead each service's constraints picked its own setup, and the differences are the design.">
+    <div className="flex items-center justify-between">
+      <span className="ds-eyebrow text-[10px]">one question</span>
+      <span className="font-mono text-[10px] text-muted-foreground">
+        where does truth live?
+      </span>
+    </div>
+
+    <div className="mt-5 grid items-stretch gap-3 sm:grid-cols-3">
+      {TRUTH_ANSWERS.map((col) => {
+        const Icon = col.icon;
+        return (
+          <div
+            className={cn(
+              "flex flex-col gap-2 rounded-xl border bg-transparent p-3.5",
+              tones[col.tone]
+            )}
+            key={col.service}
+          >
+            <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider">
+              <Icon className="size-3.5" />
+              {col.service}
+            </span>
+            <p className="font-semibold text-foreground text-sm">
+              {col.answer}
+            </p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {col.because}
+            </p>
+          </div>
+        );
+      })}
     </div>
   </DiagramFrame>
 );

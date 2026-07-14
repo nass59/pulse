@@ -56,6 +56,14 @@ const ACCENT: Record<
     note: "border-kotlin-purple/30 bg-kotlin-purple/[0.05]",
     noteIcon: "text-kotlin-purple",
   },
+  systems: {
+    mark: "ds-mark-systems",
+    tile: "border-systems-red/30 bg-systems-red/10 text-systems-ink group-hover/card:border-systems-red/60 dark:text-systems-red",
+    cardHover: "hover:border-systems-red/50 dark:hover:shadow-glow-systems-sm",
+    check: "text-systems-red",
+    note: "border-systems-red/30 bg-systems-red/[0.05]",
+    noteIcon: "text-systems-red",
+  },
 };
 
 const StepCard = ({

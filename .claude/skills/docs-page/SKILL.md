@@ -1,6 +1,6 @@
 ---
 name: docs-page
-description: Create or improve a page on the Pulse docs site (apps/docs), following its established conventions. Use when the user wants to add, write, draft, or improve a docs page — a Learn page, concept page, architecture page, or journey recap — or runs /docs-page.
+description: Create or improve a page on the Pulse docs site (apps/docs), following its established conventions. Use when the user wants to add, write, draft, or improve a docs page — a pillar path lesson, concept page, Build architecture page, or journey recap — or runs /docs-page. For book-chapter pages on the Distributed Systems pillar, the book-chapter skill drives and defers to this one for mechanics.
 ---
 
 # docs-page
@@ -15,7 +15,7 @@ below. If this skill and `AGENTS.md` ever disagree, `AGENTS.md` wins.
 ## Modes — inferred from the argument
 
 - **improve** — the argument names an existing page (a path like
-  `app/concepts/kraft-mode/page.mdx` or a route like `/concepts/kraft-mode`).
+  `app/kafka/concepts/kraft-mode/page.mdx` or a route like `/kafka/concepts/kraft-mode`).
 - **create** — the argument is a topic ("a page on consumer lag").
 - **ambiguous** — ask which, with a recommendation, before doing anything.
 
@@ -24,41 +24,53 @@ below. If this skill and `AGENTS.md` ever disagree, `AGENTS.md` wins.
 | Need                                                                                                          | Where it lives                                                                |
 | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Content conventions (provenance, build-state honesty, dynamics filter, voice, page skeleton, rendering rules) | `apps/docs/AGENTS.md`                                                         |
+| Pillar IA (overview + `path/` + `concepts/`, The Build hub)                                                    | `docs/adr/0021-docs-site-technology-pillars.md`                               |
+| Distributed Systems pillar: book tracks, one-home rule, chapter-page arc                                       | `docs/adr/0025-distributed-systems-pillar-book-tracks.md`                     |
 | Why the site exists + the dynamics-shaped filter                                                              | `docs/adr/0007-docs-site-as-study-artifact.md`                                |
 | Storybook story required per interactive widget                                                               | `docs/adr/0008-storybook-for-component-isolation.md`                          |
 | DevLab design tokens & component grammar                                                                      | `docs/adr/0009-devlab-design-system.md`, `apps/docs/app/globals.css`          |
 | MDX rendering pipeline (GFM tables, Shiki fences)                                                             | `docs/adr/0010-mdx-rendering-pipeline.md`                                     |
-| The Learn tier as general (un-gated) pedagogy                                                                 | `docs/adr/0011-learn-track-general-kafka.md`                                  |
+| The `path/` half as general (un-gated) pedagogy                                                                 | `docs/adr/0011-learn-track-general-kafka.md`                                  |
 | Global MDX components (available in any `.mdx` without import)                                                | `apps/docs/mdx-components.tsx`                                                |
 | Page primitives                                                                                               | `apps/docs/components/docs/`                                                  |
-| Interactive widgets / static figures                                                                          | `apps/docs/components/interactive/`, `apps/docs/components/learn/figures.tsx` |
-| Data libs (catalogue, roadmap, learn path)                                                                    | `apps/docs/lib/{concepts,roadmap,learn}.ts`                                   |
+| Interactive widgets / static figures                                                                          | `apps/docs/components/interactive/`, `apps/docs/components/kafka/figures.tsx` |
+| Data libs (concept shelves, pillar specs + path rail, roadmap)                                                                    | `apps/docs/lib/{concepts,pillars,learn,go,roadmap}.ts`                                   |
 | ADR link registry (add new ADRs here)                                                                         | `apps/docs/components/docs/sources.tsx` (`ADR_INDEX`)                         |
 
-## The four tiers — pick one (Gate A)
+## The surfaces — pick one (Gate A)
 
-| Tier             | Route           | Provenance                | Build-state gated?                                                                          | Canonical example                  |
-| ---------------- | --------------- | ------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------- |
-| **Learn**        | `/learn`        | external `<Sources refs>` | **No** — teaches the technology generically                                                 | `app/learn/what-is-kafka/page.mdx` |
-| **Concepts**     | `/concepts`     | `<Sources adrs issues>`   | **Yes** — only ships once Pulse exercises the idea; `live` vs `coming` in `lib/concepts.ts` | `app/concepts/kraft-mode/page.mdx` |
-| **Architecture** | `/architecture` | `<Sources adrs issues>`   | **Yes** — topology must be build-state honest                                               | `app/architecture/page.mdx`        |
-| **Journey**      | `/journey`      | `<Sources adrs issues>`   | **Yes** — per-phase recap of what shipped                                                   | `app/journey/foundations/page.mdx` |
+Per ADR-0021, the nav is technology pillars (`/kafka`, `/go`, `/kotlin`) — each
+shaped **overview + `path/` + `concepts/`** — plus the `/build` hub and the
+book-driven `/distributed-systems` pillar (ADR-0025). A page lands on one of:
+
+| Surface                    | Route                              | Provenance                       | Build-state gated?                                                                          | Canonical example                        |
+| -------------------------- | ---------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Pillar `path/` lesson**  | `/<pillar>/path/<slug>`            | external `<Sources refs>`        | **No** — teaches the technology from zero                                                   | `app/kafka/path/what-is-kafka/page.mdx`  |
+| **Pillar `concepts/` ref** | `/<pillar>/concepts/<slug>`        | `<Sources adrs issues>`          | **Yes** — a lit card means Pulse runs it; shelves are the per-pillar arrays in `lib/concepts.ts` | `app/kafka/concepts/kraft-mode/page.mdx` |
+| **Build: Architecture**    | `/build/architecture/<slug>`       | `<Sources adrs issues>`          | **Yes** — topology must be build-state honest                                               | `app/build/architecture/page.mdx`        |
+| **Build: Journey**         | `/build/journey/<slug>`            | `<Sources adrs issues>`          | **Yes** — per-epic recap of what shipped                                                    | `app/build/journey/foundations/page.mdx` |
+| **Book chapter**           | `/distributed-systems/<book>/<ch>` | `<Sources refs adrs>` (book + ADRs) | Track ordered per book; content must pass the ADR-0025 anti-summary test                    | (first ships with *The Hard Parts*)      |
+
+Book-chapter pages are **driven by the `book-chapter` skill** (intake → mapping
+→ debate); this skill supplies only the drafting/verification mechanics below.
+Concept placement follows the **one-home rule** (ADR-0025 §3): a card lives in
+the most concrete pillar that implements it; cross-link, never duplicate.
 
 ## Workflow
 
 ### 1. Orient
 
-Read `apps/docs/AGENTS.md` and the canonical example for the likely tier. In
+Read `apps/docs/AGENTS.md` and the canonical example for the likely surface. In
 **improve** mode, also read the target page and diff it against the conventions
 (skeleton present? `<Hook>` on a concept page? collapsed `<Sources>` last? GFM
 tables, language-tagged fences? voice? build-state honesty?). Surface the gaps
 before changing anything.
 
-### 2. Gate A — which tier (confirm with a recommendation)
+### 2. Gate A — which surface (confirm with a recommendation)
 
-Propose the tier with reasoning and invite pushback; don't present a blank menu.
-The tier sets the provenance model, whether build-state gating applies, and the
-voice. Getting it wrong costs a rewrite, so confirm before drafting.
+Propose the surface with reasoning and invite pushback; don't present a blank
+menu. The surface sets the provenance model, whether build-state gating applies,
+and the voice. Getting it wrong costs a rewrite, so confirm before drafting.
 
 ### 3. Gate B — does it earn an interactive widget (confirm with a recommendation)
 
@@ -72,11 +84,12 @@ reasoning. If interactive, it **must** get a Storybook story (ADR-0008).
 
 Before drafting, check the plan against what Pulse has actually built:
 
-- **Concepts / Architecture / Journey** — never draw an un-built node/edge as
-  live; never link or light a concept page before it ships; don't invent
-  architecture not in `CONTEXT.md` / `docs/adr/`.
-- **Learn** — depict the _universal_ Kafka mechanism, never Pulse's topology, and
-  label illustrative widgets as such (the `Firehose` precedent).
+- **Gated surfaces (`concepts/`, `/build`, book chapters)** — never draw an
+  un-built node/edge as live; never link or light a concept card before it
+  ships; don't invent architecture not in `CONTEXT.md` / `docs/adr/`.
+- **`path/` lessons** — depict the _universal_ mechanism of the technology,
+  never Pulse's topology, and label illustrative widgets as such (the
+  `Firehose` precedent).
 - If a genuine new convention or architectural decision **crystallises while
   drafting**, STOP. Route to `grill-with-docs` / write the ADR first (and
   register it in `sources.tsx` `ADR_INDEX`), then resume. The docs follow the
@@ -103,16 +116,19 @@ Before drafting, check the plan against what Pulse has actually built:
   boundary; reuse the a11y-safe tone pattern (category colour as text + hairline
   border, never a low-contrast fill).
 - **Wiring:** page-specific big components are imported at the top of the `.mdx`;
-  broadly-reused ones get registered in `mdx-components.tsx`. New section → add to
-  `components/docs/header.tsx`. New concept → `lib/concepts.ts` (`live` only with
-  an `href`). New Learn step → `lib/learn.ts`. Links inside `Callout`/`Hook` must
+  broadly-reused ones get registered in `mdx-components.tsx`. New nav section →
+  `components/docs/header.tsx`. New concept → its pillar's array in
+  `lib/concepts.ts` (`live` only with an `href`). New `path/` step → the pillar's
+  data lib (`lib/learn.ts` for Kafka, `lib/go.ts` for Go) and `lib/pillars.ts`
+  (`PILLAR_PATHS` drives the sticky `<PathRail>`). Links inside `Callout`/`Hook` must
   be inline markdown (multi-line JSX `<a>` breaks to its own line; `.ds-rich a`
   styles them).
 
 ### 6. Provenance (`<Sources>` is always last, collapsed)
 
-- **Learn** → `<Sources refs={[{label, href}, …]} />` (Apache / AWS / hellointerview).
-- **Other tiers** → `<Sources adrs={[…]} issues={["foundations/02-…"]} />`. ADRs
+- **`path/` lessons** → `<Sources refs={[{label, href}, …]} />` (Apache / AWS / hellointerview).
+- **Book chapters** → `<Sources refs adrs />` — the book chapter as a ref plus the linked ADRs.
+- **Other surfaces** → `<Sources adrs={[…]} issues={["foundations/02-…"]} />`. ADRs
   render as GitHub links (must exist in `ADR_INDEX`); `.scratch/` issues render as
   **plain labels, never links** — the tracker is local-only.
 
@@ -133,7 +149,7 @@ the build covers those.
 
 ### 8. Report
 
-Summarise: tier, static-vs-interactive call, files touched, provenance wired, and
+Summarise: surface, static-vs-interactive call, files touched, provenance wired, and
 the verification results (build, story tests, and the browser check if run).
 
 ## Boundaries

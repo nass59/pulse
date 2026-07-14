@@ -1,0 +1,119 @@
+export const metadata = {
+  title: "When there are no best practices — Pulse docs",
+  description:
+    "Chapter 1 of Software Architecture: The Hard Parts, retold through Pulse — why the hard problems have no correct answer, only trade-offs, proved on the one question this system deliberately answers three different ways.",
+};
+
+<PageHeader
+  eyebrow="The Hard Parts · Chapter 1"
+  title={
+    <>
+      When there are no <span className="ds-mark-systems">best practices</span>
+    </>
+  }
+/>
+
+<Hook tone="systems">
+  ask an F1 race engineer for the *best* car setup and they'll answer with a
+  question: **which track?** Monza's setup and Monaco's setup are opposites —
+  and both are right.
+</Hook>
+
+At Monza, the fastest track on the calendar, the wings get skimmed down to almost nothing — you trade cornering grip for straight-line speed, because Monza is mostly straights. Two weeks later at Monaco the same car grows the biggest wing the rules allow and gives all that speed back, because Monaco is one long corner and grip is everything. Same car, same rules, same engineers. Opposite answers. And nobody at the pit wall is embarrassed about it, because "best setup" was never a real thing — only *best for this track, this tyre, this weather*.
+
+That's the whole first chapter in one image. The reason you can't google "best way to split services" or "correct source of truth" isn't that architects are hiding the answer — it's that any problem generic enough to have a best practice has already been solved, wrapped in a library, and taken off your desk. What's left, by definition, is the hard parts: problems novel enough that nobody has seen your exact track conditions. The job isn't to find the right answer; it's to weigh trade-offs honestly and pick the **least-worst combination for your context** — then write down why.
+
+The book grounds every chapter in a fictional consulting saga, the Sysops Squad. This track has something better than fiction: the system next door. Every chapter here gets tested against what Pulse actually built.
+
+## One question, three answers
+
+If best practices existed, the most fundamental question in an event-driven system — *where does the truth live?* — would have one answer, and Pulse asked it three times.
+
+<SourceOfTruthSplit />
+
+Look at what decided each column, because none of it is ideology — it's track conditions.
+
+`identity` keeps **Postgres as the canonical store** because its data is full of promises that need a referee: a channel slug must be unique, a channel can have at most one live stream. Promises like that need something that can say *no, right now* — a unique index rejecting the second go-live in the same millisecond. An eventually-consistent log can't referee; it can only report. So the log gets demoted to a broadcast channel, fed through [the transactional outbox](/kafka/concepts/transactional-outbox) so state and announcement can never disagree.
+
+`chat` flips it: **Kafka *is* the truth.** A chat message isn't a row that gets updated — it's a fact about the past. Alice said "gg" at 20:31:04, as [the gateway saw it](/kafka/concepts/server-authored-events), and nothing will ever make that less true. Facts want a log. Everything readable — the ring buffer that fills your screen mid-stream, the archives — is a projection rebuilt by replaying it.
+
+`analytics` goes further and owns **no original state at all**. Its viewer counts live in state stores that are just materialized views over the other two services' topics. If a store dies, nothing is lost that a replay can't rebuild.
+
+Three services, three sources of truth — deliberately, and recorded with reasoning at the very start of the project. That's not indecision. That's Monza and Monaco.
+
+## Decisions with receipts
+
+The chapter's most practical advice is also its cheapest: when you make an architectural decision, write down *why* — the context, the options you rejected, the trade-off you accepted — in a short **architecture decision record**. Not documentation for documentation's sake: the *what* of a decision is visible in the code forever, but the *why* evaporates in about six weeks.
+
+Pulse has twenty-five of these records, and this very page exists because of one. Better: this pillar's own name is proof the habit pays. When this docs site was reorganized into pillars, the name *Distributed Systems* was considered for the Kafka pillar and rejected — **with the reasoning written down**. Months later, a shelf of architecture books needed a home, someone re-read that rejection, and the recorded *why* showed the name had been waiting for this pillar all along. A decision log doesn't just explain the past; it hands ammunition to the future.
+
+<Callout variant="lesson" title="The why outlives the what">
+  Six weeks after any decision, the code still shows *what* you did — three
+  services, three truth models — but only a written record remembers that you
+  weighed alternatives and what they would have cost. Without it, the next
+  person (usually you) either re-litigates the decision or, worse, "fixes" it.
+</Callout>
+
+## Pulse's one fitness function — running at half value
+
+The chapter's other tool is the **architecture fitness function**: an automated check that a structural quality you care about still holds — no cyclic dependencies, layers respected, contracts unbroken. Not a unit test (those check behaviour); a test *of the architecture itself*.
+
+Pulse has exactly one thing that qualifies, and it's a good one. Every event schema is registered against the schema registry with its compatibility rule pinned to `BACKWARD` — so a schema change that would break existing consumers is *structurally rejected*, loudly, by machinery rather than by code review vigilance. That is a fitness function by the book's own definition: an automated check on an architectural characteristic, here the evolvability of contracts.
+
+And here's the confession: **it only runs when a human remembers to run it.** The check lives in a script (`packages/schemas/scripts/publish.ts`), and there is no CI pipeline in this repo yet — nothing runs it on every change. The book is blunt about exactly this: a fitness function delivers its full value only when it runs *continually*, because the whole point is catching the erosion you weren't looking for.
+
+<Callout variant="footgun" title="A manual fitness function is a smoke alarm you have to remember to sniff">
+  The gate works — a breaking schema gets rejected. But it guards the moment
+  someone runs the script, not the moment someone makes the mistake. The gap
+  between those two moments is where a broken contract slips in and waits.
+  Half-built on purpose is fine; half-built and *documented as finished* is
+  how systems rot — the glossary here claimed "CI" until this chapter forced
+  the correction.
+</Callout>
+
+## Operational vs analytical — the trailer
+
+The chapter plants one more distinction it will grow later: **operational data** (the rows a business inserts, updates, and deletes to function — OLTP) versus **analytical data** (the read-optimized views the business learns from — OLAP). Pulse doesn't need to imagine that split; it's physically two services. `identity`'s Postgres is the operational end — every follow and go-live is a transaction. `analytics` is the analytical end — windowed aggregates nobody ever updates, only recomputes. And the bridge between the two worlds is the log itself.
+
+The book digs into this properly in its data chapters; this section fills in when the reading gets there.
+
+## The road not taken
+
+The honest way to respect a trade-off is to price the option you rejected. So: what would *one* truth model everywhere cost Pulse?
+
+Force `chat`'s answer onto `identity` — event-source everything, Kafka as the only truth — and every promise turns into a race. "Is this slug taken?" becomes a read against a log that might not have caught up with the write that took it. The one-live-stream rule loses its referee: two go-lives a millisecond apart both look fine to a consumer that hasn't seen either yet. You'd end up rebuilding synchronous coordination *on top of* the log — badly.
+
+Force `identity`'s answer onto `chat` — Postgres canonical, log as broadcast — and every chat message pays a database round-trip before anyone sees it, on a service built to hold thousands of live sockets per node. The write path that made go-live safe becomes the bottleneck that makes chat slow, guarding invariants chat doesn't have. A message needs no referee; it's already true.
+
+Each transplant fails for the same reason the original choices work: the constraints — the track — are different. The differences between the three columns aren't inconsistency. They're the design.
+
+## What would change our mind
+
+- **A CI pipeline lands in the repo.** The schema gate gets wired into it that week — it's a one-script job waiting for a place to run — and Pulse's fitness function starts earning its other half.
+- **A second fitness function suggests itself.** The moment services share internal libraries, a cyclic-dependency check (the chapter's own example) becomes worth automating. Today, three services that only meet through Kafka topics can't have that disease.
+- **The book reaches its analytical-data chapters.** The trailer section above gets replaced by the real thing, tested against how `analytics` actually windows, stores, and serves.
+
+<PageNav
+  next={{
+    href: "/kafka/concepts/transactional-outbox",
+    title: "The transactional outbox",
+    blurb:
+      "The chapter's thesis at maximum zoom — one trade-off, one service, and the crash window that decided it.",
+  }}
+  prev={{
+    href: "/distributed-systems",
+    title: "The shelf",
+    blurb: "The Distributed Systems pillar — every book, every chapter.",
+  }}
+/>
+
+<Sources
+  adrs={[3, 4, 25]}
+  refs={[
+    {
+      label:
+        "Software Architecture: The Hard Parts — Ford, Richards, Sadalage, Dehghani (O'Reilly), Chapter 1",
+      href: "https://www.oreilly.com/library/view/software-architecture-the/9781492086888/",
+    },
+  ]}
+/>

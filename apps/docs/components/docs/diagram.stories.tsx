@@ -14,6 +14,7 @@ import {
   LogWithOffsets,
   QuorumFaultTolerance,
   ServerAuthoredStamp,
+  SourceOfTruthSplit,
   VolumePersistence,
 } from "./diagram";
 
@@ -45,6 +46,7 @@ const ONE_ORDERED_CHANNEL = /one ordered channel/i;
 const LIVE_CHANNEL_MAP = /live-channel map/i;
 const BEST_EFFORT = /best-effort · live push/i;
 const WRITE_PUMP = /goroutine · write pump/i;
+const WHERE_TRUTH_LIVES = /where does truth live\?/i;
 
 export const Healthcheck: Story = {
   render: () => <HealthcheckTimeline />,
@@ -135,5 +137,12 @@ export const GoroutineLoop: Story = {
   render: () => <GoroutineReadLoop />,
   play: async ({ canvas }) => {
     await expect(canvas.getByText(WRITE_PUMP)).toBeVisible();
+  },
+};
+
+export const TruthSplit: Story = {
+  render: () => <SourceOfTruthSplit />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(WHERE_TRUTH_LIVES)).toBeVisible();
   },
 };

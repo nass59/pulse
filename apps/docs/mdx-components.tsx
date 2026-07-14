@@ -18,6 +18,7 @@ import {
   PartitionContractTrap,
   QuorumFaultTolerance,
   ServerAuthoredStamp,
+  SourceOfTruthSplit,
   VolumePersistence,
 } from "@/components/docs/diagram";
 import { Eyebrow } from "@/components/docs/eyebrow";
@@ -93,6 +94,7 @@ const components: MDXComponents = {
   SchemaEvolution,
   ServerAuthoredStamp,
   Sources,
+  SourceOfTruthSplit,
   Tag,
   VolumePersistence,
   KraftControllerElection,

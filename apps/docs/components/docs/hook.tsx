@@ -33,6 +33,13 @@ const TONES = {
     chip: "bg-go-blue/15 text-go-ink dark:text-go-blue",
     label: "text-go-ink dark:text-go-blue",
   },
+  /** O'Reilly red for the /distributed-systems pillar (ADR-0025). */
+  systems: {
+    shell:
+      "border-systems-red/40 bg-systems-tint dark:border-systems-red/25 dark:bg-systems-red/[0.07]",
+    chip: "bg-systems-red/15 text-systems-ink dark:text-systems-red",
+    label: "text-systems-ink dark:text-systems-red",
+  },
 } as const;
 
 export const Hook = ({

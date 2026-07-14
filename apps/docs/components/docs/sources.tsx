@@ -83,6 +83,22 @@ const ADR_INDEX: Record<number, { slug: string; title: string }> = {
     slug: "0021-docs-site-technology-pillars",
     title: "Docs site reorganized into technology pillars",
   },
+  22: {
+    slug: "0022-concurrent-viewer-windowed-approximation",
+    title: "Concurrent viewers as a windowed approximation",
+  },
+  23: {
+    slug: "0023-viewer-frontend-separate-next-app-with-trpc-bff",
+    title: "Viewer frontend as a separate Next app with tRPC BFF",
+  },
+  24: {
+    slug: "0024-redis-pubsub-as-the-cross-node-fanout-plane",
+    title: "Redis pub/sub as the cross-node fan-out plane",
+  },
+  25: {
+    slug: "0025-distributed-systems-pillar-book-tracks",
+    title: "Distributed Systems pillar carries book tracks",
+  },
 };
 
 const pad = (n: number) => String(n).padStart(4, "0");

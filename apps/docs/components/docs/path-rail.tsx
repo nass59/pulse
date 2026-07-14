@@ -22,6 +22,8 @@ const ACTIVE: Record<PillarAccent, string> = {
   go: "border-go-blue bg-go-blue/15 text-go-ink dark:text-go-blue",
   kotlin:
     "border-kotlin-purple bg-kotlin-purple/15 text-kotlin-ink dark:text-kotlin-purple",
+  systems:
+    "border-systems-red bg-systems-red/15 text-systems-ink dark:text-systems-red",
 };
 
 export const PathRail = () => {

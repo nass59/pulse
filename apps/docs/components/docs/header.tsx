@@ -8,6 +8,11 @@ const NAV = [
   { href: "/kafka", label: "Kafka" },
   { href: "/go", label: "Go" },
   { href: "/kotlin", label: "Kotlin" },
+  /**
+   * The Distributed Systems pillar (ADR-0025). "Systems" only because the
+   * full name overflows the fixed w-32 nav cell — the landing page carries it.
+   */
+  { href: "/distributed-systems", label: "Systems" },
   { href: "/build", label: "The Build" },
 ];
 
