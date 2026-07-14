@@ -1,4 +1,4 @@
-import { IconScale, type TablerIcon } from "@tabler/icons-react";
+import { IconLink, IconScale, type TablerIcon } from "@tabler/icons-react";
 
 /**
  * The "Software Architecture: The Hard Parts" chapter track (ADR-0025) — the
@@ -30,6 +30,18 @@ export const HARD_PARTS_STEPS: ChapterStep[] = [
       "One system, one question, three deliberate answers",
       "A real fitness function — and the half of its value Pulse leaves unclaimed",
       "Why written-down reasoning let a rejected name come back",
+    ],
+  },
+  {
+    title: "Discerning coupling",
+    blurb:
+      "Chapter 2 — static coupling is what you can't boot without; dynamic coupling is how quanta talk. Both tested for real: on chat's three startup dependencies, and on the synchronous check Pulse refused to make.",
+    href: "/distributed-systems/hard-parts/discerning-coupling",
+    icon: IconLink,
+    takeaways: [
+      "The boot test: chat dies without the registry, shrugs off the broker",
+      "Three dials of dynamic coupling — and why one of them reads empty",
+      "What a synchronous liveness check would have fused together",
     ],
   },
 ];

@@ -3,6 +3,7 @@ import { expect } from "storybook/test";
 
 import {
   AutoTopicFlow,
+  ChatBootAudit,
   ControllerRole,
   CoPartitionRouting,
   DependsOnRace,
@@ -47,6 +48,7 @@ const LIVE_CHANNEL_MAP = /live-channel map/i;
 const BEST_EFFORT = /best-effort · live push/i;
 const WRITE_PUMP = /goroutine · write pump/i;
 const WHERE_TRUTH_LIVES = /where does truth live\?/i;
+const STATIC_COUPLING_TEST = /the static-coupling test/i;
 
 export const Healthcheck: Story = {
   render: () => <HealthcheckTimeline />,
@@ -144,5 +146,12 @@ export const TruthSplit: Story = {
   render: () => <SourceOfTruthSplit />,
   play: async ({ canvas }) => {
     await expect(canvas.getByText(WHERE_TRUTH_LIVES)).toBeVisible();
+  },
+};
+
+export const BootAudit: Story = {
+  render: () => <ChatBootAudit />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(STATIC_COUPLING_TEST)).toBeVisible();
   },
 };

@@ -1422,3 +1422,117 @@ export const SourceOfTruthSplit = () => (
     </div>
   </DiagramFrame>
 );
+
+/* ------------------------------------------------------------------ */
+/* Discerning coupling — chat's boot audit: wiring vs delivery target.  */
+/* ------------------------------------------------------------------ */
+
+type BootDependency = {
+  /** Why the verdict is what it is, in one line. */
+  detail: string;
+  icon: TablerIcon;
+  name: string;
+  whenDown: string;
+  /** True when chat refuses to start without it — static coupling by the boot test. */
+  wiring: boolean;
+};
+
+/**
+ * The three dependencies `chat` meets at startup and what actually happens when
+ * each is unreachable — the recorded behaviour from ADR-0019 (registry vs
+ * broker) and ADR-0024 (Redis), not a hypothetical.
+ */
+const CHAT_BOOT_DEPS: BootDependency[] = [
+  {
+    name: "schema registry",
+    icon: IconFileCode,
+    whenDown: "process exits",
+    wiring: true,
+    detail:
+      "no schema id to stamp → the gateway cannot author a single well-formed event",
+  },
+  {
+    name: "redis · fan-out plane",
+    icon: IconShare2,
+    whenDown: "process exits",
+    wiring: true,
+    detail: "no courier → a live medium with no cross-node delivery at all",
+  },
+  {
+    name: "kafka broker",
+    icon: IconDatabase,
+    whenDown: "starts anyway",
+    wiring: false,
+    detail: "librdkafka buffers and retries; the record catches up on recovery",
+  },
+];
+
+/**
+ * Chapter 2's static-coupling test, run for real. The book defines static
+ * coupling operationally — what a service needs to *bootstrap* — and chat has
+ * already answered for each of its three dependencies: registry down kills the
+ * boot, Redis down kills the boot, broker down is shrugged off. The edge every
+ * topology diagram draws thickest is the one chat can start without.
+ */
+export const ChatBootAudit = () => (
+  <DiagramFrame caption="The boot test, per dependency. Take each box away and try to start chat: the schema registry and Redis are wiring — the process refuses to exist without them — while the broker, the arrow every diagram draws thickest, is a delivery target chat happily boots without. Static coupling is measured at startup, not by arrow width.">
+    <div className="flex items-center justify-between">
+      <span className="ds-eyebrow text-[10px]">
+        chat · dependency down at boot
+      </span>
+      <span className="font-mono text-[10px] text-muted-foreground">
+        the static-coupling test
+      </span>
+    </div>
+
+    <div className="mt-4 flex flex-col gap-2.5">
+      {CHAT_BOOT_DEPS.map((dep) => {
+        const Icon = dep.icon;
+        return (
+          <div
+            className={cn(
+              "flex flex-col gap-2 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:gap-4",
+              dep.wiring ? "border-accent-orange/40" : "border-accent-green/40"
+            )}
+            key={dep.name}
+          >
+            <div className="flex items-center gap-2 font-mono text-[11px] text-foreground sm:basis-1/4">
+              <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+              <span>{dep.name}</span>
+            </div>
+
+            <p className="text-muted-foreground text-xs leading-relaxed sm:flex-1">
+              {dep.detail}
+            </p>
+
+            <div className="flex items-center gap-2 sm:shrink-0">
+              <span
+                className={cn(
+                  "flex items-center gap-1.5 rounded-pill border px-2 py-0.5 font-mono text-[10px]",
+                  dep.wiring
+                    ? "border-accent-orange/50 text-accent-orange"
+                    : "border-accent-green/50 text-accent-green"
+                )}
+              >
+                {dep.wiring ? (
+                  <IconX className="size-3" />
+                ) : (
+                  <IconCheck className="size-3" />
+                )}
+                {dep.whenDown}
+              </span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] uppercase tracking-wider",
+                  dep.wiring ? "text-accent-orange" : "text-accent-green"
+                )}
+              >
+                {dep.wiring ? "wiring" : "delivery target"}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </DiagramFrame>
+);

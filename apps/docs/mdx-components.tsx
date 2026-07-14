@@ -5,6 +5,7 @@ import { Callout } from "@/components/docs/callout";
 import { CodeBlock } from "@/components/docs/code-block";
 import {
   AutoTopicFlow,
+  ChatBootAudit,
   ControllerRole,
   CoPartitionRouting,
   DependsOnRace,
@@ -73,6 +74,7 @@ const components: MDXComponents = {
   td: Td,
   AutoTopicFlow,
   Callout,
+  ChatBootAudit,
   CodeBlock,
   ConceptQuiz,
   CoPartitionRouting,

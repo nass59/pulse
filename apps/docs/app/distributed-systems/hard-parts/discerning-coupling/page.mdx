@@ -1,0 +1,119 @@
+export const metadata = {
+  title: "Discerning coupling — Pulse docs",
+  description:
+    "Chapter 2 of Software Architecture: The Hard Parts, retold through Pulse — static coupling is what you can't boot without, dynamic coupling is how quanta talk, and both have already been measured on this system.",
+};
+
+<PageHeader
+  eyebrow="The Hard Parts · Chapter 2"
+  title={
+    <>
+      Discerning <span className="ds-mark-systems">coupling</span>
+    </>
+  }
+/>
+
+<Hook tone="systems">
+  Inter and AC Milan are two fully independent clubs — own squads, own owners,
+  own finances — until you check who owns the **calendar**. They share one
+  stadium, so neither schedules a home match alone.
+</Hook>
+
+Nothing on either club's org chart says "coupled." The dependency only shows up when you audit the *wiring*: both play at San Siro, so a fixture clash isn't a possibility, it's a scheduling constraint the league plans around every season. Two organisations that look independent from every angle — until the shared infrastructure forces them to move in step.
+
+That's the chapter's whole method. Two parts of a system are **coupled** if changing one might force a change in the other, and you find that out by auditing wiring, not by trusting the diagram. The chapter then splits the audit in two. **Static coupling** is how things are wired together — the stadium, the training ground, everything a club can't host a match without. **Dynamic coupling** is how things talk during play — a give-and-go, where the passer sprints into space and is stranded unless the return ball comes back *now* (synchronous), versus a long ball launched over the top for whoever arrives (asynchronous — the kicker's job ended at the kick).
+
+Out of the static half falls the chapter's sharpest tool: the **architecture quantum**, the smallest deployable unit that actually functions on its own — the club that can host a match without asking anyone. The classic quantum-killer is a shared database: two services on one schema are one quantum wearing two jerseys, deployable only in lockstep. Two clubs, one stadium.
+
+So: run the audit on Pulse.
+
+## Start counting
+
+First pass says three quanta. Three services in three languages, each with its own deploy, and — deliberately, from the project's very first decision — no shared database: `identity` owns its Postgres, `chat`'s truth is the log itself, and `analytics` holds no original state at all, only stores rebuildable by replay. Pulse passes the chapter's headline test, and [the previous chapter](/distributed-systems/hard-parts/no-best-practices) already told the story of *why* each service picked its truth model.
+
+But the audit isn't done at the database. Static coupling counts *everything* a service needs to function, and all three services bolt onto the same substrate: one Kafka broker and one Apicurio schema registry, both from a single compose file. Isn't that San Siro?
+
+Not quite — and the difference is worth being precise about. A shared database couples services through *private state*: one service can reach into tables another service considers its own, so any schema change ripples blindly. Pulse's shared log carries only *published contracts*: every event on it is an Avro schema, versioned, and [compatibility-checked](/kafka/concepts/schema-compatibility) so that a producer can evolve without redeploying its consumers. The registry pins every subject to backward compatibility and structurally rejects the change that would force consumers to upgrade in lockstep. The broker is shared infrastructure, but nobody reaches through it into anyone else's state — which is exactly what keeps three quanta from quietly fusing into one.
+
+## The audit chat already ran
+
+The chapter's definition of static coupling is refreshingly operational: it's whatever your service needs to **bootstrap**. Not "what's on the diagram" — what must exist for the process to start.
+
+Pulse has already run that experiment, dependency by dependency, and recorded the verdicts:
+
+<ChatBootAudit />
+
+Look at what the boot test does to the diagram. On any topology sketch of Pulse, `chat`'s thickest arrow points at the broker — that's where every message goes. But kill the broker and `chat` starts anyway: the Go client buffers produces and retries in the background, sockets stay live, and the record catches up when the broker returns. Kill the schema registry instead — a box most diagrams draw as a faint side-note — and `chat` refuses to exist: without a schema id fetched at construction, the gateway cannot author a single well-formed event, and a gateway that can't write the record has no business accepting sockets. Redis is the same story: the fan-out plane is load-bearing for a live medium, so no courier means no boot.
+
+<Callout variant="lesson" title="Wiring is what you can't boot without">
+  Arrow thickness measures traffic. Static coupling is measured at startup:
+  take each dependency away and see whether the process still exists. Run that
+  test and `chat`'s quantum wiring turns out to include the registry and Redis
+  — and *not* the broker it talks to all day.
+</Callout>
+
+One honest wrinkle before moving on: the browser. The viewer page's data layer does synchronous server-side fetches to both `identity` and `analytics`, and the chapter warns that a user interface calling every service synchronously can stitch the whole system back into one quantum. Pulse's version is mild — read-only fetches and a five-second poll, with chat arriving over a raw WebSocket — so it couples *availability* (if `identity` is down, the channel page can't load) without coupling deploys or writes. Worth naming, not yet worth solving: the moment that page grows writes, this question gets asked again for real.
+
+## The three dials of dynamic coupling
+
+Static coupling was the stadium; dynamic coupling is match play. The chapter gives it three dimensions — how services **communicate** (sync or async), what **consistency** the interaction must uphold, and how much **coordination** the workflow needs (a rehearsed corner routine with a designated taker, versus open play where everyone reacts to the ball). Pulse's real edges, plotted:
+
+| The edge | Communication | Consistency | Coordination |
+| --- | --- | --- | --- |
+| `identity` → `chat` — stream lifecycle | async, over the log | eventual — `chat` lags by its own consumer lag | none |
+| `identity` + `chat` → `analytics` — presence, messages | async, folded into windowed stores | eventual — the viewer count is approximate by design | none |
+| browser → `identity` + `analytics` — the viewer page | sync — server-side fetches, 5-second poll | reads whatever is current; staleness accepted | none |
+
+The pattern is deliberate: **sync at the edge, async in the core.** The only synchronous calls in Pulse happen where a human is waiting for a page; between services, everything is a long ball over the top.
+
+The most instructive cell is the first one. `chat` decides "is this channel live?" by [replaying the lifecycle topics](/kafka/concepts/consumer-groups) into an in-memory map — never by calling `identity`. That gate is eventually consistent, and the glossary prices it precisely: a viewer who connects in the gap between `StreamStarted` landing and `chat` consuming it gets rejected even though the channel is genuinely live, and a message sent in the mirror-image gap after `StreamEnded` is produced against an already-ended stream. Two race windows, documented, both self-healing. That's what the async dial *costs* when you turn it — and Pulse paid it knowingly.
+
+The consistency dial has an equally sharp reading: the only atomic thing in all of Pulse lives *inside* one service. `identity` commits a stream, its `is_live` flag, and the event row [in a single Postgres transaction](/kafka/concepts/transactional-outbox) — and the moment anything crosses a service boundary, consistency is eventual, everywhere, with no exceptions. The quantum boundary and the transaction boundary are the same line.
+
+## The empty dial
+
+The coordination column reads `none` three times, and that's not an oversight. Pulse has no cross-service workflow: nothing that must complete in two services or roll back in both, no saga, no orchestrator. The closest candidate — a go-live, where `identity` commits, `chat` opens the room, `analytics` starts counting — isn't coordination at all. It's broadcast: each consumer reacts independently to the same fact, none reports back, and no one is keeping score of whether "the workflow" finished. Open play, not a corner routine.
+
+The book has entire chapters coming on what happens when this dial *does* get turned — sagas, orchestration versus choreography, transactional boundaries that span quanta. This section fills in when the reading gets there; today the honest reading is that Pulse's third dial has never left zero.
+
+## The road not taken
+
+The losing alternative, priced concretely: the **synchronous liveness check**. Every WebSocket upgrade on `chat` calls `identity` over HTTP — "is this channel live?" — and waits for the answer before accepting the socket. It's the obvious design; it's what most systems do first. What would it cost?
+
+First, the quanta fuse operationally. `chat`'s availability is now capped by `identity`'s: an `identity` redeploy, a slow Postgres query, a crash — and every new viewer everywhere bounces off a dead upgrade path. Two independently deployable services, one effective uptime. That's the exact fusion the chapter's dynamic-coupling analysis exists to catch: the deploys stay separate, but at runtime they're one quantum in a trenchcoat.
+
+Second, the load profiles couple. A raid — ten thousand viewers piling into a channel in seconds — becomes a ten-thousand-request stampede on `identity`, a service sized for account signups and go-live clicks, not for `chat`'s connection storms. `chat`'s scaling story silently becomes `identity`'s capacity-planning problem.
+
+What Pulse bought instead is visible in the payload design: the lifecycle events carry the channel's slug *inside* them, precisely so `chat` can build its slug-to-channel mapping from the log alone and never needs the callback. The whole synchronous option was engineered away by making the events self-sufficient. The price was those two race windows; the sync check's price was fused uptime and inherited stampedes. Priced side by side, the log wins — and the pricing, not the answer, is the chapter's actual lesson.
+
+## What would change our mind
+
+- **A real cross-service workflow arrives** — a moderation case spanning `chat` and `identity`, a creator payout touching three services. The coordination dial gets its first non-zero reading, and this pillar's concepts shelf — kept deliberately empty so far — has a trigger waiting for exactly that pattern.
+- **`chat`'s registry fail-fast gets softened.** The recorded reversal is bounded — retry-with-backoff at boot, or deferring the first schema fetch — and the moment it lands, the boot audit's verdicts flip and the figure above gets redrawn.
+- **A production deployment splits the substrate.** A clustered broker and an HA registry would make "one compose file" stop being the shared wiring in practice; the quantum count deserves a re-audit per environment.
+- **The viewer page grows writes.** Follows, subscriptions, anything that mutates through the BFF — and the "does the UI fuse the quanta?" question stops being mild.
+
+<PageNav
+  next={{
+    href: "/build/architecture",
+    title: "The Build — Architecture",
+    blurb:
+      "The topology this chapter audits, drawn live — every service, every edge, build-state honest.",
+  }}
+  prev={{
+    href: "/distributed-systems/hard-parts/no-best-practices",
+    title: "When there are no best practices",
+    blurb: "Chapter 1 — trade-offs all the way down, proved on where truth lives.",
+  }}
+/>
+
+<Sources
+  adrs={[2, 13, 15, 16, 19, 22, 23, 24, 25]}
+  refs={[
+    {
+      label:
+        "Software Architecture: The Hard Parts — Ford, Richards, Sadalage, Dehghani (O'Reilly), Chapter 2",
+      href: "https://www.oreilly.com/library/view/software-architecture-the/9781492086888/",
+    },
+  ]}
+/>
