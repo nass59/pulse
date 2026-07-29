@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"pulse/chat/internal/consumer"
 	"pulse/chat/internal/fanout"
+	"pulse/chat/internal/history"
 	"pulse/chat/internal/producer"
 	"syscall"
 	"time"
@@ -65,6 +66,14 @@ func main() {
 	cons.OnEnded(s.closeChannel)
 	fan.OnMessage(s.broadcast)
 	go fan.Run()
+
+	hist, err := history.New(brokers, registryURL, redisURL, logger)
+	if err != nil {
+		logger.Error("history init failed", "err", err)
+		os.Exit(1)
+	}
+	defer hist.Close()
+	go hist.Run()
 
 	mux.HandleFunc("GET /ws/{channelSlug}", s.handleWS)
 

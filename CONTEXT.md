@@ -22,6 +22,10 @@ The division of labour behind every real-time surface in Pulse. The **record** i
 
 The rule that follows: **anything derived from the log survives a node restart and is rebuildable by replay; anything that lived only in a process or on the courier's wire does not, and must never be the only copy.** So every read model — the ring buffer, the archives, every analytics aggregate — is built by consuming Kafka, never by listening to the courier. A feature tempted to build state off the fan-out channel is a feature that should be a Kafka consumer. _Avoid:_ treating Redis as a message queue for chat; adding delivery guarantees to the live plane (that is rebuilding Kafka inside it).
 
+### Projection
+
+A read model built by **consuming a Kafka topic and maintaining derived state**, rather than writing that state inline on the request path. Because a projection is a pure function of the log, it survives a restart, stays consistent with the record, and is rebuildable by replaying the topic — the properties a courier can never have (see Courier vs record). The first one in Pulse is the **chat history ring buffer**: a consumer of `chat.messages.v1` that keeps the last N messages per channel in the Redis list `chat:history:{channelId}` via `LPUSH` + `LTRIM` ([ADR-0026](docs/adr/0026-ring-buffer-as-a-projection-off-the-log.md)). A projection's consumer wants a **stable group id with committed offsets** — it *resumes* where it left off — the deliberate opposite of the liveness consumer's fresh-per-boot, replay-everything group (see Chat topology). _Avoid:_ writing a read model inline in the request handler ("write it once here, cheaper"); treating a projection as a source of truth — it is disposable and re-derivable, never the record.
+
 ### Stream
 
 A single live broadcast session by a creator. Has a lifecycle: scheduled → live → ended. Stream lifecycle transitions are first-class control-plane events.
